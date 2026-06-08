@@ -7,7 +7,13 @@ import 'package:mmac/ui/views/widgets/footer.dart';
 
 class Home extends StatefulWidget {
   final VoidCallback? onStartNewApplication;
-  const Home({super.key, this.onStartNewApplication});
+  final VoidCallback? onStartUpdateWorkflow;
+
+  const Home({
+    super.key,
+    this.onStartNewApplication,
+    this.onStartUpdateWorkflow,
+  });
 
   @override
   State<Home> createState() => _HomeState();
@@ -30,7 +36,9 @@ class _HomeState extends State<Home> {
                 }
               },
               onStartUpdateWorkflow: () {
-                debugPrint("Update Application Button Clicked - Logic Pending");
+                if (widget.onStartUpdateWorkflow != null) {
+                  widget.onStartUpdateWorkflow!();
+                }
               },
             ),
             const FormFooter(),

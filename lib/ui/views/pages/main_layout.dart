@@ -32,12 +32,14 @@ class _MainLayoutState extends State<MainLayout>
         onStartNewApplication: () {
           _tabController.animateTo(1);
         },
+        onStartUpdateWorkflow: () {
+          _tabController.animateTo(2);
+        },
       ),
       const NewApplication(),
       const UpdateApplication(),
       FAQS(
         onReturnHome: () {
-          // Index 0 is the "Home" tab
           _tabController.animateTo(0);
         },
       ),
