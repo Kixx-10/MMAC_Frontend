@@ -1,0 +1,39 @@
+name: mmac
+description: "A new Flutter project."
+
+publish_to: 'none' 
+
+
+version: 1.0.0+1
+
+environment:
+  sdk: ^3.11.4
+
+
+dependencies:
+  flutter:
+    sdk: flutter
+
+
+  cupertino_icons: ^1.0.8
+  dio: ^5.9.2
+  flutter_riverpod: ^2.5.1
+
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+
+
+  flutter_lints: ^6.0.0
+
+
+flutter:
+  assets:
+    - assets/data/purposes.json
+    - assets/images/
+    - assets/images/department_logo.jpg
+    - assets/images/national_flag.jpg
+    - assets/images/national_logo.jpg
+  uses-material-design: true
+
+  

@@ -1,0 +1,466 @@
+import 'dart:convert';
+import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:mmac/data/controllers/location_provider.dart';
+import 'package:mmac/data/controllers/port_of_arrival_provider.dart';
+import 'package:mmac/ui/views/widgets/custom_dropdown_field.dart';
+import '../../../../utils/form_validators.dart';
+import '../../widgets/custom_text_field.dart';
+import '../../widgets/custom_date_field.dart';
+
+abstract class TripFormLayoutInterface {
+  bool validate();
+}
+
+class TripFormLayout extends ConsumerStatefulWidget {
+  final Map<String, TextEditingController> controllers;
+  final Map<String, dynamic> values;
+  final Widget actionButtons;
+  final Function(String, dynamic) onValueChanged;
+  final void Function(TripFormLayoutInterface) onReady;
+
+  const TripFormLayout({
+    super.key,
+    required this.controllers,
+    required this.values,
+    required this.actionButtons,
+    required this.onValueChanged,
+    required this.onReady,
+  });
+
+  @override
+  ConsumerState<TripFormLayout> createState() => _TripFormLayoutState();
+}
+
+class _TripFormLayoutState extends ConsumerState<TripFormLayout>
+    implements TripFormLayoutInterface {
+
+  final GlobalKey<FormState> _formKey = GlobalKey<FormState>();
+  bool _showDateErrors = false;
+  List<String> _purposeList = [];
+
+  // "Others" text controller
+  final TextEditingController _otherPurposeController = TextEditingController();
+
+  @override
+  void initState() {
+    super.initState();
+    widget.onReady(this);
+
+    if (widget.values['purposeOfVisit'] != null &&
+        !["Visit", "Business", "Education", "Health"].contains(widget.values['purposeOfVisit']) &&
+        widget.values['purposeOfVisit'].toString().isNotEmpty) {
+      _otherPurposeController.text = widget.values['purposeOfVisit'];
+    }
+    Future.microtask(() {
+      if (!mounted) return;
+      final locationState = ref.read(locationProvider);
+      if (locationState.valueOrNull?.allStates.isEmpty ?? true) {
+        ref.read(locationProvider.notifier).retry();
+      }
+      final currentMode = widget.values['modeOfTravel'];
+      final modeId = currentMode == "Land" ? 2 : currentMode == "Sea" ? 3 : 1;
+      ref.read(portOfArrivalProvider.notifier).loadPortOfArrrivalByModeId(modeId);
+      _loadPurposeFromJson();
+    });
+  }
+
+  @override
+  void dispose() {
+    _otherPurposeController.dispose();
+    super.dispose();
+  }
+
+  Future<void> _loadPurposeFromJson() async {
+    try {
+      final String response = await rootBundle.loadString('assets/data/purposes.json');
+      if (mounted) {
+        setState(() {
+          _purposeList = List<String>.from(jsonDecode(response));
+          _purposeList.remove("Others");
+          _purposeList.add("Others");
+        });
+      }
+    } catch (_) {
+      if (mounted) {
+        setState(() {
+          _purposeList = ["Visit", "Business", "Education", "Health", "Others"];
+        });
+      }
+    }
+  }
+
+  @override
+  bool validate() {
+    // 💡 အကယ်၍ Review Page ရောက်သွားချိန် Widget က Screen ပေါ်မှာ မရှိတော့ရင် (Unmounted ဖြစ်ရင်)
+    // setState မလုပ်တော့ဘဲ လက်ရှိ Map ထဲက ဒေတာ မှန်ကန်မှုကိုသာ စစ်ဆေးပြီး True/False ပြန်ပေးခြင်းဖြင့် State Error ကို ဖြေရှင်းပါတယ်
+    if (!mounted) {
+      final bool hasArrivalDate = widget.values['arrivalDate'] != null;
+      final bool isFormValid = _formKey.currentState?.validate() ?? true;
+      return hasArrivalDate && isFormValid;
+    }
+
+    setState(() => _showDateErrors = true);
+    return _formKey.currentState!.validate();
+  }
+
+  bool get _isOtherPurpose => 
+      widget.values['selectedPurposeDropdown'] == "Others" || 
+      (widget.values['purposeOfVisit'] != null && 
+       widget.values['purposeOfVisit'].toString().isNotEmpty &&
+       !["Visit", "Business", "Education", "Health"].contains(widget.values['purposeOfVisit']));
+
+  TextEditingController _getSafeController(String key) {
+    return widget.controllers[key] ?? TextEditingController();
+  }
+
+  Widget _row(Widget l, Widget r) => Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [Expanded(child: l), const SizedBox(width: 24), Expanded(child: r)],
+      );
+
+  Widget _column(Widget t, Widget b) => Column(children: [t, const SizedBox(height: 16), b]);
+
+  Widget _halfRow(bool isDesktop, Widget field) {
+    if (!isDesktop) return field;
+    return Row(children: [
+      Expanded(child: field),
+      const SizedBox(width: 24),
+      const Expanded(child: SizedBox()),
+    ]);
+  }
+
+  Widget _errorWidget(String message, VoidCallback onRetry) {
+    return Container(
+      padding: const EdgeInsets.all(12),
+      decoration: BoxDecoration(
+        color: Colors.red.shade50,
+        borderRadius: BorderRadius.circular(8),
+        border: Border.all(color: Colors.red.shade200),
+      ),
+      child: Row(children: [
+        Icon(Icons.wifi_off_rounded, color: Colors.red.shade600, size: 18),
+        const SizedBox(width: 10),
+        Expanded(child: Text(message, style: TextStyle(color: Colors.red.shade700, fontSize: 13))),
+        TextButton.icon(
+          onPressed: onRetry,
+          icon: const Icon(Icons.refresh, size: 16),
+          label: const Text('Retry'),
+        ),
+      ]),
+    );
+  }
+
+  Widget _buildPurposeField() {
+    if (_isOtherPurpose) {
+      return Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Padding(
+            padding: const EdgeInsets.only(top: 14),
+            child: SizedBox(
+              width: 140,
+              child: RichText(
+                text: const TextSpan(
+                  text: 'Purpose of Visit',
+                  style: TextStyle(fontSize: 14, fontWeight: FontWeight.w500, color: Colors.black87),
+                  children: [TextSpan(text: ' *', style: TextStyle(color: Colors.red, fontWeight: FontWeight.bold))],
+                ),
+              ),
+            ),
+          ),
+          const SizedBox(width: 8),
+          Expanded(
+            child: TextFormField(
+              controller: _otherPurposeController,
+              autofocus: true,
+              autovalidateMode: AutovalidateMode.onUserInteraction,
+              validator: (v) => FormValidators.required(v, 'Purpose detail'),
+              onChanged: (v) {
+                widget.onValueChanged('purposeOfVisit', v);
+              },
+              style: const TextStyle(fontWeight: FontWeight.w500, color: Colors.black87),
+              decoration: InputDecoration(
+                hintText: "Please specify your purpose...",
+                hintStyle: TextStyle(color: Colors.grey.shade400, fontSize: 14),
+                filled: true,
+                fillColor: Colors.white,
+                contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                suffixIcon: IconButton(
+                  icon: const Icon(Icons.arrow_drop_down_circle_outlined, color: Colors.grey),
+                  tooltip: "Back to dropdown",
+                  onPressed: () {
+                    _otherPurposeController.clear();
+                    widget.onValueChanged('selectedPurposeDropdown', null);
+                    widget.onValueChanged('purposeOfVisit', null);
+                    setState(() {});
+                  },
+                ),
+                enabledBorder: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(8),
+                  borderSide: BorderSide(color: Colors.grey.shade300, width: 1),
+                ),
+                focusedBorder: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(8),
+                  borderSide: const BorderSide(color: Colors.blue, width: 1.5),
+                ),
+                errorBorder: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(8),
+                  borderSide: const BorderSide(color: Colors.red, width: 1),
+                ),
+                focusedErrorBorder: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(8),
+                  borderSide: const BorderSide(color: Colors.red, width: 1.5),
+                ),
+              ),
+            ),
+          ),
+        ],
+      );
+    }
+    return CustomDropdownField(
+      label: "Purpose of Visit",
+      value: widget.values['selectedPurposeDropdown'] ?? 
+              (["Visit", "Business", "Education", "Health"].contains(widget.values['purposeOfVisit']) ? widget.values['purposeOfVisit'] : null),
+      hint: "Select Purpose",
+      items: _purposeList,
+      validator: (v) => FormValidators.requiredDropdown(v, 'Purpose of Visit'),
+      onChanged: (v) {
+        if (v != null) {
+          widget.onValueChanged('selectedPurposeDropdown', v);
+          if (v != "Others") {
+            _otherPurposeController.clear();
+            widget.onValueChanged('purposeOfVisit', v);
+          } else {
+            widget.onValueChanged('purposeOfVisit', '');
+          }
+          setState(() {});
+        }
+      },
+    );
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final locationAsync = ref.watch(locationProvider);
+    final portAsync     = ref.watch(portOfArrivalProvider);
+
+    final locationState = locationAsync.valueOrNull;
+    final portState     = portAsync.valueOrNull;
+
+    final locationFirstLoad = locationState == null && !locationAsync.hasError;
+    final portFirstLoad     = portState == null && !portAsync.hasError;
+
+    return LayoutBuilder(builder: (context, constraints) {
+      final bool isDesktop = constraints.maxWidth > 500;
+      Widget pair(Widget a, Widget b) => isDesktop ? _row(a, b) : _column(a, b);
+
+      return Form(
+        key: _formKey,
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            // Row 1: Arrival Date | Mode of Travel
+            pair(
+              CustomDateField(
+                label: "Arrival Date",
+                value: widget.values['arrivalDate'],
+                firstDate: DateTime.now(), lastDate: DateTime(2100),
+                errorText: _showDateErrors && widget.values['arrivalDate'] == null
+                    ? 'Arrival Date is required' : null,
+                onPicked: (d) {
+                  widget.onValueChanged('arrivalDate', d);
+                  setState(() => _showDateErrors = false);
+                },
+              ),
+              CustomDropdownField(
+                label: "Mode of Travel",
+                value: widget.values['modeOfTravel'],
+                hint: "Select Mode",
+                items: const ["Air", "Land", "Sea"],
+                validator: (v) => FormValidators.requiredDropdown(v, 'Mode of Travel'),
+                onChanged: (v) {
+                  if (v != null && v != widget.values['modeOfTravel']) {
+                    final modeId = v == "Land" ? 2 : v == "Sea" ? 3 : 1;
+                    widget.onValueChanged('modeOfTravel', v);
+                    widget.onValueChanged('modeOfTravelId', modeId);
+                    widget.onValueChanged('portOfArrival', null);
+                    widget.onValueChanged('portOfArrivalId', null);
+                    ref.read(portOfArrivalProvider.notifier).loadPortOfArrrivalByModeId(modeId);
+                  }
+                },
+              ),
+            ),
+            const SizedBox(height: 16),
+
+            // Row 2: Port of Arrival | Vehicle Number
+            if (portFirstLoad)
+              const SizedBox(height: 60, child: Center(child: CircularProgressIndicator()))
+            else if (portAsync.hasError)
+              _errorWidget('Port of arrival failed to load', () {
+                final mode = widget.values['modeOfTravel'];
+                final modeId = mode == "Land" ? 2 : mode == "Sea" ? 3 : 1;
+                ref.read(portOfArrivalProvider.notifier).loadPortOfArrrivalByModeId(modeId);
+              })
+            else ...[
+              pair(
+                CustomDropdownField(
+                  label: "Port of Arrival",
+                  value: (portState!.portOfArrivalList.any((p) => p.portOfArrivalName == widget.values['portOfArrival']))
+                      ? widget.values['portOfArrival'] as String?
+                      : null,
+                  hint: "Select Port",
+                  items: portState.portOfArrivalList.map((p) => p.portOfArrivalName.toString()).toList(),
+                  validator: (v) => FormValidators.requiredDropdown(v, 'Port of Arrival'),
+                  onChanged: (v) {
+                    if (v != null) {
+                      widget.onValueChanged('portOfArrival', v);
+                      try {
+                        final selected = portState.portOfArrivalList.firstWhere((p) => p.portOfArrivalName == v);
+                        widget.onValueChanged('portOfArrivalId', selected.portOfArrivalId);
+                        ref.read(portOfArrivalProvider.notifier).selectPort(selected.portOfArrivalId);
+                      } catch (_) {}
+                    }
+                  },
+                ),
+                CustomTextField(
+                  label: "Vehicle Number",
+                  controller: _getSafeController('vehicleNumber'),
+                  validator: (v) => FormValidators.required(v, 'Vehicle Number'),
+                ),
+              ),
+            ],
+            const SizedBox(height: 16),
+
+            // Row 3: Vehicle Name | Accommodation
+            pair(
+              CustomTextField(
+                label: "Vehicle Name",
+                controller: _getSafeController('vehicleName'),
+                validator: (v) => FormValidators.required(v, 'Vehicle Name'),
+              ),
+              CustomTextField(
+                label: "Accommodation",
+                controller: _getSafeController('accommodation'),
+                validator: (v) => FormValidators.required(v, 'Accommodation'),
+              ),
+            ),
+            const SizedBox(height: 16),
+
+            // Rows 4 & 5: Location Details
+            if (locationFirstLoad)
+              const SizedBox(height: 60, child: Center(child: CircularProgressIndicator()))
+            else if (locationAsync.hasError)
+              _errorWidget('Failed to load locations', () {
+                ref.read(locationProvider.notifier).retry();
+              })
+            else ...[
+              pair(
+                CustomTextField(
+                  label: "Address in Myanmar",
+                  controller: _getSafeController('addressInMyanmar'),
+                  validator: (v) => FormValidators.required(v, 'Address in Myanmar'),
+                ),
+                CustomDropdownField(
+                  label: "State/Region",
+                  value: (locationState!.allStates.any((s) => s.name == widget.values['stateRegion']))
+                      ? widget.values['stateRegion'] as String? : null,
+                  hint: "Select State/Region",
+                  items: locationState.allStates.map((s) => s.name.toString()).toList(),
+                  validator: (v) => FormValidators.requiredDropdown(v, 'State/Region'),
+                  onChanged: (v) {
+                    if (v != widget.values['stateRegion']) {
+                      widget.onValueChanged('stateRegion', v);
+                      widget.onValueChanged('district', null);
+                      widget.onValueChanged('districtId', null);
+                      widget.onValueChanged('township', null);
+                      widget.onValueChanged('townshipId', null);
+                      
+                      try {
+                        final selectedState = locationState.allStates.firstWhere((s) => s.name == v);
+                        widget.onValueChanged('stateRegionId', selectedState.id);
+                      } catch (_) {}
+
+                      ref.read(locationProvider.notifier).selectState(v);
+                    }
+                  },
+                ),
+              ),
+              const SizedBox(height: 16),
+
+              pair(
+                CustomDropdownField(
+                  label: "District",
+                  value: (locationState.availableDistricts.contains(widget.values['district']))
+                      ? widget.values['district'] as String? : null,
+                  hint: "Select District",
+                  items: locationState.availableDistricts,
+                  validator: (v) => FormValidators.requiredDropdown(v, 'District'),
+                  onChanged: (v) {
+                    if (v != widget.values['district']) {
+                      widget.onValueChanged('district', v);
+                      widget.onValueChanged('township', null);
+                      widget.onValueChanged('townshipId', null);
+
+                      try {
+                        final selectedState = locationState.allStates.firstWhere((s) => s.name == widget.values['stateRegion']);
+                        final selectedDist = selectedState.districts.firstWhere((d) => d.name == v);
+                        widget.onValueChanged('districtId', selectedDist.districtId);
+                      } catch (_) {}
+
+                      ref.read(locationProvider.notifier).selectDistrict(v);
+                    }
+                  },
+                ),
+                CustomDropdownField(
+                  label: "Township",
+                  value: (locationState.availableTownships.contains(widget.values['township']))
+                      ? widget.values['township'] as String? : null,
+                  hint: "Select Township",
+                  items: locationState.availableTownships,
+                  validator: (v) => FormValidators.requiredDropdown(v, 'Township'),
+                  onChanged: (v) {
+                    if (v != widget.values['township']) {
+                      widget.onValueChanged('township', v);
+                      try {
+                        final selectedState = locationState.allStates.firstWhere((s) => s.name == widget.values['stateRegion']);
+                        final selectedDist = selectedState.districts.firstWhere((d) => d.name == widget.values['district']);
+                        final selectedTown = selectedDist.townships.firstWhere((t) => t.name == v);
+                        widget.onValueChanged('townshipId', selectedTown.id);
+                      } catch (_) {}
+                    }
+                  },
+                ),
+              ),
+            ],
+            const SizedBox(height: 16),
+
+            // Row 6: Mobile Number | Purpose of Visit
+            pair(
+              CustomTextField(
+                label: "Mobile Number (MM)",
+                controller: _getSafeController('mobileNumberMM'),
+                validator: (v) => FormValidators.required(v, 'Mobile Number'),
+              ),
+              _buildPurposeField(),
+            ),
+            const SizedBox(height: 16),
+
+            // Row 7: Previous City
+            _halfRow(isDesktop,
+              CustomTextField(
+                label: "Previous City",
+                controller: _getSafeController('previousCity'),
+                validator: (v) => FormValidators.required(v, 'Previous City'),
+              ),
+            ),
+            const SizedBox(height: 30),
+
+            widget.actionButtons,
+          ],
+        ),
+      );
+    });
+  }
+}
