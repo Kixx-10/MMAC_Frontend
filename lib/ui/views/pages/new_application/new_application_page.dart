@@ -301,7 +301,7 @@ with AutomaticKeepAliveClientMixin
   // --- Dynamic UI Section Title ---
   String get _sectionTitle {
     switch (currentStep) {
-      case 1: return "Identification & Personal Info";
+      case 1: return "Identification & Personal Informations";
       case 2: return "Trip & Accommodation Details";
       case 3: return "Declarations";
       case 4: return "Review Application";

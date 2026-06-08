@@ -85,7 +85,6 @@ class _MainLayoutState extends State<MainLayout> with SingleTickerProviderStateM
                   child: Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
-                      // ဘယ်ဘက်ခြမ်း Title စာသား
                       const Text(
                         "MMAC", 
                         style: TextStyle(
@@ -100,16 +99,16 @@ class _MainLayoutState extends State<MainLayout> with SingleTickerProviderStateM
                         child: Align(
                           alignment: Alignment.centerRight,
                           child: SizedBox(
-                            width: isMobile ? null : 700, // Desktop တွင် သင့်မူလ 700 width အတိုင်း ပေါ်ပါမည်
+                            width: isMobile ? null : 700, 
                             child: TabBar(
                               controller: _tabController,
-                              // 💡 Mobile တွင် စာသားများ အစုံအလင်ပေါ်စေရန် scroll ဆွဲနိုင်အောင် true ပေးပြီး Desktop တွင် အညီအမျှဖြစ်အောင် false ပေးထားပါသည်
                               isScrollable: isMobile, 
                               dividerColor: Colors.transparent, 
                               labelColor: Colors.blue.shade800, 
                               unselectedLabelColor: Colors.grey.shade600, 
                               labelStyle: const TextStyle(fontWeight: FontWeight.bold),
                               unselectedLabelStyle: const TextStyle(fontWeight: FontWeight.w500),
+                              indicatorColor: Colors.blue.shade800,
                               labelPadding: const EdgeInsets.symmetric(horizontal: 4),
                               tabs: [
                                 _buildCustomTab("Home"),
