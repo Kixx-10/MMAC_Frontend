@@ -26,7 +26,7 @@ class ReviewLayout extends StatelessWidget {
     return date.toString();
   }
 
-  // ── Modern Information Grid Block ──────────────────────────────────────────
+  // ── Modern Information Grid Block 
   Widget _reviewTile(String label, String value) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -56,7 +56,7 @@ class ReviewLayout extends StatelessWidget {
     );
   }
 
-  // ── Premium Card Section Header ──────────────────────────────────────────
+  // ── Premium Card Section Header 
   Widget _sectionBlock({
     required String title, 
     required IconData icon, 
@@ -138,7 +138,7 @@ class ReviewLayout extends StatelessWidget {
     );
   }
 
-  // ── Modern Declaration Block ───────────────────────────────────────────────
+  // ── Modern Declaration Block 
   Widget _declarationCard(String label, String? value) {
     final bool isYes = value == 'Yes';
     final color = isYes ? Colors.red.shade700 : Colors.green.shade700;
@@ -226,7 +226,7 @@ class ReviewLayout extends StatelessWidget {
         ),
         const SizedBox(height: 24),
 
-        // ══ STEP 1: Personal Information ═════════════════════════════════════
+        // ══ STEP 1: Personal Information 
         _sectionBlock(
           title: 'Personal Information', 
           icon: Icons.person_outline_rounded, 
@@ -239,8 +239,10 @@ class ReviewLayout extends StatelessWidget {
             _reviewTile('Email', controllers['email']?.text ?? ''),
             _reviewTile('Mobile Number', controllers['mobile']?.text ?? ''),
             _reviewTile('Visa Number', controllers['visaNumber']?.text ?? ''),
-            _reviewTile('NRC', controllers['nrc']?.text ?? ''),
-            _reviewTile('Father Name', controllers['fatherName']?.text ?? ''),
+            if (values['country'] == 'Myanmar') ...[
+               _reviewTile('NRC', controllers['nrc']?.text ?? ''),
+                _reviewTile('Father Name', controllers['fatherName']?.text ?? ''),
+              ],
             _reviewTile('Passport Number', controllers['passportNumber']?.text ?? ''),
             _reviewTile('Issued Date', _formatDate(values['issuedDate'])),
             _reviewTile('Expiry Date', _formatDate(values['expiryDate'])),
@@ -279,6 +281,7 @@ class ReviewLayout extends StatelessWidget {
             borderRadius: BorderRadius.circular(16),
             boxShadow: [
               BoxShadow(
+                // ignore: deprecated_member_use
                 color: Colors.black.withOpacity(0.03),
                 blurRadius: 15,
                 offset: const Offset(0, 4),

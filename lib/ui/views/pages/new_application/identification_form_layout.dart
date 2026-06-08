@@ -40,6 +40,7 @@ class _IdentificationFormLayoutState extends ConsumerState<IdentificationFormLay
     implements IdentificationFormLayoutInterface {
 
   bool _showDateErrors = false;
+  bool _isLoading = true; 
   
   // change objects to lists for dropdowns from API
   final List<dynamic> _rawCountryObjects = [];
@@ -70,9 +71,14 @@ class _IdentificationFormLayoutState extends ConsumerState<IdentificationFormLay
           // to keep the full country objects for later use when we need to find the code based on selected name
           _rawCountryObjects.addAll(state.countryList);
           _countryNameList.addAll(state.countryList.map((c) => c.countryName).toList());
+          _isLoading = false; 
         });
       }).catchError((e) {
         debugPrint("❌ Failed to load countries from API: $e");
+        if (!mounted) return;
+        setState(() {
+          _isLoading = false; 
+        });
       });
     });
   }
@@ -89,11 +95,88 @@ class _IdentificationFormLayoutState extends ConsumerState<IdentificationFormLay
         _selectedNrcType != null &&
         _nrcNumberController.text.isNotEmpty) {
       
-      final fullNrc = "$_selectedNrcStateCode/$_selectedTownshipCode($_selectedNrcType)${_nrcNumberController.text}";
-      widget.controllers['nrc']?.text = fullNrc;
+      // reading from rivepod
+      final nrcStateData = ref.read(nrcProvider).valueOrNull;
+      final stateList = nrcStateData?.nrcStateList ?? [];
+      final townshipList = nrcStateData?.availableNrcTownships ?? [];
+
+      String stateMM = _selectedNrcStateCode!;
+      String townshipMM = _selectedTownshipCode!;
+
+      try {
+        final matchedState = stateList.firstWhere((st) => st.idCode == _selectedNrcStateCode);
+        stateMM = matchedState.codeMM; 
+      } catch (e) {
+        debugPrint("State codeMM mapping error: $e");
+      }
+
+      // finding mynamr language
+      try {
+        final matchedTownship = townshipList.firstWhere((ts) => ts.idCode == _selectedTownshipCode);
+        townshipMM = matchedTownship.codeMM; 
+      } catch (e) {
+        debugPrint("Township codeMM mapping error: $e");
+      }
+      //change myanmar
+      final fullNrcMyanmar = "$stateMM/$townshipMM($_selectedNrcType)${_nrcNumberController.text}";
+      
+      widget.controllers['nrc']?.text = fullNrcMyanmar;
     } else {
       widget.controllers['nrc']?.text = ""; 
     }
+  }
+
+  // ─── Backend Validation Rules for Date Fields ───
+  
+  DateTime _toDateOnly(DateTime date) {
+    return DateTime(date.year, date.month, date.day);
+  }
+
+  String? _getDobError() {
+    if (!_showDateErrors) return null;
+    final dob = widget.values['dateOfBirth'] as DateTime?;
+    if (dob == null) return 'DOB is required';
+
+    final today = _toDateOnly(DateTime.now());
+    if (!dob.isBefore(today)) {
+      return 'DOB must be in the past';
+    }
+    return null;
+  }
+
+  String? _getIssuedDateError() {
+    if (!_showDateErrors) return null;
+    final issuedDate = widget.values['issuedDate'] as DateTime?;
+    if (issuedDate == null) return 'Passport Issue Date is required.';
+
+    final today = _toDateOnly(DateTime.now());
+    if (issuedDate.isAfter(today)) {
+      return 'Issue date cannot be in the future.';
+    }
+
+    final dob = widget.values['dateOfBirth'] as DateTime?;
+    if (dob != null && !issuedDate.isAfter(dob)) {
+      return 'Issue date must be after your Date of Birth.';
+    }
+    return null;
+  }
+
+  String? _getExpiryDateError() {
+    if (!_showDateErrors) return null;
+    final expiryDate = widget.values['expiryDate'] as DateTime?;
+    if (expiryDate == null) return 'Passport Expiry Date is required.';
+
+    final issuedDate = widget.values['issuedDate'] as DateTime?;
+    if (issuedDate != null && !expiryDate.isAfter(issuedDate)) {
+      return 'Expiry date must be after the Passport Issue Date.';
+    }
+
+    final today = _toDateOnly(DateTime.now());
+    final sixMonthsFromToday = DateTime(today.year, today.month + 6, today.day);
+    if (expiryDate.isBefore(sixMonthsFromToday)) {
+      return 'This passport cannot be used because it has expired or has less than 6 months of validity remaining from today.';
+    }
+    return null;
   }
 
   @override
@@ -101,11 +184,31 @@ class _IdentificationFormLayoutState extends ConsumerState<IdentificationFormLay
     if (!mounted) return false;
     
     setState(() => _showDateErrors = true);
-    return widget.formKey.currentState!.validate();
+    
+    final isFormValid = widget.formKey.currentState?.validate() ?? false;
+    
+    final hasDateErrors = _getDobError() != null || 
+                          _getIssuedDateError() != null || 
+                          _getExpiryDateError() != null;
+                          
+    return isFormValid && !hasDateErrors;
   }
 
   @override
   Widget build(BuildContext context) {
+    // if waiting 
+    if (_isLoading) {
+      return const Padding(
+        padding: EdgeInsets.symmetric(vertical: 60), 
+        child: Center(
+          child: CircularProgressIndicator(
+            valueColor: AlwaysStoppedAnimation<Color>(Colors.blue),
+          ),
+        ),
+      );
+    }
+
+    //if get api
     final bool isDesktop = MediaQuery.of(context).size.width > 500;
     final bool isMyanmar = widget.values['country'] == 'Myanmar' || widget.values['country'] == 'MMR';
     const double lw = 140;
@@ -135,7 +238,7 @@ class _IdentificationFormLayoutState extends ConsumerState<IdentificationFormLay
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Expanded(child: a),
-            const SizedBox(width: 24),
+            const SizedBox(width: 40),
             Expanded(child: b),
           ],
         );
@@ -152,18 +255,21 @@ class _IdentificationFormLayoutState extends ConsumerState<IdentificationFormLay
             CustomTextField(
               label: "Full Name",
               controller: widget.controllers['fullName']!,
+              maxLength: 50,
               labelWidth: lw,
               validator: (v) => FormValidators.required(v, 'Full Name'),
             ),
             CustomDropdownField(
-              label: 'Gender',
-              value: widget.values['gender'],
-              hint: 'Select Gender',
-              items: const ['Male', 'Female'],
-              labelWidth: lw,
-              validator: (v) => FormValidators.requiredDropdown(v, 'Gender'),
-              onChanged: (v) => widget.onValueChanged('gender', v),
-            ),
+              label: "Gender",
+              hint: "Select Gender",
+              value: widget.values['gender'], 
+              items: const ["Male", "Female"],
+              showSearch: false,             
+              onChanged: (value) {
+                widget.onValueChanged('gender', value); 
+              },
+              validator: (value) => value == null ? "Please select gender" : null,
+            )
           ),
           const SizedBox(height: 20),
 
@@ -174,8 +280,7 @@ class _IdentificationFormLayoutState extends ConsumerState<IdentificationFormLay
               labelWidth: lw,
               firstDate: DateTime(1900),
               lastDate: DateTime.now(),
-              errorText: _showDateErrors && widget.values['dateOfBirth'] == null
-                  ? 'Date of Birth is required' : null,
+              errorText: _getDobError(), 
               onPicked: (d) {
                 widget.onValueChanged('dateOfBirth', d);
                 if (!mounted) return;
@@ -222,11 +327,13 @@ class _IdentificationFormLayoutState extends ConsumerState<IdentificationFormLay
               label: "Email",
               controller: widget.controllers['email']!,
               labelWidth: lw,
+              maxLength: 30,
               validator: FormValidators.email,
             ),
             CustomTextField(
               label: "Mobile Number",
               controller: widget.controllers['mobile']!,
+              maxLength: 20,
               labelWidth: lw,
               validator: (v) => FormValidators.required(v, 'Mobile Number'),
             ),
@@ -237,12 +344,15 @@ class _IdentificationFormLayoutState extends ConsumerState<IdentificationFormLay
             CustomTextField(
               label: "Visa Number",
               controller: widget.controllers['visaNumber']!,
+              maxLength: 50,
               labelWidth: lw,
-              validator: (v) => FormValidators.required(v, 'Visa Number'),
+              isRequired: false,
+              //validator: (v) => FormValidators.required(v, 'Visa Number'),
             ),
             CustomTextField(
               label: "Passport Number",
               controller: widget.controllers['passportNumber']!,
+              maxLength: 20,
               labelWidth: lw,
               validator: (v) => FormValidators.required(v, 'Passport Number'),
             ),
@@ -435,10 +545,11 @@ class _IdentificationFormLayoutState extends ConsumerState<IdentificationFormLay
                           ],
                         ),
                       ),
-                      const SizedBox(width: 24),
+                      const SizedBox(width: 40),
                       Expanded(
                         child: CustomTextField(
                           label: "Father Name",
+                          maxLength: 50,
                           controller: widget.controllers['fatherName']!,
                           labelWidth: lw,
                           validator: (v) => FormValidators.fatherName(v, isMyanmar: isMyanmar),
@@ -474,6 +585,7 @@ class _IdentificationFormLayoutState extends ConsumerState<IdentificationFormLay
                         label: "Father Name",
                         controller: widget.controllers['fatherName']!,
                         labelWidth: lw,
+                        maxLength: 50,
                         validator: (v) => FormValidators.fatherName(v, isMyanmar: isMyanmar),
                       ),
                     ],
@@ -491,8 +603,7 @@ class _IdentificationFormLayoutState extends ConsumerState<IdentificationFormLay
               labelWidth: lw,
               firstDate: DateTime(1900),
               lastDate: DateTime.now(),
-              errorText: _showDateErrors && widget.values['issuedDate'] == null
-                  ? 'Issued Date is required' : null,
+              errorText: _getIssuedDateError(), 
               onPicked: (d) {
                 widget.onValueChanged('issuedDate', d);
                 if (!mounted) return;
@@ -505,8 +616,7 @@ class _IdentificationFormLayoutState extends ConsumerState<IdentificationFormLay
               labelWidth: lw,
               firstDate: DateTime.now(),
               lastDate: DateTime(2100),
-              errorText: _showDateErrors && widget.values['expiryDate'] == null
-                  ? 'Expiry Date is required' : null,
+              errorText: _getExpiryDateError(),
               onPicked: (d) {
                 widget.onValueChanged('expiryDate', d);
                 if (!mounted) return;
@@ -541,6 +651,7 @@ class _IdentificationFormLayoutState extends ConsumerState<IdentificationFormLay
               label: "Address",
               controller: widget.controllers['address']!,
               labelWidth: lw,
+              maxLength: 100,
               validator: (v) => FormValidators.required(v, 'Address'),
             ),
           ),

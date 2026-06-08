@@ -93,8 +93,6 @@ class _TripFormLayoutState extends ConsumerState<TripFormLayout>
 
   @override
   bool validate() {
-    // 💡 အကယ်၍ Review Page ရောက်သွားချိန် Widget က Screen ပေါ်မှာ မရှိတော့ရင် (Unmounted ဖြစ်ရင်)
-    // setState မလုပ်တော့ဘဲ လက်ရှိ Map ထဲက ဒေတာ မှန်ကန်မှုကိုသာ စစ်ဆေးပြီး True/False ပြန်ပေးခြင်းဖြင့် State Error ကို ဖြေရှင်းပါတယ်
     if (!mounted) {
       final bool hasArrivalDate = widget.values['arrivalDate'] != null;
       final bool isFormValid = _formKey.currentState?.validate() ?? true;
@@ -117,7 +115,11 @@ class _TripFormLayoutState extends ConsumerState<TripFormLayout>
 
   Widget _row(Widget l, Widget r) => Row(
         crossAxisAlignment: CrossAxisAlignment.start,
-        children: [Expanded(child: l), const SizedBox(width: 24), Expanded(child: r)],
+        children: [
+          Expanded(child: l), 
+          const SizedBox(width: 40), 
+          Expanded(child: r)
+        ],
       );
 
   Widget _column(Widget t, Widget b) => Column(children: [t, const SizedBox(height: 16), b]);
@@ -126,7 +128,7 @@ class _TripFormLayoutState extends ConsumerState<TripFormLayout>
     if (!isDesktop) return field;
     return Row(children: [
       Expanded(child: field),
-      const SizedBox(width: 24),
+      const SizedBox(width: 40),
       const Expanded(child: SizedBox()),
     ]);
   }
@@ -251,7 +253,17 @@ class _TripFormLayoutState extends ConsumerState<TripFormLayout>
 
     final locationFirstLoad = locationState == null && !locationAsync.hasError;
     final portFirstLoad     = portState == null && !portAsync.hasError;
-
+//api waiting
+    if (locationFirstLoad || portFirstLoad) {
+      return const Padding(
+        padding: EdgeInsets.symmetric(vertical: 60),
+        child: Center(
+          child: CircularProgressIndicator(
+            valueColor: AlwaysStoppedAnimation<Color>(Colors.blue),
+          ),
+        ),
+      );
+    }
     return LayoutBuilder(builder: (context, constraints) {
       final bool isDesktop = constraints.maxWidth > 500;
       Widget pair(Widget a, Widget b) => isDesktop ? _row(a, b) : _column(a, b);
@@ -295,9 +307,7 @@ class _TripFormLayoutState extends ConsumerState<TripFormLayout>
             const SizedBox(height: 16),
 
             // Row 2: Port of Arrival | Vehicle Number
-            if (portFirstLoad)
-              const SizedBox(height: 60, child: Center(child: CircularProgressIndicator()))
-            else if (portAsync.hasError)
+            if (portAsync.hasError)
               _errorWidget('Port of arrival failed to load', () {
                 final mode = widget.values['modeOfTravel'];
                 final modeId = mode == "Land" ? 2 : mode == "Sea" ? 3 : 1;
@@ -327,6 +337,7 @@ class _TripFormLayoutState extends ConsumerState<TripFormLayout>
                 CustomTextField(
                   label: "Vehicle Number",
                   controller: _getSafeController('vehicleNumber'),
+                  maxLength: 10,
                   validator: (v) => FormValidators.required(v, 'Vehicle Number'),
                 ),
               ),
@@ -337,11 +348,13 @@ class _TripFormLayoutState extends ConsumerState<TripFormLayout>
             pair(
               CustomTextField(
                 label: "Vehicle Name",
+                maxLength: 20,
                 controller: _getSafeController('vehicleName'),
                 validator: (v) => FormValidators.required(v, 'Vehicle Name'),
               ),
               CustomTextField(
                 label: "Accommodation",
+                maxLength: 20,
                 controller: _getSafeController('accommodation'),
                 validator: (v) => FormValidators.required(v, 'Accommodation'),
               ),
@@ -349,9 +362,7 @@ class _TripFormLayoutState extends ConsumerState<TripFormLayout>
             const SizedBox(height: 16),
 
             // Rows 4 & 5: Location Details
-            if (locationFirstLoad)
-              const SizedBox(height: 60, child: Center(child: CircularProgressIndicator()))
-            else if (locationAsync.hasError)
+            if (locationAsync.hasError)
               _errorWidget('Failed to load locations', () {
                 ref.read(locationProvider.notifier).retry();
               })
@@ -359,6 +370,7 @@ class _TripFormLayoutState extends ConsumerState<TripFormLayout>
               pair(
                 CustomTextField(
                   label: "Address in Myanmar",
+                  maxLength: 20,
                   controller: _getSafeController('addressInMyanmar'),
                   validator: (v) => FormValidators.required(v, 'Address in Myanmar'),
                 ),
@@ -440,6 +452,7 @@ class _TripFormLayoutState extends ConsumerState<TripFormLayout>
             pair(
               CustomTextField(
                 label: "Mobile Number (MM)",
+                maxLength: 11,
                 controller: _getSafeController('mobileNumberMM'),
                 validator: (v) => FormValidators.required(v, 'Mobile Number'),
               ),

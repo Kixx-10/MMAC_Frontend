@@ -9,8 +9,8 @@ class FAQS extends StatefulWidget {
 class _FAQSState extends State<FAQS> {
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      body: const Center(
+    return const Scaffold(
+      body: Center(
         child: Text("Welcome to the FAQs Page"),
       ),
     );

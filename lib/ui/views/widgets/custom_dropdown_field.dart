@@ -8,6 +8,7 @@ class CustomDropdownField extends StatefulWidget {
   final ValueChanged<String?> onChanged;
   final double labelWidth;
   final String? Function(String?)? validator;
+  final bool showSearch; // 🔥 Search Box ပြမပြ ထိန်းချုပ်ရန် Parameter အသစ်
 
   const CustomDropdownField({
     super.key,
@@ -18,6 +19,7 @@ class CustomDropdownField extends StatefulWidget {
     required this.onChanged,
     this.labelWidth = 140,
     this.validator,
+    this.showSearch = true, // 🔥 Default အနေနဲ့ True ထားပေးထားလို့ တခြားနေရာတွေမှာ ပုံမှန်အတိုင်း ရှာလို့ရနေပါမယ်
   });
 
   @override
@@ -47,6 +49,7 @@ class _CustomDropdownFieldState extends State<CustomDropdownField> {
           title: widget.hint,
           items: widget.items,
           selectedValue: state.value,
+          showSearch: widget.showSearch, // 🔥 လက်ဆင့်ကမ်းပေးခြင်း
           onSelected: (newValue) {
             state.didChange(newValue); 
             widget.onChanged(newValue); 
@@ -86,7 +89,6 @@ class _CustomDropdownFieldState extends State<CustomDropdownField> {
         ),
         const SizedBox(width: 8),
         
-
         Expanded(
           child: FormField<String>(
             key: _fieldKey,
@@ -154,17 +156,20 @@ class _CustomDropdownFieldState extends State<CustomDropdownField> {
     );
   }
 }
+
 class _SearchPickerDialog extends StatefulWidget {
   final String title;
   final List<String> items;
   final String? selectedValue;
   final ValueChanged<String> onSelected;
+  final bool showSearch; // 🔥
 
   const _SearchPickerDialog({
     required this.title,
     required this.items,
     required this.selectedValue,
     required this.onSelected,
+    required this.showSearch, // 🔥
   });
 
   @override
@@ -207,41 +212,42 @@ class _SearchPickerDialogState extends State<_SearchPickerDialog> {
       ),
       content: SizedBox(
         width: screenWidth > 600 ? 450 : screenWidth * 0.9,
-        height: 450,
+       
+        height: widget.showSearch ? 200 : 100, 
         child: Column(
           children: [
-            // Built-in Search System
-            TextField(
-              controller: _searchController,
-              onChanged: _filterList,
-              style: const TextStyle(fontSize: 14),
-              decoration: InputDecoration(
-                hintText: 'Search here...',
-                hintStyle: TextStyle(color: Colors.grey.shade400, fontSize: 14),
-                prefixIcon: const Icon(Icons.search, size: 20, color: Colors.grey),
-                suffixIcon: _searchController.text.isNotEmpty
-                    ? IconButton(
-                        icon: const Icon(Icons.clear, size: 18, color: Colors.grey),
-                        onPressed: () {
-                          _searchController.clear();
-                          _filterList('');
-                        },
-                      )
-                    : null,
-                contentPadding: const EdgeInsets.symmetric(vertical: 10),
-                enabledBorder: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(8),
-                  borderSide: BorderSide(color: Colors.grey.shade300),
-                ),
-                focusedBorder: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(8),
-                  borderSide: const BorderSide(color: Colors.blue, width: 1.5),
+            if (widget.showSearch) ...[
+              TextField(
+                controller: _searchController,
+                onChanged: _filterList,
+                style: const TextStyle(fontSize: 14),
+                decoration: InputDecoration(
+                  hintText: 'Search here...',
+                  hintStyle: TextStyle(color: Colors.grey.shade400, fontSize: 14),
+                  prefixIcon: const Icon(Icons.search, size: 20, color: Colors.grey),
+                  suffixIcon: _searchController.text.isNotEmpty
+                      ? IconButton(
+                          icon: const Icon(Icons.clear, size: 18, color: Colors.grey),
+                          onPressed: () {
+                            _searchController.clear();
+                            _filterList('');
+                          },
+                        )
+                      : null,
+                  contentPadding: const EdgeInsets.symmetric(vertical: 10),
+                  enabledBorder: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(8),
+                    borderSide: BorderSide(color: Colors.grey.shade300),
+                  ),
+                  focusedBorder: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(8),
+                    borderSide: const BorderSide(color: Colors.blue, width: 1.5),
+                  ),
                 ),
               ),
-            ),
-            const SizedBox(height: 12),
+              const SizedBox(height: 12),
+            ],
             
-            // if many data but not slow
             Expanded(
               child: _filteredItems.isEmpty
                   ? const Center(

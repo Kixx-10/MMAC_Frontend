@@ -8,9 +8,10 @@ class SubmitRequestModel {
   final String email;
   final String mobileNumber;
   final String address;
-  final String visaNo;
-  final String nrc;            
-  final String fatherName;     
+  final String? visaNo;
+  final String? nrc;            
+  final String? fatherName;     
+
   final String passportNo;
   final String issuedCountryCode;
   final String issuedDate;      
@@ -18,18 +19,18 @@ class SubmitRequestModel {
   final String arrivalDate;     
   final String modeOfTravelId;  
   final String portOfArrivalId; 
-  final String? vehicleNumber;  
-  final String? vehicleName;    
-  final String? accommodation;  
+  final String vehicleNumber;  
+  final String vehicleName;    
+  final String accommodation;  
   final String addressInMyanmar;
   final String stateRegionId;   
   final String districtId;     
   final String townshipId;      
   final String mobileNumberMM;  
   final String purposeOfVisit;
-  final String? previousCity;   
-  final String? healthDeclaration;
-  final String? digitalDeclarations;
+  final String previousCity;   
+  final String healthDeclaration;
+  final String digitalDeclarations;
 
   SubmitRequestModel({
     required this.fullName,
@@ -39,9 +40,9 @@ class SubmitRequestModel {
     required this.email,
     required this.mobileNumber,
     required this.address,
-    required this.visaNo,
-    required this.nrc,
-    required this.fatherName,
+    this.visaNo,
+    this.nrc,
+    this.fatherName,
     required this.passportNo,
     required this.issuedCountryCode,
     required this.issuedDate,
@@ -49,18 +50,18 @@ class SubmitRequestModel {
     required this.arrivalDate,
     required this.modeOfTravelId,
     required this.portOfArrivalId,
-    this.vehicleNumber,
-    this.vehicleName,
-    this.accommodation,
+    required this.vehicleNumber,
+    required this.vehicleName,
+    required this.accommodation,
     required this.addressInMyanmar,
     required this.stateRegionId,
     required this.districtId,
     required this.townshipId,
     required this.mobileNumberMM,
     required this.purposeOfVisit,
-    this.previousCity,
-    this.healthDeclaration,
-    this.digitalDeclarations,
+    required this.previousCity,
+    required this.healthDeclaration,
+    required this.digitalDeclarations,
   });
 
   Map<String, dynamic> toJson() {
@@ -72,9 +73,11 @@ class SubmitRequestModel {
       'email':              email,
       'mobileNumber':       mobileNumber,
       'address':            address,
-      'visaNo':             visaNo,
-      'nrc':                nrc,
-      'fatherName':         fatherName,
+      
+      'visaNo':             (visaNo == null || visaNo!.trim().isEmpty) ? null : visaNo,
+      'nrc':                (nrc == null || nrc!.trim().isEmpty) ? null : nrc,
+      'fatherName':         (fatherName == null || fatherName!.trim().isEmpty) ? null : fatherName,
+      
       'passportNo':         passportNo,
       'issuedCountryCode':  issuedCountryCode,
       'issuedDate':         issuedDate,

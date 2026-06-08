@@ -26,6 +26,8 @@ class NationalHeader extends StatelessWidget {
           ),
         ],
       ),
+      child: Transform.translate(
+        offset: const Offset(0, -12),
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
@@ -104,6 +106,6 @@ class NationalHeader extends StatelessWidget {
             ),
         ],
       ),
-    );
+    ));
   }
 }
