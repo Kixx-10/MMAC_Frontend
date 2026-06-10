@@ -67,8 +67,8 @@ class _TripFormLayoutState extends ConsumerState<TripFormLayout>
       final modeId = currentMode == "Land"
           ? 2
           : currentMode == "Sea"
-          ? 3
-          : 1;
+              ? 3
+              : 1;
       ref
           .read(portOfArrivalProvider.notifier)
           .loadPortOfArrrivalByModeId(modeId);
@@ -131,13 +131,13 @@ class _TripFormLayoutState extends ConsumerState<TripFormLayout>
   }
 
   Widget _row(Widget l, Widget r) => Row(
-    crossAxisAlignment: CrossAxisAlignment.start,
-    children: [
-      Expanded(child: l),
-      const SizedBox(width: 40),
-      Expanded(child: r),
-    ],
-  );
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Expanded(child: l),
+          const SizedBox(width: 40),
+          Expanded(child: r),
+        ],
+      );
 
   Widget _column(Widget t, Widget b) =>
       Column(children: [t, const SizedBox(height: 16), b]);
@@ -271,14 +271,13 @@ class _TripFormLayoutState extends ConsumerState<TripFormLayout>
     }
     return CustomDropdownField(
       label: "Purpose of Visit",
-      value:
-          widget.values['selectedPurposeDropdown'] ??
+      value: widget.values['selectedPurposeDropdown'] ??
           ([
-                "Visit",
-                "Business",
-                "Education",
-                "Health",
-              ].contains(widget.values['purposeOfVisit'])
+            "Visit",
+            "Business",
+            "Education",
+            "Health",
+          ].contains(widget.values['purposeOfVisit'])
               ? widget.values['purposeOfVisit']
               : null),
       hint: "Select Purpose",
@@ -310,7 +309,7 @@ class _TripFormLayoutState extends ConsumerState<TripFormLayout>
 
     final locationFirstLoad = locationState == null && !locationAsync.hasError;
     final portFirstLoad = portState == null && !portAsync.hasError;
-    //api waiting
+
     if (locationFirstLoad || portFirstLoad) {
       return const Padding(
         padding: EdgeInsets.symmetric(vertical: 60),
@@ -341,8 +340,8 @@ class _TripFormLayoutState extends ConsumerState<TripFormLayout>
                   lastDate: DateTime(2100),
                   errorText:
                       _showDateErrors && widget.values['arrivalDate'] == null
-                      ? 'Arrival Date is required'
-                      : null,
+                          ? 'Arrival Date is required'
+                          : null,
                   onPicked: (d) {
                     widget.onValueChanged('arrivalDate', d);
                     setState(() => _showDateErrors = false);
@@ -362,8 +361,8 @@ class _TripFormLayoutState extends ConsumerState<TripFormLayout>
                       final modeId = v == "Land"
                           ? 2
                           : v == "Sea"
-                          ? 3
-                          : 1;
+                              ? 3
+                              : 1;
                       widget.onValueChanged('modeOfTravel', v);
                       widget.onValueChanged('modeOfTravelId', modeId);
                       widget.onValueChanged('portOfArrival', null);
@@ -385,8 +384,8 @@ class _TripFormLayoutState extends ConsumerState<TripFormLayout>
                   final modeId = mode == "Land"
                       ? 2
                       : mode == "Sea"
-                      ? 3
-                      : 1;
+                          ? 3
+                          : 1;
                   ref
                       .read(portOfArrivalProvider.notifier)
                       .loadPortOfArrrivalByModeId(modeId);
@@ -395,12 +394,9 @@ class _TripFormLayoutState extends ConsumerState<TripFormLayout>
                 pair(
                   CustomDropdownField(
                     label: "Port of Arrival",
-                    value:
-                        (portState!.portOfArrivalList.any(
-                          (p) =>
-                              p.portOfArrivalName ==
-                              widget.values['portOfArrival'],
-                        ))
+                    value: (portState!.portOfArrivalList.any(
+                      (p) => p.portOfArrivalName == widget.values['portOfArrival'],
+                    ))
                         ? widget.values['portOfArrival'] as String?
                         : null,
                     hint: "Select Port",
@@ -440,17 +436,22 @@ class _TripFormLayoutState extends ConsumerState<TripFormLayout>
               ],
               const SizedBox(height: 16),
 
-              // Row 3: Vehicle Name | Accommodation
+              // Row 3: State/Region | District
               pair(
                 CustomDropdownField(
                   label: "State/Region",
-                  dialogWidth: 300,   
+                  dialogWidth: 300,
                   dialogHeight: 250,
-                  value: (locationState!.allStates.any((s) => s.name == widget.values['stateRegion']))
-                      ? widget.values['stateRegion'] as String? : null,
+                  value: (locationState!.allStates
+                          .any((s) => s.name == widget.values['stateRegion']))
+                      ? widget.values['stateRegion'] as String?
+                      : null,
                   hint: "Select State/Region",
-                  items: locationState.allStates.map((s) => s.name.toString()).toList(),
-                  validator: (v) => FormValidators.requiredDropdown(v, 'State/Region'),
+                  items: locationState.allStates
+                      .map((s) => s.name.toString())
+                      .toList(),
+                  validator: (v) =>
+                      FormValidators.requiredDropdown(v, 'State/Region'),
                   onChanged: (v) {
                     if (v != widget.values['stateRegion']) {
                       widget.onValueChanged('stateRegion', v);
@@ -458,26 +459,30 @@ class _TripFormLayoutState extends ConsumerState<TripFormLayout>
                       widget.onValueChanged('districtId', null);
                       widget.onValueChanged('township', null);
                       widget.onValueChanged('townshipId', null);
-                      
+
                       try {
-                        final selectedState = locationState.allStates.firstWhere((s) => s.name == v);
+                        final selectedState = locationState.allStates
+                            .firstWhere((s) => s.name == v);
                         widget.onValueChanged('stateRegionId', selectedState.id);
                       } catch (_) {}
 
                       ref.read(locationProvider.notifier).selectState(v);
                     }
-                  }, spacing: 16,
-
+                  },
+                  spacing: 16,
                 ),
-                 CustomDropdownField(
+                CustomDropdownField(
                   label: "District",
-                  dialogWidth: 300,   
+                  dialogWidth: 300,
                   dialogHeight: 250,
-                  value: (locationState.availableDistricts.contains(widget.values['district']))
-                      ? widget.values['district'] as String? : null,
+                  value: (locationState.availableDistricts
+                          .contains(widget.values['district']))
+                      ? widget.values['district'] as String?
+                      : null,
                   hint: "Select District",
                   items: locationState.availableDistricts,
-                  validator: (v) => FormValidators.requiredDropdown(v, 'District'),
+                  validator: (v) =>
+                      FormValidators.requiredDropdown(v, 'District'),
                   onChanged: (v) {
                     if (v != widget.values['district']) {
                       widget.onValueChanged('district', v);
@@ -485,69 +490,89 @@ class _TripFormLayoutState extends ConsumerState<TripFormLayout>
                       widget.onValueChanged('townshipId', null);
 
                       try {
-                        final selectedState = locationState.allStates.firstWhere((s) => s.name == widget.values['stateRegion']);
-                        final selectedDist = selectedState.districts.firstWhere((d) => d.name == v);
-                        widget.onValueChanged('districtId', selectedDist.districtId);
+                        final selectedState = locationState.allStates
+                            .firstWhere((s) => s.name == widget.values['stateRegion']);
+                        final selectedDist = selectedState.districts
+                            .firstWhere((d) => d.name == v);
+                        widget.onValueChanged(
+                          'districtId',
+                          selectedDist.districtId,
+                        );
                       } catch (_) {}
 
                       ref.read(locationProvider.notifier).selectDistrict(v);
                     }
-                  }, spacing: 16,
+                  },
+                  spacing: 16,
                 ),
               ),
               const SizedBox(height: 16),
 
+              // Row 4: Township | Address in Myanmar
               pair(
                 CustomDropdownField(
                   label: "Township",
-                  dialogWidth: 300,   
+                  dialogWidth: 300,
                   dialogHeight: 250,
-                  value: (locationState.availableTownships.contains(widget.values['township']))
-                      ? widget.values['township'] as String? : null,
+                  value: (locationState.availableTownships
+                          .contains(widget.values['township']))
+                      ? widget.values['township'] as String?
+                      : null,
                   hint: "Select Township",
                   items: locationState.availableTownships,
-                  validator: (v) => FormValidators.requiredDropdown(v, 'Township'),
+                  validator: (v) =>
+                      FormValidators.requiredDropdown(v, 'Township'),
                   onChanged: (v) {
                     if (v != widget.values['township']) {
                       widget.onValueChanged('township', v);
                       try {
-                        final selectedState = locationState.allStates.firstWhere((s) => s.name == widget.values['stateRegion']);
-                        final selectedDist = selectedState.districts.firstWhere((d) => d.name == widget.values['district']);
-                        final selectedTown = selectedDist.townships.firstWhere((t) => t.name == v);
+                        final selectedState = locationState.allStates.firstWhere(
+                            (s) => s.name == widget.values['stateRegion']);
+                        final selectedDist = selectedState.districts.firstWhere(
+                            (d) => d.name == widget.values['district']);
+                        final selectedTown = selectedDist.townships
+                            .firstWhere((t) => t.name == v);
                         widget.onValueChanged('townshipId', selectedTown.id);
                       } catch (_) {}
                     }
-                  }, spacing: 16,
+                  },
+                  spacing: 16,
                 ),
                 CustomTextField(
                   label: "Address in Myanmar",
                   maxLength: 20,
                   controller: _getSafeController('addressInMyanmar'),
-                  validator: (v) => FormValidators.required(v, 'Address in Myanmar'),
+                  validator: (v) =>
+                      FormValidators.required(v, 'Address in Myanmar'),
                 ),
               ),
-            ],
-            const SizedBox(height: 16),
-            pair(
-              CustomTextField(
-                label: "Mobile Number (MM)",
-                maxLength: 11,
-                controller: _getSafeController('mobileNumberMM'),
-                validator: (v) => FormValidators.required(v, 'Mobile Number'),
-              ),
-              _buildPurposeField(),
-            ),
-            const SizedBox(height: 16),
+              const SizedBox(height: 16),
 
-            // Row 7: Previous City
-            _halfRow(isDesktop,
-              CustomTextField(
-                label: "Previous City",
-                controller: _getSafeController('previousCity'),
-                validator: (v) => FormValidators.required(v, 'Previous City'),
+              // Row 5: Mobile Number | Purpose of Visit
+              pair(
+                CustomTextField(
+                  label: "Mobile Number (MM)",
+                  hintText: "09xxxxxxxx",
+                  maxLength: 11,
+                  controller: _getSafeController('mobileNumberMM'),
+                  validator: (v) => FormValidators.required(v, 'Mobile Number'),
+                ),
+                _buildPurposeField(),
+              ),
+              const SizedBox(height: 16),
+
+              // Row 6: Previous City
+              _halfRow(
+                isDesktop,
+                CustomTextField(
+                  label: "Previous City",
+                  controller: _getSafeController('previousCity'),
+                  validator: (v) => FormValidators.required(v, 'Previous City'),
+                ),
               ),
               const SizedBox(height: 30),
 
+              // Action Buttons
               widget.actionButtons,
             ],
           ),
