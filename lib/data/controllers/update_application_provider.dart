@@ -8,11 +8,10 @@ final submitRepositoryProvider = Provider<SubmitRepository>((ref) {
   return SubmitRepository();
 });
 
-// 2. Notifier to manage the search lifecycle (Idle -> Loading -> Success/Error)
 class UpdateApplicationNotifier extends AsyncNotifier<SubmitRequestModel?> {
   @override
   Future<SubmitRequestModel?> build() async {
-    return null; // Initial state is idle (null)
+    return null; 
   }
 
   Future<void> findApplication({
@@ -37,13 +36,11 @@ class UpdateApplicationNotifier extends AsyncNotifier<SubmitRequestModel?> {
         return null;
       }
 
-      onSuccess(); // Triggers UI callback (e.g., notification alert)
+      onSuccess(); 
       return application;
     });
   }
 }
-
-// 3. The globally accessible provider
 final updateApplicationProvider =
     AsyncNotifierProvider<UpdateApplicationNotifier, SubmitRequestModel?>(() {
       return UpdateApplicationNotifier();

@@ -18,31 +18,23 @@ class _FAQSState extends State<FAQS> {
   final List<Map<String, String>> _faqData = [
     {
       'category': 'Identity & Passport Validation',
-      'question':
-          'What should I do if my passport does not have an expiration date?',
-      'answer':
-          'Most official passports contain an expiration threshold. If your document is legally valid indefinitely under state terms, please contact your local consulate support desk before filing this entry.',
+      'question': 'What should I do if my passport does not have an expiration date?',
+      'answer': 'Most official passports contain an expiration threshold. If your document is legally valid indefinitely under state terms, please contact your local consulate support desk before filing this entry.',
     },
     {
       'category': 'Identity & Passport Validation',
-      'question':
-          'How do Myanmar citizens format their National Registration Card (NRC)?',
-      'answer':
-          'The entry module automatically compiles split selections into a standardized string matrix (e.g., 12/TNY(N)123456). Ensure your state code, township token, identity type, and registration numbers precisely match your physical card.',
+      'question': 'How do Myanmar citizens format their National Registration Card (NRC)?',
+      'answer': 'The entry module automatically compiles split selections into a standardized string matrix (e.g., 12/TNY(N)123456). Ensure your state code, township token, identity type, and registration numbers precisely match your physical card.',
     },
     {
       'category': 'Application Amendments',
-      'question':
-          'Can I modify my entry submission after final processing dispatch?',
-      'answer':
-          'Yes. You can use the "Retrieve & Update Records" utility located in the top navigation header. Enter your unique system token and validation credentials to amend your profile coordinates safely.',
+      'question': 'Can I modify my entry submission after final processing dispatch?',
+      'answer': 'Yes. You can use the "Retrieve & Update Records" utility located in the top navigation header. Enter your unique system token and validation credentials to amend your profile coordinates safely.',
     },
     {
       'category': 'Technical & Health Protocols',
-      'question':
-          'What happens if I accidentally flag a health declaration symptom?',
-      'answer':
-          'Flagged health conditions trigger automated quarantine interlocks. If this was a clerical error, navigate back to Step 3 using the step indicator matrix before making your final submission.',
+      'question': 'What happens if I accidentally flag a health declaration symptom?',
+      'answer': 'Flagged health conditions trigger automated quarantine interlocks. If this was a clerical error, navigate back to Step 3 using the step indicator matrix before making your final submission.',
     },
   ];
 
@@ -75,8 +67,7 @@ class _FAQSState extends State<FAQS> {
                     const FormHeader(
                       category: 'SYSTEM SUPPORT & DOCUMENTATION',
                       title: 'Frequently Asked Questions',
-                      subtitle:
-                          'Review statutory lookup parameters, application procedures, and security matrix troubleshooting steps.',
+                      subtitle: 'Review statutory lookup parameters, application procedures, and security matrix troubleshooting steps.',
                     ),
                     const SizedBox(height: 16),
 
@@ -89,16 +80,14 @@ class _FAQSState extends State<FAQS> {
                       ),
                       padding: const EdgeInsets.symmetric(horizontal: 16),
                       child: TextField(
-                        onChanged: (value) =>
-                            setState(() => _searchQuery = value),
+                        onChanged: (value) => setState(() => _searchQuery = value),
                         decoration: const InputDecoration(
                           icon: Icon(
                             Icons.search,
                             color: Color(0xff64748B),
                             size: 20,
                           ),
-                          hintText:
-                              'Search FAQ parameters (e.g., NRC, Update, Passport)...',
+                          hintText: 'Search FAQ parameters (e.g., NRC, Update, Passport)...',
                           hintStyle: TextStyle(
                             color: Color(0xff94A3B8),
                             fontSize: 14,
@@ -140,9 +129,7 @@ class _FAQSState extends State<FAQS> {
                               ),
                             ),
                             child: Theme(
-                              data: Theme.of(
-                                context,
-                              ).copyWith(dividerColor: Colors.transparent),
+                              data: Theme.of(context).copyWith(dividerColor: Colors.transparent),
                               child: ExpansionTile(
                                 leading: const Icon(
                                   Icons.help_outline,
@@ -211,21 +198,14 @@ class _FAQSState extends State<FAQS> {
                 ),
               ),
             ),
-
-            // Section 2: Full Row Footer Component (Breaks free of the 800px center width constraint)
-            const FormFooter(),
+            const FormFooter(), 
           ],
         ),
-    return const Scaffold(
-      body: Center(
-        child: Text("Welcome to the FAQs Page"),
       ),
-    );
+    ); 
   }
 }
-
 // LOCAL COMPONENTS
-
 class FormHeader extends StatelessWidget {
   final String category;
   final String title;

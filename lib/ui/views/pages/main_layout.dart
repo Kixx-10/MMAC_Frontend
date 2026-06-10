@@ -17,8 +17,6 @@ class MainLayout extends StatefulWidget {
 class _MainLayoutState extends State<MainLayout>
     with SingleTickerProviderStateMixin {
   late TabController _tabController;
-
-  // 1. Change to 'late' so we can initialize it after the TabController
   late List<Widget> _pages;
 
   @override
@@ -26,7 +24,6 @@ class _MainLayoutState extends State<MainLayout>
     super.initState();
     _tabController = TabController(length: 4, vsync: this);
 
-    // 2. Initialize the pages here, passing the controller logic to Home
     _pages = [
       Home(
         onStartNewApplication: () {
@@ -51,8 +48,6 @@ class _MainLayoutState extends State<MainLayout>
     _tabController.dispose();
     super.dispose();
   }
-
-  // ... Keep your _buildCustomTab and build methods exactly as they are ...
 
   Widget _buildCustomTab(String label) {
     return Tab(
@@ -118,25 +113,6 @@ class _MainLayoutState extends State<MainLayout>
                         child: Align(
                           alignment: Alignment.centerRight,
                           child: SizedBox(
-                            width: isMobile
-                                ? null
-                                : 700, // Desktop တွင် သင့်မူလ 700 width အတိုင်း ပေါ်ပါမည်
-                            child: TabBar(
-                              controller: _tabController,
-                              // 💡 Mobile တွင် စာသားများ အစုံအလင်ပေါ်စေရန် scroll ဆွဲနိုင်အောင် true ပေးပြီး Desktop တွင် အညီအမျှဖြစ်အောင် false ပေးထားပါသည်
-                              isScrollable: isMobile,
-                              dividerColor: Colors.transparent,
-                              labelColor: Colors.blue.shade800,
-                              unselectedLabelColor: Colors.grey.shade600,
-                              labelStyle: const TextStyle(
-                                fontWeight: FontWeight.bold,
-                              ),
-                              unselectedLabelStyle: const TextStyle(
-                                fontWeight: FontWeight.w500,
-                              ),
-                              labelPadding: const EdgeInsets.symmetric(
-                                horizontal: 4,
-                              ),
                             width: isMobile ? null : 700, 
                             child: TabBar(
                               controller: _tabController,
@@ -144,7 +120,10 @@ class _MainLayoutState extends State<MainLayout>
                               dividerColor: Colors.transparent, 
                               labelColor: Colors.blue.shade800, 
                               unselectedLabelColor: Colors.grey.shade600, 
-                              labelStyle: const TextStyle(fontWeight: FontWeight.bold),
+                              labelStyle: const TextStyle(
+                                fontWeight: FontWeight.bold,
+                                fontFamily: 'sans-serif',
+                              ),
                               unselectedLabelStyle: const TextStyle(fontWeight: FontWeight.w500),
                               indicatorColor: Colors.blue.shade800,
                               labelPadding: const EdgeInsets.symmetric(horizontal: 4),
@@ -161,15 +140,15 @@ class _MainLayoutState extends State<MainLayout>
                     ],
                   ),
                 ),
-
-                // ───────────────────────────────────────────────────────────────────────
               ],
             ),
           ),
         ),
       ),
-
-      body: TabBarView(controller: _tabController, children: _pages),
+      body: TabBarView(
+        controller: _tabController, 
+        children: _pages,
+      ),
     );
   }
 }

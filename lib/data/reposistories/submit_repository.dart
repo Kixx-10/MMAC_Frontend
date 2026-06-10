@@ -14,9 +14,7 @@ class SubmitRepository {
   ) async {
     try {
       final payload = submitRequestModel.toJson();
-
-      // 🚀 ဆာဗာဆီ ပို့လိုက်တဲ့ JSON Payload ကို Console မှာ ကြည့်ရှုရန်
-      dev.log("🚀 SENDING JSON PAYLOAD: $payload", name: "SubmitRepository");
+      dev.log("SENDING JSON PAYLOAD: $payload", name: "SubmitRepository");
 
       final response = await _apiClient.post(
         ApiEndpoints.submitApplication,
@@ -33,8 +31,6 @@ class SubmitRepository {
       return null;
     } catch (e) {
       dev.log("❌ SUBMISSION FAILED", name: "SubmitRepository", error: e);
-
-      // 🛠️ 400 Bad Request အသေးစိတ် Error Message များကို ထုတ်ပြပေးမည့်စနစ်
       if (e is DioException) {
         if (e.response != null) {
           dev.log(
@@ -43,28 +39,17 @@ class SubmitRepository {
           );
           dev.log(
             "🚨 [SERVER VALIDATION ERROR DETAILS]: ${e.response?.data}",
-            name: "SubmitRepository",
           );
         } else {
           dev.log(
             "🚨 [NETWORK ERROR / NO RESPONSE FROM SERVER]: ${e.message}",
             name: "SubmitRepository",
           );
-      
-      if (e is DioException) {
-        if (e.response != null) {
-          dev.log(" [SERVER STATUS CODE]: ${e.response?.statusCode}", name: "SubmitRepository");
-          dev.log(" [SERVER VALIDATION ERROR DETAILS]: ${e.response?.data}", name: "SubmitRepository");
-        } else {
-          dev.log(" [NETWORK ERROR / NO RESPONSE FROM SERVER]: ${e.message}", name: "SubmitRepository");
         }
       }
       throw Exception('Failed to submit application: $e');
     }
   }
-
-  //Get Application by ID
-  // lib/data/repositories/submit_repository.dart ထဲမှာ ထည့်ရန်
 
   Future<SubmitRequestModel?> fetchApplicationForUpdate({
     required String qrReference,
@@ -72,7 +57,6 @@ class SubmitRepository {
     required String passportNumber,
   }) async {
     try {
-      // 🚀 API ဆီ ပို့မယ့် Search Parameters Payload
       final payload = {
         'qrReference': qrReference,
         'email': email,
@@ -83,17 +67,13 @@ class SubmitRepository {
         "🔍 FETCHING APPLICATION WITH PAYLOAD: $payload",
         name: "SubmitRepository",
       );
-
-      // စီနီယာ့ရဲ့ ApiEndpoints ထဲမှာ လမ်းကြောင်းအသစ် ထည့်ပေးထားရပါမယ်
       final response = await _apiClient.post(
-        '/application/search', // ApiEndpoints.searchApplication လို့ ပြောင်းသုံးနိုင်သည်
+        '/application/search', 
         data: payload,
       );
 
       if (response.statusCode == 200 && response.data != null) {
         dev.log("✅ APPLICATION RECORD FOUND!", name: "SubmitRepository");
-
-        // Server က ပြန်လာတဲ့ အချက်အလက်တွေကို SubmitRequestModel အဖြစ် ပြန်ပြောင်းပြီး Return ပေးခြင်း
         return SubmitRequestModel.fromJson(response.data);
       }
       return null;
