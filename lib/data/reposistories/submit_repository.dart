@@ -1,4 +1,3 @@
-// lib/data/reposistories/submit_repository.dart
 import 'dart:developer' as dev;
 import 'package:dio/dio.dart';
 import 'package:mmac/core/constants/api_endpoints.dart';
@@ -23,26 +22,24 @@ class SubmitRepository {
 
       if (response.statusCode == 200 && response.data != null) {
         dev.log(
-          "✅ APPLICATION SUBMITTED SUCCESSFULLY!",
+          "APPLICATION SUBMITTED SUCCESSFULLY!",
           name: "SubmitRepository",
         );
         return SubmitResponseModel.fromJson(response.data);
       }
       return null;
     } catch (e) {
-      dev.log("❌ SUBMISSION FAILED", name: "SubmitRepository", error: e);
+      dev.log("SUBMISSION FAILED", name: "SubmitRepository", error: e);
       if (e is DioException) {
         if (e.response != null) {
           dev.log(
-            "🚨 [SERVER STATUS CODE]: ${e.response?.statusCode}",
+            "[SERVER STATUS CODE]: ${e.response?.statusCode}",
             name: "SubmitRepository",
           );
-          dev.log(
-            "🚨 [SERVER VALIDATION ERROR DETAILS]: ${e.response?.data}",
-          );
+          dev.log("[SERVER VALIDATION ERROR DETAILS]: ${e.response?.data}");
         } else {
           dev.log(
-            "🚨 [NETWORK ERROR / NO RESPONSE FROM SERVER]: ${e.message}",
+            "[NETWORK ERROR / NO RESPONSE FROM SERVER]: ${e.message}",
             name: "SubmitRepository",
           );
         }
@@ -53,43 +50,36 @@ class SubmitRepository {
 
   Future<SubmitRequestModel?> fetchApplicationForUpdate({
     required String qrReference,
-    required String email,
-    required String passportNumber,
   }) async {
     try {
-      final payload = {
-        'qrReference': qrReference,
-        'email': email,
-        'passportNumber': passportNumber,
-      };
+      final endpoint = ApiEndpoints.fetchApplicationForUpdate(qrReference);
 
       dev.log(
-        "🔍 FETCHING APPLICATION WITH PAYLOAD: $payload",
+        "FETCHING APPLICATION FROM ENDPOINT: $endpoint",
         name: "SubmitRepository",
       );
-      final response = await _apiClient.post(
-        '/application/search', 
-        data: payload,
-      );
+
+      final response = await _apiClient.get(endpoint);
 
       if (response.statusCode == 200 && response.data != null) {
-        dev.log("✅ APPLICATION RECORD FOUND!", name: "SubmitRepository");
+        dev.log("APPLICATION RECORD FOUND!", name: "SubmitRepository");
         return SubmitRequestModel.fromJson(response.data);
       }
       return null;
     } catch (e) {
-      dev.log("❌ FETCH APPLICATION FAILED", name: "SubmitRepository", error: e);
-
+      dev.log("FETCH APPLICATION FAILED", name: "SubmitRepository", error: e);
       if (e is DioException) {
         if (e.response != null) {
           dev.log(
-            "🚨 [STATUS CODE]: ${e.response?.statusCode}",
+            "[SERVER STATUS CODE]: ${e.response?.statusCode}",
             name: "SubmitRepository",
           );
           dev.log(
-            "🚨 [SERVER ERROR]: ${e.response?.data}",
+            "[SERVER ERROR DETAILS]: ${e.response?.data}",
             name: "SubmitRepository",
           );
+        } else {
+          dev.log("[NETWORK ERROR]: ${e.message}", name: "SubmitRepository");
         }
       }
       return null;

@@ -1,6 +1,6 @@
 // lib/ui/views/pages/update_application/update_application_page.dart
 
-// ignore_for_file: curly_braces_in_flow_control_structures
+// ignore_for_file: deprecated_member_use, curly_braces_in_flow_control_structures
 
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -43,9 +43,42 @@ class _UpdateApplicationState extends ConsumerState<UpdateApplication>
   // --- Logic Execution Gate ---
   // --- Inside _UpdateApplicationState ---
 
+  // void _handleFindApplication() {
+  //   if (_searchFormKey.currentState?.validate() ?? false) {
+  //     // Read the provider and call the search logic
+  //     ref
+  //         .read(updateApplicationProvider.notifier)
+  //         .findApplication(
+  //           qrReference: _text('qrReference'),
+  //           email: _text('email'),
+  //           passportNumber: _text('passportNumber'),
+  //           onError: (errorMessage) {
+  //             // Show error banner if not found or network error
+  //             ScaffoldMessenger.of(context).showSnackBar(
+  //               SnackBar(
+  //                 content: Text(errorMessage),
+  //                 backgroundColor: Colors.red.shade700,
+  //               ),
+  //             );
+  //           },
+  //           onSuccess: () {
+  //             // Show success message
+  //             ScaffoldMessenger.of(context).showSnackBar(
+  //               const SnackBar(
+  //                 content: Text("Application successfully retrieved!"),
+  //                 backgroundColor: Colors.green,
+  //               ),
+  //             );
+  //           },
+  //         );
+  //   }
+  // }
+
+  //Test
+  // --- Inside _UpdateApplicationState ---
+
   void _handleFindApplication() {
     if (_searchFormKey.currentState?.validate() ?? false) {
-      // Read the provider and call the search logic
       ref
           .read(updateApplicationProvider.notifier)
           .findApplication(
@@ -53,7 +86,6 @@ class _UpdateApplicationState extends ConsumerState<UpdateApplication>
             email: _text('email'),
             passportNumber: _text('passportNumber'),
             onError: (errorMessage) {
-              // Show error banner if not found or network error
               ScaffoldMessenger.of(context).showSnackBar(
                 SnackBar(
                   content: Text(errorMessage),
@@ -62,11 +94,30 @@ class _UpdateApplicationState extends ConsumerState<UpdateApplication>
               );
             },
             onSuccess: () {
+              // ---------------------------------------------------------
+              // 🧪 TEMPORARY TEST CODE (စမ်းသပ်ပြီးပါက ပြန်ဖျက်ရန်)
+              // ---------------------------------------------------------
+              final fetchedData = ref.read(updateApplicationProvider).value;
+
+              if (fetchedData != null) {
+                print("==================================================");
+                print("🎉 [TEST LOG] DATABASE CONNECTION SUCCESS!");
+                print("👤 Name:          ${fetchedData.fullName}");
+                print("🛂 Passport:      ${fetchedData.passportNo}");
+                print("📧 Email:         ${fetchedData.email}");
+                print("📅 DOB:           ${fetchedData.dob}");
+                print("🌍 Country Code:  ${fetchedData.countryOfBirthCode}");
+                print("📦 Full JSON:     ${fetchedData.toJson()}");
+                print("==================================================");
+              }
+              // ---------------------------------------------------------
+
               // Show success message
               ScaffoldMessenger.of(context).showSnackBar(
                 const SnackBar(
-                  content: Text("Application successfully retrieved!"),
+                  content: Text("Application found! Check terminal console."),
                   backgroundColor: Colors.green,
+                  duration: Duration(seconds: 4),
                 ),
               );
             },
@@ -148,7 +199,7 @@ class _UpdateApplicationState extends ConsumerState<UpdateApplication>
                         TextFormField(
                           controller: _searchControllers['qrReference'],
                           inputFormatters: [
-                            LengthLimitingTextInputFormatter(20),
+                            LengthLimitingTextInputFormatter(100),
                           ],
                           decoration: InputDecoration(
                             hintText: "e.g., QR-2026-987654",

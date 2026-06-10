@@ -11,7 +11,7 @@ final submitRepositoryProvider = Provider<SubmitRepository>((ref) {
 class UpdateApplicationNotifier extends AsyncNotifier<SubmitRequestModel?> {
   @override
   Future<SubmitRequestModel?> build() async {
-    return null; 
+    return null;
   }
 
   Future<void> findApplication({
@@ -27,8 +27,6 @@ class UpdateApplicationNotifier extends AsyncNotifier<SubmitRequestModel?> {
       final repo = ref.read(submitRepositoryProvider);
       final application = await repo.fetchApplicationForUpdate(
         qrReference: qrReference,
-        email: email,
-        passportNumber: passportNumber,
       );
 
       if (application == null) {
@@ -36,11 +34,12 @@ class UpdateApplicationNotifier extends AsyncNotifier<SubmitRequestModel?> {
         return null;
       }
 
-      onSuccess(); 
+      onSuccess();
       return application;
     });
   }
 }
+
 final updateApplicationProvider =
     AsyncNotifierProvider<UpdateApplicationNotifier, SubmitRequestModel?>(() {
       return UpdateApplicationNotifier();
