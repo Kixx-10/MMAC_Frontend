@@ -8,9 +8,6 @@ class SubmitRequestModel {
   final String email;
   final String mobileNumber;
   final String address;
-  // final String visaNo;
-  // final String nrc;
-  // final String fatherName;
   final String passportNo;
   final String issuedCountryCode;
   final String issuedDate;
@@ -24,17 +21,6 @@ class SubmitRequestModel {
   final String? visaNo;
   final String? nrc;            
   final String? fatherName;     
-
-  // final String passportNo;
-  // final String issuedCountryCode;
-  // final String issuedDate;      
-  // final String expiryDate;      
-  // final String arrivalDate;     
-  // final String modeOfTravelId;  
-  // final String portOfArrivalId; 
-  // final String vehicleNumber;  
-  // final String vehicleName;    
-  // final String accommodation;  
   final String addressInMyanmar;
   final String stateRegionId;
   final String districtId;
@@ -44,10 +30,6 @@ class SubmitRequestModel {
   final String? previousCity;
   final String? healthDeclaration;
   final String? digitalDeclarations;
-  // final String previousCity;   
-  // final String healthDeclaration;
-  // final String digitalDeclarations;
-
   SubmitRequestModel({
     required this.fullName,
     required this.gender,
@@ -89,9 +71,6 @@ class SubmitRequestModel {
       'email': email,
       'mobileNumber': mobileNumber,
       'address': address,
-      //'visaNo': visaNo,
-      //'nrc': nrc,
-      //'fatherName': fatherName,
       'passportNo': passportNo,
       'issuedCountryCode': issuedCountryCode,
       'issuedDate': issuedDate,
@@ -117,7 +96,6 @@ class SubmitRequestModel {
      
     };
   }
-
   //this Method is used in search application by id aka update
   factory SubmitRequestModel.fromJson(Map<String, dynamic> json) {
     return SubmitRequestModel(
@@ -136,7 +114,6 @@ class SubmitRequestModel {
       issuedDate: json['issuedDate'] ?? '',
       expiryDate: json['expiryDate'] ?? '',
       arrivalDate: json['arrivalDate'] ?? '',
-      // Server မှ Int ဖြင့် လာပါက String သို့ ပြောင်းပေးရန်
       modeOfTravelId: (json['modeOfTravelId'] ?? 0).toString(),
       portOfArrivalId: (json['portOfArrivalId'] ?? 0).toString(),
       vehicleNumber: json['vehicleNumber'],
@@ -153,5 +130,4 @@ class SubmitRequestModel {
       digitalDeclarations: json['digitalDeclarations'],
     );
   }
-  // ဤနေရာအထိ ကူးယူပြီး toJson() ၏ အပေါ်တွင် ထည့်ပါ
 }
