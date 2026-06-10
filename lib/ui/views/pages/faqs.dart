@@ -216,6 +216,9 @@ class _FAQSState extends State<FAQS> {
             const FormFooter(),
           ],
         ),
+    return const Scaffold(
+      body: Center(
+        child: Text("Welcome to the FAQs Page"),
       ),
     );
   }

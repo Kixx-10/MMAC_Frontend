@@ -1,19 +1,23 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 
 class CustomTextField extends StatelessWidget {
   final String label;
   final TextEditingController controller;
   final double labelWidth;
   final String? Function(String?)? validator;
+  final int? maxLength;
   final ValueChanged<String>? onChanged; // ← NEW
-
+  final bool isRequired;
   const CustomTextField({
     super.key,
     required this.label,
     required this.controller,
     this.labelWidth = 140,
     this.validator,
+    this.maxLength,
     this.onChanged, // ← NEW
+    this.isRequired=true,
   });
 
   @override
@@ -34,8 +38,9 @@ class CustomTextField extends StatelessWidget {
                   color: Colors.black87,
                   fontFamily: 'sans-serif',
                 ),
-                children: const [
-                  TextSpan(
+                children:  [
+                  if(isRequired)
+                 const TextSpan(
                     text: ' *',
                     style: TextStyle(color: Colors.red, fontWeight: FontWeight.bold),
                   ),
@@ -49,6 +54,9 @@ class CustomTextField extends StatelessWidget {
           child: TextFormField(
             controller: controller,
             validator: validator,
+            inputFormatters: [
+              if (maxLength != null) LengthLimitingTextInputFormatter(maxLength),
+            ],
             onChanged: onChanged, // ← plugged in
             autovalidateMode: AutovalidateMode.onUserInteraction,
             style: const TextStyle(fontWeight: FontWeight.w500, color: Colors.black87),

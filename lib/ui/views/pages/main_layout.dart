@@ -104,7 +104,6 @@ class _MainLayoutState extends State<MainLayout>
                   child: Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
-                      // ဘယ်ဘက်ခြမ်း Title စာသား
                       const Text(
                         "MMAC",
                         style: TextStyle(
@@ -138,6 +137,17 @@ class _MainLayoutState extends State<MainLayout>
                               labelPadding: const EdgeInsets.symmetric(
                                 horizontal: 4,
                               ),
+                            width: isMobile ? null : 700, 
+                            child: TabBar(
+                              controller: _tabController,
+                              isScrollable: isMobile, 
+                              dividerColor: Colors.transparent, 
+                              labelColor: Colors.blue.shade800, 
+                              unselectedLabelColor: Colors.grey.shade600, 
+                              labelStyle: const TextStyle(fontWeight: FontWeight.bold),
+                              unselectedLabelStyle: const TextStyle(fontWeight: FontWeight.w500),
+                              indicatorColor: Colors.blue.shade800,
+                              labelPadding: const EdgeInsets.symmetric(horizontal: 4),
                               tabs: [
                                 _buildCustomTab("Home"),
                                 _buildCustomTab("New Application"),

@@ -1,14 +1,15 @@
-// lib/ui/views/pages/new_application/identification_form_layout.dart
-
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart'; 
-import 'package:flutter_riverpod/flutter_riverpod.dart'; 
+import 'package:flutter/services.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:mmac/data/controllers/country_provider.dart';
 import 'package:mmac/data/controllers/nrc_provider.dart';
 import '../../../../utils/form_validators.dart';
+import '../../../../utils/country_codes.dart';
 import '../../widgets/custom_text_field.dart';
 import '../../widgets/custom_date_field.dart';
 import '../../widgets/custom_dropdown_field.dart';
+import '../../widgets/mobile_code_search_dialog.dart';
+import '../../widgets/nrc_selector_field.dart';
 
 abstract class IdentificationFormLayoutInterface {
   bool validate();
@@ -33,22 +34,23 @@ class IdentificationFormLayout extends ConsumerStatefulWidget {
   });
 
   @override
-  ConsumerState<IdentificationFormLayout> createState() => _IdentificationFormLayoutState();
+  ConsumerState<IdentificationFormLayout> createState() =>
+      _IdentificationFormLayoutState();
 }
 
-class _IdentificationFormLayoutState extends ConsumerState<IdentificationFormLayout>
+class _IdentificationFormLayoutState
+    extends ConsumerState<IdentificationFormLayout>
     implements IdentificationFormLayoutInterface {
-
   bool _showDateErrors = false;
-  
-  // change objects to lists for dropdowns from API
+  bool _isLoading = true;
+
   final List<dynamic> _rawCountryObjects = [];
   final List<String> _countryNameList = [];
 
   // ─── NRC State Variables ───
-  String? _selectedNrcStateCode;   
-  String? _selectedTownshipCode; 
-  String? _selectedNrcType; 
+  String? _selectedNrcStateCode;
+  String? _selectedTownshipCode;
+  String? _selectedNrcType;
 
   final TextEditingController _nrcNumberController = TextEditingController();
   final List<Map<String, String>> _nrcTypes = [
@@ -57,30 +59,57 @@ class _IdentificationFormLayoutState extends ConsumerState<IdentificationFormLay
     {"code": "ပြု", "label": "ပြု"},
   ];
 
+  // ─── Mobile Country Codes State ───
+  List<Map<String, String>> _countryCodes = [];
+  final TextEditingController _mobileNumberController = TextEditingController();
+
   @override
   void initState() {
     super.initState();
     widget.onReady(this);
-    Future.microtask(() {
-      ref.read(countryProvider.future).then((state) {
-        if (!mounted) return;
-        setState(() {
-          _rawCountryObjects.clear();
-          _countryNameList.clear();
-          // to keep the full country objects for later use when we need to find the code based on selected name
-          _rawCountryObjects.addAll(state.countryList);
-          _countryNameList.addAll(state.countryList.map((c) => c.countryName).toList());
-        });
-      }).catchError((e) {
-        debugPrint("❌ Failed to load countries from API: $e");
-      });
+
+    _countryCodes = CountryCodeData.codes;
+    Future.microtask(() async {
+      ref
+          .read(countryProvider.future)
+          .then((state) {
+            if (!mounted) return;
+            setState(() {
+              _rawCountryObjects.clear();
+              _countryNameList.clear();
+              _rawCountryObjects.addAll(state.countryList);
+              _countryNameList.addAll(
+                state.countryList.map((c) => c.countryName).toList(),
+              );
+              _isLoading = false;
+            });
+          })
+          .catchError((e) {
+            debugPrint("❌ Failed to load countries from API: $e");
+            if (!mounted) return;
+            setState(() {
+              _isLoading = false;
+            });
+          });
     });
   }
 
   @override
   void dispose() {
-    _nrcNumberController.dispose(); 
+    _nrcNumberController.dispose();
+    _mobileNumberController.dispose();
     super.dispose();
+  }
+
+  void _updateMobileControllerValue() {
+    final String? code = widget.values['mobileCode'];
+    final String number = _mobileNumberController.text.trim();
+
+    if (code != null && number.isNotEmpty) {
+      widget.controllers['mobile']?.text = "$code$number";
+    } else {
+      widget.controllers['mobile']?.text = "";
+    }
   }
 
   void _updateNrcControllerValue() {
@@ -88,35 +117,76 @@ class _IdentificationFormLayoutState extends ConsumerState<IdentificationFormLay
         _selectedTownshipCode != null &&
         _selectedNrcType != null &&
         _nrcNumberController.text.isNotEmpty) {
-      
-      final fullNrc = "$_selectedNrcStateCode/$_selectedTownshipCode($_selectedNrcType)${_nrcNumberController.text}";
-      widget.controllers['nrc']?.text = fullNrc;
+      final nrcStateData = ref.read(nrcProvider).valueOrNull;
+      final stateList = nrcStateData?.nrcStateList ?? [];
+      final townshipList = nrcStateData?.availableNrcTownships ?? [];
+
+      String stateMM = _selectedNrcStateCode!;
+      String townshipMM = _selectedTownshipCode!;
+
+      try {
+        final matchedState = stateList.firstWhere(
+          (st) => st.idCode == _selectedNrcStateCode,
+        );
+        stateMM = matchedState.codeMM;
+      } catch (e) {
+        debugPrint("State codeMM mapping error: $e");
+      }
+
+      try {
+        final matchedTownship = townshipList.firstWhere(
+          (ts) => ts.idCode == _selectedTownshipCode,
+        );
+        townshipMM = matchedTownship.codeMM;
+      } catch (e) {
+        debugPrint("Township codeMM mapping error: $e");
+      }
+      final fullNrcMyanmar =
+          "$stateMM/$townshipMM($_selectedNrcType)${_nrcNumberController.text}";
+
+      widget.controllers['nrc']?.text = fullNrcMyanmar;
     } else {
-      widget.controllers['nrc']?.text = ""; 
+      widget.controllers['nrc']?.text = "";
     }
   }
 
   @override
   bool validate() {
     if (!mounted) return false;
-    
     setState(() => _showDateErrors = true);
     return widget.formKey.currentState!.validate();
   }
 
   @override
   Widget build(BuildContext context) {
+    if (_isLoading) {
+      return const Padding(
+        padding: EdgeInsets.symmetric(vertical: 60),
+        child: Center(
+          child: CircularProgressIndicator(
+            valueColor: AlwaysStoppedAnimation<Color>(Colors.blue),
+          ),
+        ),
+      );
+    }
+
     final bool isDesktop = MediaQuery.of(context).size.width > 500;
-    final bool isMyanmar = widget.values['country'] == 'Myanmar' || widget.values['country'] == 'MMR';
+    final bool isMyanmar =
+        widget.values['country'] == 'Myanmar' ||
+        widget.values['country'] == 'MMR';
     const double lw = 140;
 
     final nrcAsync = ref.watch(nrcProvider);
     final nrcState = nrcAsync.valueOrNull;
 
-    Widget buildCustomDropdownContainer({required Widget child, bool isFocused = false}) {
+    Widget buildCustomDropdownContainer({
+      required Widget child,
+      bool isFocused = false,
+    }) {
       return Container(
-        height: 42, 
-        padding: const EdgeInsets.only(left: 6, right: 2),
+        padding: const EdgeInsets.symmetric(horizontal: 8),
+        alignment: Alignment.center,
+        height: 45,
         decoration: BoxDecoration(
           color: Colors.white,
           borderRadius: BorderRadius.circular(8),
@@ -135,7 +205,7 @@ class _IdentificationFormLayoutState extends ConsumerState<IdentificationFormLay
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Expanded(child: a),
-            const SizedBox(width: 24),
+            const SizedBox(width: 40),
             Expanded(child: b),
           ],
         );
@@ -152,17 +222,24 @@ class _IdentificationFormLayoutState extends ConsumerState<IdentificationFormLay
             CustomTextField(
               label: "Full Name",
               controller: widget.controllers['fullName']!,
+              maxLength: 50,
               labelWidth: lw,
               validator: (v) => FormValidators.required(v, 'Full Name'),
             ),
             CustomDropdownField(
-              label: 'Gender',
-              value: widget.values['gender'],
-              hint: 'Select Gender',
-              items: const ['Male', 'Female'],
+              label: "Gender",
+              hint: "Select Gender",
               labelWidth: lw,
-              validator: (v) => FormValidators.requiredDropdown(v, 'Gender'),
-              onChanged: (v) => widget.onValueChanged('gender', v),
+              dialogWidth: 200,
+              dialogHeight: 100,
+              value: widget.values['gender'],
+              items: const ["Male", "Female"],
+              showSearch: false,
+              onChanged: (value) {
+                widget.onValueChanged('gender', value);
+              },
+              validator: (value) =>
+                  value == null ? "Please select gender" : null, spacing: 8,
             ),
           ),
           const SizedBox(height: 20),
@@ -175,27 +252,31 @@ class _IdentificationFormLayoutState extends ConsumerState<IdentificationFormLay
               firstDate: DateTime(1900),
               lastDate: DateTime.now(),
               errorText: _showDateErrors && widget.values['dateOfBirth'] == null
-                  ? 'Date of Birth is required' : null,
+                  ? 'Date of Birth is required'
+                  : null,
               onPicked: (d) {
                 widget.onValueChanged('dateOfBirth', d);
                 if (!mounted) return;
                 setState(() => _showDateErrors = false);
               },
             ),
-            // ── Country of Birth Dropdown ──
             CustomDropdownField(
-              label: "Country", 
+              label: "Country",
               value: widget.values['country'],
               hint: "Select Country",
               labelWidth: lw,
-              items: _countryNameList, 
+              dialogWidth: 250,
+              dialogHeight: 250,
+              items: _countryNameList,
               validator: (v) => FormValidators.requiredDropdown(v, 'Country'),
               onChanged: (v) {
                 widget.onValueChanged('country', v);
                 if (v != null) {
                   ref.read(countryProvider.notifier).selectCountry(v);
                   try {
-                    final matched = _rawCountryObjects.firstWhere((c) => c.countryName == v);
+                    final matched = _rawCountryObjects.firstWhere(
+                      (c) => c.countryName == v,
+                    );
                     widget.onValueChanged('countryCode', matched.countryCode);
                   } catch (e) {
                     debugPrint("Country model mapping error: $e");
@@ -207,12 +288,12 @@ class _IdentificationFormLayoutState extends ConsumerState<IdentificationFormLay
                   if (!mounted) return;
                   setState(() {
                     _selectedNrcStateCode = null;
-                    _selectedTownshipCode = null; 
+                    _selectedTownshipCode = null;
                     _selectedNrcType = null;
                     _nrcNumberController.clear();
                   });
                 }
-              },
+              }, spacing: 8,
             ),
           ),
           const SizedBox(height: 20),
@@ -222,27 +303,198 @@ class _IdentificationFormLayoutState extends ConsumerState<IdentificationFormLay
               label: "Email",
               controller: widget.controllers['email']!,
               labelWidth: lw,
+              maxLength: 30,
               validator: FormValidators.email,
             ),
-            CustomTextField(
-              label: "Mobile Number",
-              controller: widget.controllers['mobile']!,
-              labelWidth: lw,
-              validator: (v) => FormValidators.required(v, 'Mobile Number'),
+
+            // ─── Mobile Number Field ───
+            Row(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Padding(
+                  padding: const EdgeInsets.only(top: 14),
+                  child: SizedBox(
+                    width: lw,
+                    child: RichText(
+                      text: const TextSpan(
+                        text: "Mobile Number",
+                        style: TextStyle(
+                          fontSize: 14,
+                          fontWeight: FontWeight.w500,
+                          color: Colors.black87,
+                          fontFamily: 'sans-serif',
+                        ),
+                        children: [
+                          TextSpan(
+                            text: ' *',
+                            style: TextStyle(
+                              color: Colors.red,
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+                ),
+                const SizedBox(width: 8),
+                Expanded(
+                  child: IntrinsicHeight(
+                    child: Row(
+                      crossAxisAlignment: CrossAxisAlignment.stretch,
+                      children: [
+                        SizedBox(
+                          width: 80,
+                          child: InkWell(
+                            onTap: () {
+                              showDialog<String>(
+                                context: context,
+                                builder: (context) => MobileCodeSearchDialog(
+                                  countryCodes: _countryCodes,
+                                  selectedValue: widget.values['mobileCode'],
+                                ),
+                              ).then((code) {
+                                if (code != null) {
+                                  widget.onValueChanged('mobileCode', code);
+                                  _updateMobileControllerValue();
+                                }
+                              });
+                            },
+                            borderRadius: BorderRadius.circular(8),
+                            child: Container(
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 8,
+                              ),
+                              alignment: Alignment.center,
+                              decoration: BoxDecoration(
+                                color: Colors.white,
+                                borderRadius: BorderRadius.circular(8),
+                                border: Border.all(
+                                  color: Colors.grey.shade300,
+                                  width: 1,
+                                ),
+                              ),
+                              child: Row(
+                                mainAxisAlignment:
+                                    MainAxisAlignment.spaceBetween,
+                                children: [
+                                  Expanded(
+                                    child: Text(
+                                      widget.values['mobileCode'] ?? "Code",
+                                      style: TextStyle(
+                                        fontSize: 13,
+                                        color:
+                                            widget.values['mobileCode'] != null
+                                            ? Colors.black87
+                                            : Colors.grey.shade400,
+                                        fontWeight: FontWeight.w500,
+                                      ),
+                                      overflow: TextOverflow.ellipsis,
+                                    ),
+                                  ),
+                                  const Icon(
+                                    Icons.arrow_drop_down,
+                                    size: 18,
+                                    color: Colors.black54,
+                                  ),
+                                ],
+                              ),
+                            ),
+                          ),
+                        ),
+                        // Phone Number Text Field
+                        Expanded(
+                          child: TextFormField(
+                            controller: _mobileNumberController,
+                            keyboardType: TextInputType.phone,
+                            inputFormatters: [
+                              FilteringTextInputFormatter.digitsOnly,
+                              LengthLimitingTextInputFormatter(20),
+                            ],
+                            style: const TextStyle(
+                              fontSize: 13,
+                              fontWeight: FontWeight.w500,
+                            ),
+                            decoration: InputDecoration(
+                              filled: true,
+                              fillColor: Colors.white,
+                              hintText: "Enter phone number",
+                              hintStyle: TextStyle(
+                                color: Colors.grey.shade400,
+                                fontSize: 13,
+                              ),
+
+                              // 🎯 ဤနေရာရှိ vertical padding တန်ဖိုး (၁၄၊ ၁၆ သို့မဟုတ် ၁၈) ကို ပြောင်းလဲခြင်းဖြင့်
+                              // ကျန်ရှိနေသော Text Box များ၏ အမြင့်အတိုင်း ကွက်တိဖြစ်အောင် စိတ်ကြိုက် တိုးမြှင့်ညှိနှိုင်းနိုင်ပါသည်
+                              contentPadding: const EdgeInsets.symmetric(
+                                horizontal: 10,
+                                vertical: 16,
+                              ),
+
+                              enabledBorder: OutlineInputBorder(
+                                borderRadius: BorderRadius.circular(8),
+                                borderSide: BorderSide(
+                                  color: Colors.grey.shade300,
+                                  width: 1,
+                                ),
+                              ),
+                              focusedBorder: OutlineInputBorder(
+                                borderRadius: BorderRadius.circular(8),
+                                borderSide: const BorderSide(
+                                  color: Colors.blue,
+                                  width: 1.5,
+                                ),
+                              ),
+                              errorBorder: OutlineInputBorder(
+                                borderRadius: BorderRadius.circular(8),
+                                borderSide: const BorderSide(
+                                  color: Colors.red,
+                                  width: 1,
+                                ),
+                              ),
+                              focusedErrorBorder: OutlineInputBorder(
+                                borderRadius: BorderRadius.circular(8),
+                                borderSide: const BorderSide(
+                                  color: Colors.red,
+                                  width: 1.5,
+                                ),
+                              ),
+                            ),
+                            onChanged: (v) => _updateMobileControllerValue(),
+                            validator: (v) {
+                              final String? code = widget.values['mobileCode'];
+                              final String number =
+                                  _mobileNumberController.text;
+                              if (code == null) {
+                                return 'Please select country code';
+                              }
+                              if (number.isEmpty) {
+                                return 'Mobile Number is required';
+                              }
+                              return null;
+                            },
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+              ],
             ),
           ),
           const SizedBox(height: 20),
-
           pair(
             CustomTextField(
               label: "Visa Number",
               controller: widget.controllers['visaNumber']!,
+              maxLength: 50,
               labelWidth: lw,
-              validator: (v) => FormValidators.required(v, 'Visa Number'),
+             // validator: (v) => FormValidators.required(v, 'Visa Number'),
             ),
             CustomTextField(
               label: "Passport Number",
               controller: widget.controllers['passportNumber']!,
+              maxLength: 20,
               labelWidth: lw,
               validator: (v) => FormValidators.required(v, 'Passport Number'),
             ),
@@ -256,27 +508,43 @@ class _IdentificationFormLayoutState extends ConsumerState<IdentificationFormLay
 
                 Widget nrcFields() {
                   final List<dynamic> stateList = nrcState?.nrcStateList ?? [];
-                  final List<dynamic> townshipList = nrcState?.availableNrcTownships ?? [];
+                  final List<dynamic> townshipList =
+                      nrcState?.availableNrcTownships ?? [];
 
-                  final int? currentProviderStateId = nrcState?.selectedNrcStateId;
-                  final int? activeStateId = stateList.any((st) => st.id == currentProviderStateId) 
-                      ? currentProviderStateId 
+                  final int? currentProviderStateId =
+                      nrcState?.selectedNrcStateId;
+                  final int? activeStateId =
+                      stateList.any((st) => st.id == currentProviderStateId)
+                      ? currentProviderStateId
                       : null;
 
-                  final String? activeTownshipCode = townshipList.any((ts) => ts.idCode == _selectedTownshipCode)
+                  final String? activeTownshipCode =
+                      townshipList.any(
+                        (ts) => ts.idCode == _selectedTownshipCode,
+                      )
                       ? _selectedTownshipCode
                       : null;
 
-                  final String? activeNrcType = _nrcTypes.any((t) => t['code'] == _selectedNrcType)
+                  final String? activeNrcType =
+                      _nrcTypes.any((t) => t['code'] == _selectedNrcType)
                       ? _selectedNrcType
                       : null;
 
                   final stateDropdown = buildCustomDropdownContainer(
                     child: DropdownButton<int>(
                       value: activeStateId,
-                      isExpanded: true, 
-                      icon: const Icon(Icons.arrow_drop_down, size: 18, color: Colors.black54),
-                      style: const TextStyle(fontSize: 13, color: Colors.black87, fontWeight: FontWeight.w500),
+                      isExpanded: true,
+                      isDense: true,
+                      icon: const Icon(
+                        Icons.arrow_drop_down,
+                        size: 18,
+                        color: Colors.black54,
+                      ),
+                      style: const TextStyle(
+                        fontSize: 13,
+                        color: Colors.black87,
+                        fontWeight: FontWeight.w500,
+                      ),
                       menuMaxHeight: 350,
                       items: stateList.map<DropdownMenuItem<int>>((st) {
                         return DropdownMenuItem<int>(
@@ -303,13 +571,25 @@ class _IdentificationFormLayoutState extends ConsumerState<IdentificationFormLay
                     child: DropdownButton<String>(
                       value: activeTownshipCode,
                       isExpanded: true,
-                      icon: const Icon(Icons.arrow_drop_down, size: 18, color: Colors.black54),
-                      style: const TextStyle(fontSize: 12, color: Colors.black87, fontWeight: FontWeight.w500),
+                      isDense: true,
+                      icon: const Icon(
+                        Icons.arrow_drop_down,
+                        size: 18,
+                        color: Colors.black54,
+                      ),
+                      style: const TextStyle(
+                        fontSize: 12,
+                        color: Colors.black87,
+                        fontWeight: FontWeight.w500,
+                      ),
                       menuMaxHeight: 350,
                       items: townshipList.map<DropdownMenuItem<String>>((ts) {
                         return DropdownMenuItem<String>(
                           value: ts.idCode,
-                          child: Text(ts.codeMM, overflow: TextOverflow.visible),
+                          child: Text(
+                            ts.codeMM,
+                            overflow: TextOverflow.ellipsis,
+                          ),
                         );
                       }).toList(),
                       onChanged: (v) {
@@ -324,8 +604,17 @@ class _IdentificationFormLayoutState extends ConsumerState<IdentificationFormLay
                     child: DropdownButton<String>(
                       value: activeNrcType,
                       isExpanded: true,
-                      icon: const Icon(Icons.arrow_drop_down, size: 18, color: Colors.black54),
-                      style: const TextStyle(fontSize: 12, color: Colors.black87, fontWeight: FontWeight.w500),
+                      isDense: true,
+                      icon: const Icon(
+                        Icons.arrow_drop_down,
+                        size: 18,
+                        color: Colors.black54,
+                      ),
+                      style: const TextStyle(
+                        fontSize: 12,
+                        color: Colors.black87,
+                        fontWeight: FontWeight.w500,
+                      ),
                       items: _nrcTypes.map<DropdownMenuItem<String>>((t) {
                         return DropdownMenuItem<String>(
                           value: t['code'],
@@ -340,72 +629,50 @@ class _IdentificationFormLayoutState extends ConsumerState<IdentificationFormLay
                     ),
                   );
 
-                  final numberField = SizedBox(
-                    height: 42,
+                  final numberField = Container(
+                    height: 44,
+                    padding: const EdgeInsets.symmetric(horizontal: 10),
+                    alignment: Alignment.center,
+                    decoration: BoxDecoration(
+                      color: Colors.white,
+                      borderRadius: BorderRadius.circular(8),
+                      border: Border.all(color: Colors.grey.shade300, width: 1),
+                    ),
                     child: TextFormField(
                       controller: _nrcNumberController,
-                      keyboardType: TextInputType.number, 
+                      keyboardType: TextInputType.number,
                       inputFormatters: [
-                        FilteringTextInputFormatter.allow(RegExp(r'[\u1040-\u1049]')), 
-                        LengthLimitingTextInputFormatter(6), 
+                        FilteringTextInputFormatter.allow(
+                          RegExp(r'[\u1040-\u1049]'),
+                        ),
+                        LengthLimitingTextInputFormatter(6),
                       ],
-                      style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w500),
+                      style: const TextStyle(
+                        fontSize: 13,
+                        fontWeight: FontWeight.w500,
+                      ),
                       decoration: InputDecoration(
-                        filled: true,
-                        fillColor: Colors.white,
+                        hintText: "၁၂၃၄၅၆",
+                        hintStyle: TextStyle(
+                          color: Colors.grey.shade400,
+                          fontSize: 13,
+                        ),
                         isDense: true,
-                        hintText: "၁၂၃၄၅၆", 
-                        hintStyle: TextStyle(color: Colors.grey.shade400, fontSize: 13),
-                        contentPadding: const EdgeInsets.symmetric(horizontal: 6, vertical: 12),
-                        enabledBorder: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(8),
-                          borderSide: BorderSide(color: Colors.grey.shade300, width: 1),
-                        ),
-                        focusedBorder: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(8),
-                          borderSide: const BorderSide(color: Colors.blue, width: 1.5),
-                        ),
+                        border: InputBorder.none,
+                        enabledBorder: InputBorder.none,
+                        focusedBorder: InputBorder.none,
+                        contentPadding: EdgeInsets.zero,
                       ),
                       onChanged: (v) => _updateNrcControllerValue(),
                     ),
                   );
 
-                  return Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      if (isNrcRowDesktop) 
-                        Row(
-                          children: [
-                            Expanded(flex: 28, child: stateDropdown),    
-                            const SizedBox(width: 4),
-                            Expanded(flex: 48, child: townshipDropdown), 
-                            const SizedBox(width: 4),
-                            Expanded(flex: 26, child: typeDropdown),   
-                            const SizedBox(width: 4),
-                            Expanded(flex: 38, child: numberField),
-                          ],
-                        )
-                      else 
-                        Column(
-                          children: [
-                            Row(
-                              children: [
-                                Expanded(child: stateDropdown),
-                                const SizedBox(width: 6),
-                                Expanded(child: townshipDropdown),
-                              ],
-                            ),
-                            const SizedBox(height: 8),
-                            Row(
-                              children: [
-                                Expanded(child: typeDropdown),
-                                const SizedBox(width: 6),
-                                Expanded(child: numberField),
-                              ],
-                            ),
-                          ],
-                        ),
-                    ],
+                  return NrcSelectorField(
+                    isDesktop: isNrcRowDesktop,
+                    stateDropdown: stateDropdown,
+                    townshipDropdown: townshipDropdown,
+                    typeDropdown: typeDropdown,
+                    numberField: numberField,
                   );
                 }
 
@@ -424,8 +691,17 @@ class _IdentificationFormLayoutState extends ConsumerState<IdentificationFormLay
                                 child: RichText(
                                   text: const TextSpan(
                                     text: "NRC",
-                                    style: TextStyle(fontSize: 14, fontWeight: FontWeight.w500, color: Colors.black87),
-                                    children: [TextSpan(text: ' *', style: TextStyle(color: Colors.red))],
+                                    style: TextStyle(
+                                      fontSize: 14,
+                                      fontWeight: FontWeight.w500,
+                                      color: Colors.black87,
+                                    ),
+                                    children: [
+                                      TextSpan(
+                                        text: ' *',
+                                        style: TextStyle(color: Colors.red),
+                                      ),
+                                    ],
                                   ),
                                 ),
                               ),
@@ -435,13 +711,17 @@ class _IdentificationFormLayoutState extends ConsumerState<IdentificationFormLay
                           ],
                         ),
                       ),
-                      const SizedBox(width: 24),
+                      const SizedBox(width: 40),
                       Expanded(
                         child: CustomTextField(
                           label: "Father Name",
+                          maxLength: 50,
                           controller: widget.controllers['fatherName']!,
                           labelWidth: lw,
-                          validator: (v) => FormValidators.fatherName(v, isMyanmar: isMyanmar),
+                          validator: (v) => FormValidators.fatherName(
+                            v,
+                            isMyanmar: isMyanmar,
+                          ),
                         ),
                       ),
                     ],
@@ -459,8 +739,17 @@ class _IdentificationFormLayoutState extends ConsumerState<IdentificationFormLay
                               child: RichText(
                                 text: const TextSpan(
                                   text: "NRC",
-                                  style: TextStyle(fontSize: 14, fontWeight: FontWeight.w500, color: Colors.black87),
-                                  children: [TextSpan(text: ' *', style: TextStyle(color: Colors.red))],
+                                  style: TextStyle(
+                                    fontSize: 14,
+                                    fontWeight: FontWeight.w500,
+                                    color: Colors.black87,
+                                  ),
+                                  children: [
+                                    TextSpan(
+                                      text: ' *',
+                                      style: TextStyle(color: Colors.red),
+                                    ),
+                                  ],
                                 ),
                               ),
                             ),
@@ -474,7 +763,9 @@ class _IdentificationFormLayoutState extends ConsumerState<IdentificationFormLay
                         label: "Father Name",
                         controller: widget.controllers['fatherName']!,
                         labelWidth: lw,
-                        validator: (v) => FormValidators.fatherName(v, isMyanmar: isMyanmar),
+                        maxLength: 50,
+                        validator: (v) =>
+                            FormValidators.fatherName(v, isMyanmar: isMyanmar),
                       ),
                     ],
                   );
@@ -492,7 +783,8 @@ class _IdentificationFormLayoutState extends ConsumerState<IdentificationFormLay
               firstDate: DateTime(1900),
               lastDate: DateTime.now(),
               errorText: _showDateErrors && widget.values['issuedDate'] == null
-                  ? 'Issued Date is required' : null,
+                  ? 'Issued Date is required'
+                  : null,
               onPicked: (d) {
                 widget.onValueChanged('issuedDate', d);
                 if (!mounted) return;
@@ -506,7 +798,8 @@ class _IdentificationFormLayoutState extends ConsumerState<IdentificationFormLay
               firstDate: DateTime.now(),
               lastDate: DateTime(2100),
               errorText: _showDateErrors && widget.values['expiryDate'] == null
-                  ? 'Expiry Date is required' : null,
+                  ? 'Expiry Date is required'
+                  : null,
               onPicked: (d) {
                 widget.onValueChanged('expiryDate', d);
                 if (!mounted) return;
@@ -517,30 +810,38 @@ class _IdentificationFormLayoutState extends ConsumerState<IdentificationFormLay
           const SizedBox(height: 20),
 
           pair(
-            // ── Issued Country Dropdown ──
             CustomDropdownField(
               label: "Issued Country",
               value: widget.values['issuedCountry'],
               hint: "Select Country",
-              items: _countryNameList, 
+              items: _countryNameList,
               labelWidth: lw,
-              validator: (v) => FormValidators.requiredDropdown(v, 'Issued Country'),
+              dialogWidth: 250,
+              dialogHeight: 250,
+              validator: (v) =>
+                  FormValidators.requiredDropdown(v, 'Issued Country'),
               onChanged: (v) {
                 widget.onValueChanged('issuedCountry', v);
                 if (v != null) {
                   try {
-                    final matched = _rawCountryObjects.firstWhere((c) => c.countryName == v);
-                    widget.onValueChanged('issuedCountryCode', matched.countryCode);
+                    final matched = _rawCountryObjects.firstWhere(
+                      (c) => c.countryName == v,
+                    );
+                    widget.onValueChanged(
+                      'issuedCountryCode',
+                      matched.countryCode,
+                    );
                   } catch (e) {
                     debugPrint("Issued Country model mapping error: $e");
                   }
                 }
-              },
+              }, spacing: 8,
             ),
             CustomTextField(
               label: "Address",
               controller: widget.controllers['address']!,
               labelWidth: lw,
+              maxLength: 100,
               validator: (v) => FormValidators.required(v, 'Address'),
             ),
           ),

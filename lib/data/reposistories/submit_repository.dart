@@ -50,6 +50,13 @@ class SubmitRepository {
             "🚨 [NETWORK ERROR / NO RESPONSE FROM SERVER]: ${e.message}",
             name: "SubmitRepository",
           );
+      
+      if (e is DioException) {
+        if (e.response != null) {
+          dev.log(" [SERVER STATUS CODE]: ${e.response?.statusCode}", name: "SubmitRepository");
+          dev.log(" [SERVER VALIDATION ERROR DETAILS]: ${e.response?.data}", name: "SubmitRepository");
+        } else {
+          dev.log(" [NETWORK ERROR / NO RESPONSE FROM SERVER]: ${e.message}", name: "SubmitRepository");
         }
       }
       throw Exception('Failed to submit application: $e');
