@@ -239,7 +239,7 @@ class _TripFormLayoutState extends ConsumerState<TripFormLayout>
           }
           setState(() {});
         }
-      },
+      }, spacing: 16,
     );
   }
 
@@ -289,6 +289,8 @@ class _TripFormLayoutState extends ConsumerState<TripFormLayout>
               CustomDropdownField(
                 label: "Mode of Travel",
                 value: widget.values['modeOfTravel'],
+                dialogWidth: 100,   
+                dialogHeight: 200,
                 hint: "Select Mode",
                 items: const ["Air", "Land", "Sea"],
                 validator: (v) => FormValidators.requiredDropdown(v, 'Mode of Travel'),
@@ -301,7 +303,7 @@ class _TripFormLayoutState extends ConsumerState<TripFormLayout>
                     widget.onValueChanged('portOfArrivalId', null);
                     ref.read(portOfArrivalProvider.notifier).loadPortOfArrrivalByModeId(modeId);
                   }
-                },
+                }, spacing: 16,
               ),
             ),
             const SizedBox(height: 16),
@@ -316,12 +318,15 @@ class _TripFormLayoutState extends ConsumerState<TripFormLayout>
             else ...[
               pair(
                 CustomDropdownField(
+                  
                   label: "Port of Arrival",
                   value: (portState!.portOfArrivalList.any((p) => p.portOfArrivalName == widget.values['portOfArrival']))
                       ? widget.values['portOfArrival'] as String?
                       : null,
                   hint: "Select Port",
                   items: portState.portOfArrivalList.map((p) => p.portOfArrivalName.toString()).toList(),
+                  dialogWidth: 250,   
+                  dialogHeight: 200,
                   validator: (v) => FormValidators.requiredDropdown(v, 'Port of Arrival'),
                   onChanged: (v) {
                     if (v != null) {
@@ -332,7 +337,7 @@ class _TripFormLayoutState extends ConsumerState<TripFormLayout>
                         ref.read(portOfArrivalProvider.notifier).selectPort(selected.portOfArrivalId);
                       } catch (_) {}
                     }
-                  },
+                  }, spacing: 16,
                 ),
                 CustomTextField(
                   label: "Vehicle Number",
@@ -376,6 +381,8 @@ class _TripFormLayoutState extends ConsumerState<TripFormLayout>
                 ),
                 CustomDropdownField(
                   label: "State/Region",
+                  dialogWidth: 300,   
+                  dialogHeight: 250,
                   value: (locationState!.allStates.any((s) => s.name == widget.values['stateRegion']))
                       ? widget.values['stateRegion'] as String? : null,
                   hint: "Select State/Region",
@@ -396,7 +403,7 @@ class _TripFormLayoutState extends ConsumerState<TripFormLayout>
 
                       ref.read(locationProvider.notifier).selectState(v);
                     }
-                  },
+                  }, spacing: 16,
                 ),
               ),
               const SizedBox(height: 16),
@@ -404,6 +411,8 @@ class _TripFormLayoutState extends ConsumerState<TripFormLayout>
               pair(
                 CustomDropdownField(
                   label: "District",
+                  dialogWidth: 300,   
+                  dialogHeight: 250,
                   value: (locationState.availableDistricts.contains(widget.values['district']))
                       ? widget.values['district'] as String? : null,
                   hint: "Select District",
@@ -423,10 +432,12 @@ class _TripFormLayoutState extends ConsumerState<TripFormLayout>
 
                       ref.read(locationProvider.notifier).selectDistrict(v);
                     }
-                  },
+                  }, spacing: 16,
                 ),
                 CustomDropdownField(
                   label: "Township",
+                  dialogWidth: 300,   
+                  dialogHeight: 250,
                   value: (locationState.availableTownships.contains(widget.values['township']))
                       ? widget.values['township'] as String? : null,
                   hint: "Select Township",
@@ -442,7 +453,7 @@ class _TripFormLayoutState extends ConsumerState<TripFormLayout>
                         widget.onValueChanged('townshipId', selectedTown.id);
                       } catch (_) {}
                     }
-                  },
+                  }, spacing: 16,
                 ),
               ),
             ],

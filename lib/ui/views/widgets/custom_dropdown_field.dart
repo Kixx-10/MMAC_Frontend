@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 class CustomDropdownField extends StatefulWidget {
+  final double spacing;
   final String label;
   final String? value;
   final String hint;
@@ -8,7 +9,9 @@ class CustomDropdownField extends StatefulWidget {
   final ValueChanged<String?> onChanged;
   final double labelWidth;
   final String? Function(String?)? validator;
-  final bool showSearch; // 🔥 Search Box ပြမပြ ထိန်းချုပ်ရန် Parameter အသစ်
+  final bool showSearch; 
+  final double? dialogHeight; 
+  final double? dialogWidth;  
 
   const CustomDropdownField({
     super.key,
@@ -17,9 +20,11 @@ class CustomDropdownField extends StatefulWidget {
     required this.hint,
     required this.items,
     required this.onChanged,
-    this.labelWidth = 140,
+    this.labelWidth = 130,
     this.validator,
-    this.showSearch = true, // 🔥 Default အနေနဲ့ True ထားပေးထားလို့ တခြားနေရာတွေမှာ ပုံမှန်အတိုင်း ရှာလို့ရနေပါမယ်
+    this.showSearch = true, 
+    this.dialogHeight, 
+    this.dialogWidth, this.spacing=8,  
   });
 
   @override
@@ -45,11 +50,13 @@ class _CustomDropdownFieldState extends State<CustomDropdownField> {
     showDialog(
       context: context,
       builder: (context) {
-        return _SearchPickerDialog(
+        return SearchPickerDialog(
           title: widget.hint,
           items: widget.items,
           selectedValue: state.value,
-          showSearch: widget.showSearch, // 🔥 လက်ဆင့်ကမ်းပေးခြင်း
+          showSearch: widget.showSearch, 
+          dialogHeight: widget.dialogHeight, 
+          dialogWidth: widget.dialogWidth,   
           onSelected: (newValue) {
             state.didChange(newValue); 
             widget.onChanged(newValue); 
@@ -75,7 +82,6 @@ class _CustomDropdownFieldState extends State<CustomDropdownField> {
                   fontSize: 14,
                   fontWeight: FontWeight.w500,
                   color: Colors.black87,
-                  fontFamily: 'sans-serif',
                 ),
                 children: const [
                   TextSpan(
@@ -87,7 +93,7 @@ class _CustomDropdownFieldState extends State<CustomDropdownField> {
             ),
           ),
         ),
-        const SizedBox(width: 8),
+         SizedBox(width: widget.spacing),
         
         Expanded(
           child: FormField<String>(
@@ -157,26 +163,31 @@ class _CustomDropdownFieldState extends State<CustomDropdownField> {
   }
 }
 
-class _SearchPickerDialog extends StatefulWidget {
+class SearchPickerDialog extends StatefulWidget {
   final String title;
   final List<String> items;
   final String? selectedValue;
   final ValueChanged<String> onSelected;
-  final bool showSearch; // 🔥
+  final bool showSearch; 
+  final double? dialogHeight; 
+  final double? dialogWidth;  
 
-  const _SearchPickerDialog({
+  const SearchPickerDialog({
+    super.key,
     required this.title,
     required this.items,
     required this.selectedValue,
     required this.onSelected,
-    required this.showSearch, // 🔥
+    required this.showSearch, 
+    this.dialogHeight, 
+    this.dialogWidth,  
   });
 
   @override
-  State<_SearchPickerDialog> createState() => _SearchPickerDialogState();
+  State<SearchPickerDialog> createState() => _SearchPickerDialogState();
 }
 
-class _SearchPickerDialogState extends State<_SearchPickerDialog> {
+class _SearchPickerDialogState extends State<SearchPickerDialog> {
   late List<String> _filteredItems;
   final TextEditingController _searchController = TextEditingController();
 
@@ -211,9 +222,8 @@ class _SearchPickerDialogState extends State<_SearchPickerDialog> {
         style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: Colors.black87),
       ),
       content: SizedBox(
-        width: screenWidth > 600 ? 450 : screenWidth * 0.9,
-       
-        height: widget.showSearch ? 200 : 100, 
+        width: widget.dialogWidth ?? (screenWidth > 600 ? 450 : screenWidth * 0.9),
+        height: widget.dialogHeight ?? (widget.showSearch ? 300 : 180), 
         child: Column(
           children: [
             if (widget.showSearch) ...[
