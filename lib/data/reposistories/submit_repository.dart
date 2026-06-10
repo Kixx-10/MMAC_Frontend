@@ -12,7 +12,7 @@ class SubmitRepository {
   Future<SubmitResponseModel?> submitApplication(SubmitRequestModel submitRequestModel) async {
     try {
       final payload = submitRequestModel.toJson();
-      dev.log("🚀 SENDING JSON PAYLOAD: $payload", name: "SubmitRepository");
+      dev.log("SENDING JSON PAYLOAD: $payload", name: "SubmitRepository");
 
       final response = await _apiClient.post(
         ApiEndpoints.submitApplication,
