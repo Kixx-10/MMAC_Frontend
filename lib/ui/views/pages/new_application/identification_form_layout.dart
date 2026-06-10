@@ -69,6 +69,11 @@ class _IdentificationFormLayoutState
     widget.onReady(this);
 
     _countryCodes = CountryCodeData.codes;
+    final String existingMobile = widget.controllers['mobile']?.text ?? '';
+  final String? currentCode = widget.values['mobileCode'];
+  if (existingMobile.isNotEmpty && currentCode != null && existingMobile.startsWith(currentCode)) {
+    _mobileNumberController.text = existingMobile.substring(currentCode.length);
+  }
     Future.microtask(() async {
       ref
           .read(countryProvider.future)
