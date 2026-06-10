@@ -35,7 +35,6 @@ class TripFormLayout extends ConsumerStatefulWidget {
 
 class _TripFormLayoutState extends ConsumerState<TripFormLayout>
     implements TripFormLayoutInterface {
-
   final GlobalKey<FormState> _formKey = GlobalKey<FormState>();
   bool _showDateErrors = false;
   List<String> _purposeList = [];
@@ -49,7 +48,12 @@ class _TripFormLayoutState extends ConsumerState<TripFormLayout>
     widget.onReady(this);
 
     if (widget.values['purposeOfVisit'] != null &&
-        !["Visit", "Business", "Education", "Health"].contains(widget.values['purposeOfVisit']) &&
+        ![
+          "Visit",
+          "Business",
+          "Education",
+          "Health",
+        ].contains(widget.values['purposeOfVisit']) &&
         widget.values['purposeOfVisit'].toString().isNotEmpty) {
       _otherPurposeController.text = widget.values['purposeOfVisit'];
     }
@@ -60,8 +64,14 @@ class _TripFormLayoutState extends ConsumerState<TripFormLayout>
         ref.read(locationProvider.notifier).retry();
       }
       final currentMode = widget.values['modeOfTravel'];
-      final modeId = currentMode == "Land" ? 2 : currentMode == "Sea" ? 3 : 1;
-      ref.read(portOfArrivalProvider.notifier).loadPortOfArrrivalByModeId(modeId);
+      final modeId = currentMode == "Land"
+          ? 2
+          : currentMode == "Sea"
+          ? 3
+          : 1;
+      ref
+          .read(portOfArrivalProvider.notifier)
+          .loadPortOfArrrivalByModeId(modeId);
       _loadPurposeFromJson();
     });
   }
@@ -74,7 +84,9 @@ class _TripFormLayoutState extends ConsumerState<TripFormLayout>
 
   Future<void> _loadPurposeFromJson() async {
     try {
-      final String response = await rootBundle.loadString('assets/data/purposes.json');
+      final String response = await rootBundle.loadString(
+        'assets/data/purposes.json',
+      );
       if (mounted) {
         setState(() {
           _purposeList = List<String>.from(jsonDecode(response));
@@ -103,34 +115,42 @@ class _TripFormLayoutState extends ConsumerState<TripFormLayout>
     return _formKey.currentState!.validate();
   }
 
-  bool get _isOtherPurpose => 
-      widget.values['selectedPurposeDropdown'] == "Others" || 
-      (widget.values['purposeOfVisit'] != null && 
-       widget.values['purposeOfVisit'].toString().isNotEmpty &&
-       !["Visit", "Business", "Education", "Health"].contains(widget.values['purposeOfVisit']));
+  bool get _isOtherPurpose =>
+      widget.values['selectedPurposeDropdown'] == "Others" ||
+      (widget.values['purposeOfVisit'] != null &&
+          widget.values['purposeOfVisit'].toString().isNotEmpty &&
+          ![
+            "Visit",
+            "Business",
+            "Education",
+            "Health",
+          ].contains(widget.values['purposeOfVisit']));
 
   TextEditingController _getSafeController(String key) {
     return widget.controllers[key] ?? TextEditingController();
   }
 
   Widget _row(Widget l, Widget r) => Row(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Expanded(child: l), 
-          const SizedBox(width: 40), 
-          Expanded(child: r)
-        ],
-      );
+    crossAxisAlignment: CrossAxisAlignment.start,
+    children: [
+      Expanded(child: l),
+      const SizedBox(width: 40),
+      Expanded(child: r),
+    ],
+  );
 
-  Widget _column(Widget t, Widget b) => Column(children: [t, const SizedBox(height: 16), b]);
+  Widget _column(Widget t, Widget b) =>
+      Column(children: [t, const SizedBox(height: 16), b]);
 
   Widget _halfRow(bool isDesktop, Widget field) {
     if (!isDesktop) return field;
-    return Row(children: [
-      Expanded(child: field),
-      const SizedBox(width: 40),
-      const Expanded(child: SizedBox()),
-    ]);
+    return Row(
+      children: [
+        Expanded(child: field),
+        const SizedBox(width: 40),
+        const Expanded(child: SizedBox()),
+      ],
+    );
   }
 
   Widget _errorWidget(String message, VoidCallback onRetry) {
@@ -141,16 +161,23 @@ class _TripFormLayoutState extends ConsumerState<TripFormLayout>
         borderRadius: BorderRadius.circular(8),
         border: Border.all(color: Colors.red.shade200),
       ),
-      child: Row(children: [
-        Icon(Icons.wifi_off_rounded, color: Colors.red.shade600, size: 18),
-        const SizedBox(width: 10),
-        Expanded(child: Text(message, style: TextStyle(color: Colors.red.shade700, fontSize: 13))),
-        TextButton.icon(
-          onPressed: onRetry,
-          icon: const Icon(Icons.refresh, size: 16),
-          label: const Text('Retry'),
-        ),
-      ]),
+      child: Row(
+        children: [
+          Icon(Icons.wifi_off_rounded, color: Colors.red.shade600, size: 18),
+          const SizedBox(width: 10),
+          Expanded(
+            child: Text(
+              message,
+              style: TextStyle(color: Colors.red.shade700, fontSize: 13),
+            ),
+          ),
+          TextButton.icon(
+            onPressed: onRetry,
+            icon: const Icon(Icons.refresh, size: 16),
+            label: const Text('Retry'),
+          ),
+        ],
+      ),
     );
   }
 
@@ -166,8 +193,20 @@ class _TripFormLayoutState extends ConsumerState<TripFormLayout>
               child: RichText(
                 text: const TextSpan(
                   text: 'Purpose of Visit',
-                  style: TextStyle(fontSize: 14, fontWeight: FontWeight.w500, color: Colors.black87),
-                  children: [TextSpan(text: ' *', style: TextStyle(color: Colors.red, fontWeight: FontWeight.bold))],
+                  style: TextStyle(
+                    fontSize: 14,
+                    fontWeight: FontWeight.w500,
+                    color: Colors.black87,
+                  ),
+                  children: [
+                    TextSpan(
+                      text: ' *',
+                      style: TextStyle(
+                        color: Colors.red,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                  ],
                 ),
               ),
             ),
@@ -182,15 +221,24 @@ class _TripFormLayoutState extends ConsumerState<TripFormLayout>
               onChanged: (v) {
                 widget.onValueChanged('purposeOfVisit', v);
               },
-              style: const TextStyle(fontWeight: FontWeight.w500, color: Colors.black87),
+              style: const TextStyle(
+                fontWeight: FontWeight.w500,
+                color: Colors.black87,
+              ),
               decoration: InputDecoration(
                 hintText: "Please specify your purpose...",
                 hintStyle: TextStyle(color: Colors.grey.shade400, fontSize: 14),
                 filled: true,
                 fillColor: Colors.white,
-                contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                contentPadding: const EdgeInsets.symmetric(
+                  horizontal: 16,
+                  vertical: 12,
+                ),
                 suffixIcon: IconButton(
-                  icon: const Icon(Icons.arrow_drop_down_circle_outlined, color: Colors.grey),
+                  icon: const Icon(
+                    Icons.arrow_drop_down_circle_outlined,
+                    color: Colors.grey,
+                  ),
                   tooltip: "Back to dropdown",
                   onPressed: () {
                     _otherPurposeController.clear();
@@ -223,8 +271,16 @@ class _TripFormLayoutState extends ConsumerState<TripFormLayout>
     }
     return CustomDropdownField(
       label: "Purpose of Visit",
-      value: widget.values['selectedPurposeDropdown'] ?? 
-              (["Visit", "Business", "Education", "Health"].contains(widget.values['purposeOfVisit']) ? widget.values['purposeOfVisit'] : null),
+      value:
+          widget.values['selectedPurposeDropdown'] ??
+          ([
+                "Visit",
+                "Business",
+                "Education",
+                "Health",
+              ].contains(widget.values['purposeOfVisit'])
+              ? widget.values['purposeOfVisit']
+              : null),
       hint: "Select Purpose",
       items: _purposeList,
       validator: (v) => FormValidators.requiredDropdown(v, 'Purpose of Visit'),
@@ -239,21 +295,22 @@ class _TripFormLayoutState extends ConsumerState<TripFormLayout>
           }
           setState(() {});
         }
-      }, spacing: 16,
+      },
+      spacing: 16,
     );
   }
 
   @override
   Widget build(BuildContext context) {
     final locationAsync = ref.watch(locationProvider);
-    final portAsync     = ref.watch(portOfArrivalProvider);
+    final portAsync = ref.watch(portOfArrivalProvider);
 
     final locationState = locationAsync.valueOrNull;
-    final portState     = portAsync.valueOrNull;
+    final portState = portAsync.valueOrNull;
 
     final locationFirstLoad = locationState == null && !locationAsync.hasError;
-    final portFirstLoad     = portState == null && !portAsync.hasError;
-//api waiting
+    final portFirstLoad = portState == null && !portAsync.hasError;
+    //api waiting
     if (locationFirstLoad || portFirstLoad) {
       return const Padding(
         padding: EdgeInsets.symmetric(vertical: 60),
@@ -264,114 +321,126 @@ class _TripFormLayoutState extends ConsumerState<TripFormLayout>
         ),
       );
     }
-    return LayoutBuilder(builder: (context, constraints) {
-      final bool isDesktop = constraints.maxWidth > 500;
-      Widget pair(Widget a, Widget b) => isDesktop ? _row(a, b) : _column(a, b);
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        final bool isDesktop = constraints.maxWidth > 500;
+        Widget pair(Widget a, Widget b) =>
+            isDesktop ? _row(a, b) : _column(a, b);
 
-      return Form(
-        key: _formKey,
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            // Row 1: Arrival Date | Mode of Travel
-            pair(
-              CustomDateField(
-                label: "Arrival Date",
-                value: widget.values['arrivalDate'],
-                firstDate: DateTime.now(), lastDate: DateTime(2100),
-                errorText: _showDateErrors && widget.values['arrivalDate'] == null
-                    ? 'Arrival Date is required' : null,
-                onPicked: (d) {
-                  widget.onValueChanged('arrivalDate', d);
-                  setState(() => _showDateErrors = false);
-                },
-              ),
-              CustomDropdownField(
-                label: "Mode of Travel",
-                value: widget.values['modeOfTravel'],
-                dialogWidth: 100,   
-                dialogHeight: 200,
-                hint: "Select Mode",
-                items: const ["Air", "Land", "Sea"],
-                validator: (v) => FormValidators.requiredDropdown(v, 'Mode of Travel'),
-                onChanged: (v) {
-                  if (v != null && v != widget.values['modeOfTravel']) {
-                    final modeId = v == "Land" ? 2 : v == "Sea" ? 3 : 1;
-                    widget.onValueChanged('modeOfTravel', v);
-                    widget.onValueChanged('modeOfTravelId', modeId);
-                    widget.onValueChanged('portOfArrival', null);
-                    widget.onValueChanged('portOfArrivalId', null);
-                    ref.read(portOfArrivalProvider.notifier).loadPortOfArrrivalByModeId(modeId);
-                  }
-                }, spacing: 16,
-              ),
-            ),
-            const SizedBox(height: 16),
-
-            // Row 2: Port of Arrival | Vehicle Number
-            if (portAsync.hasError)
-              _errorWidget('Port of arrival failed to load', () {
-                final mode = widget.values['modeOfTravel'];
-                final modeId = mode == "Land" ? 2 : mode == "Sea" ? 3 : 1;
-                ref.read(portOfArrivalProvider.notifier).loadPortOfArrrivalByModeId(modeId);
-              })
-            else ...[
+        return Form(
+          key: _formKey,
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              // Row 1: Arrival Date | Mode of Travel
               pair(
-                CustomDropdownField(
-                  
-                  label: "Port of Arrival",
-                  value: (portState!.portOfArrivalList.any((p) => p.portOfArrivalName == widget.values['portOfArrival']))
-                      ? widget.values['portOfArrival'] as String?
+                CustomDateField(
+                  label: "Arrival Date",
+                  value: widget.values['arrivalDate'],
+                  firstDate: DateTime.now(),
+                  lastDate: DateTime(2100),
+                  errorText:
+                      _showDateErrors && widget.values['arrivalDate'] == null
+                      ? 'Arrival Date is required'
                       : null,
-                  hint: "Select Port",
-                  items: portState.portOfArrivalList.map((p) => p.portOfArrivalName.toString()).toList(),
-                  dialogWidth: 250,   
+                  onPicked: (d) {
+                    widget.onValueChanged('arrivalDate', d);
+                    setState(() => _showDateErrors = false);
+                  },
+                ),
+                CustomDropdownField(
+                  label: "Mode of Travel",
+                  value: widget.values['modeOfTravel'],
+                  dialogWidth: 100,
                   dialogHeight: 200,
-                  validator: (v) => FormValidators.requiredDropdown(v, 'Port of Arrival'),
+                  hint: "Select Mode",
+                  items: const ["Air", "Land", "Sea"],
+                  validator: (v) =>
+                      FormValidators.requiredDropdown(v, 'Mode of Travel'),
                   onChanged: (v) {
-                    if (v != null) {
-                      widget.onValueChanged('portOfArrival', v);
-                      try {
-                        final selected = portState.portOfArrivalList.firstWhere((p) => p.portOfArrivalName == v);
-                        widget.onValueChanged('portOfArrivalId', selected.portOfArrivalId);
-                        ref.read(portOfArrivalProvider.notifier).selectPort(selected.portOfArrivalId);
-                      } catch (_) {}
+                    if (v != null && v != widget.values['modeOfTravel']) {
+                      final modeId = v == "Land"
+                          ? 2
+                          : v == "Sea"
+                          ? 3
+                          : 1;
+                      widget.onValueChanged('modeOfTravel', v);
+                      widget.onValueChanged('modeOfTravelId', modeId);
+                      widget.onValueChanged('portOfArrival', null);
+                      widget.onValueChanged('portOfArrivalId', null);
+                      ref
+                          .read(portOfArrivalProvider.notifier)
+                          .loadPortOfArrrivalByModeId(modeId);
                     }
-                  }, spacing: 16,
-                ),
-                CustomTextField(
-                  label: "Vehicle Number",
-                  controller: _getSafeController('vehicleNumber'),
-                  maxLength: 10,
-                  validator: (v) => FormValidators.required(v, 'Vehicle Number'),
+                  },
+                  spacing: 16,
                 ),
               ),
-            ],
-            const SizedBox(height: 16),
+              const SizedBox(height: 16),
 
-            // Row 3: Vehicle Name | Accommodation
-            pair(
-              CustomTextField(
-                label: "Vehicle Name",
-                maxLength: 20,
-                controller: _getSafeController('vehicleName'),
-                validator: (v) => FormValidators.required(v, 'Vehicle Name'),
-              ),
-              CustomTextField(
-                label: "Accommodation",
-                maxLength: 20,
-                controller: _getSafeController('accommodation'),
-                validator: (v) => FormValidators.required(v, 'Accommodation'),
-              ),
-            ),
-            const SizedBox(height: 16),
+              // Row 2: Port of Arrival | Vehicle Number
+              if (portAsync.hasError)
+                _errorWidget('Port of arrival failed to load', () {
+                  final mode = widget.values['modeOfTravel'];
+                  final modeId = mode == "Land"
+                      ? 2
+                      : mode == "Sea"
+                      ? 3
+                      : 1;
+                  ref
+                      .read(portOfArrivalProvider.notifier)
+                      .loadPortOfArrrivalByModeId(modeId);
+                })
+              else ...[
+                pair(
+                  CustomDropdownField(
+                    label: "Port of Arrival",
+                    value:
+                        (portState!.portOfArrivalList.any(
+                          (p) =>
+                              p.portOfArrivalName ==
+                              widget.values['portOfArrival'],
+                        ))
+                        ? widget.values['portOfArrival'] as String?
+                        : null,
+                    hint: "Select Port",
+                    items: portState.portOfArrivalList
+                        .map((p) => p.portOfArrivalName.toString())
+                        .toList(),
+                    dialogWidth: 250,
+                    dialogHeight: 200,
+                    validator: (v) =>
+                        FormValidators.requiredDropdown(v, 'Port of Arrival'),
+                    onChanged: (v) {
+                      if (v != null) {
+                        widget.onValueChanged('portOfArrival', v);
+                        try {
+                          final selected = portState.portOfArrivalList
+                              .firstWhere((p) => p.portOfArrivalName == v);
+                          widget.onValueChanged(
+                            'portOfArrivalId',
+                            selected.portOfArrivalId,
+                          );
+                          ref
+                              .read(portOfArrivalProvider.notifier)
+                              .selectPort(selected.portOfArrivalId);
+                        } catch (_) {}
+                      }
+                    },
+                    spacing: 16,
+                  ),
+                  CustomTextField(
+                    label: "Vehicle Number",
+                    controller: _getSafeController('vehicleNumber'),
+                    maxLength: 10,
+                    validator: (v) =>
+                        FormValidators.required(v, 'Vehicle Number'),
+                  ),
+                ),
+              ],
+              const SizedBox(height: 16),
 
-            // Rows 4 & 5: Location Details
-            if (locationAsync.hasError)
-              _errorWidget('Failed to load locations', () {
-                ref.read(locationProvider.notifier).retry();
-              })
-            else ...[
+              // Row 3: Vehicle Name | Accommodation
               pair(
                 CustomDropdownField(
                   label: "State/Region",
@@ -477,13 +546,13 @@ class _TripFormLayoutState extends ConsumerState<TripFormLayout>
                 controller: _getSafeController('previousCity'),
                 validator: (v) => FormValidators.required(v, 'Previous City'),
               ),
-            ),
-            const SizedBox(height: 30),
+              const SizedBox(height: 30),
 
-            widget.actionButtons,
-          ],
-        ),
-      );
-    });
+              widget.actionButtons,
+            ],
+          ),
+        );
+      },
+    );
   }
 }

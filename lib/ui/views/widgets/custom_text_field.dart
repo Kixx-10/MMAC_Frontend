@@ -7,8 +7,10 @@ class CustomTextField extends StatelessWidget {
   final double labelWidth;
   final String? Function(String?)? validator;
   final int? maxLength;
-  final ValueChanged<String>? onChanged; // ← NEW
+  final ValueChanged<String>? onChanged;
   final bool isRequired;
+  final String? hintText; // 🎯 hintText အတွက် parameter အသစ် ထည့်သွင်းခြင်း
+
   const CustomTextField({
     super.key,
     required this.label,
@@ -16,8 +18,9 @@ class CustomTextField extends StatelessWidget {
     this.labelWidth = 140,
     this.validator,
     this.maxLength,
-    this.onChanged, // ← NEW
-    this.isRequired=true,
+    this.onChanged,
+    this.isRequired = true,
+    this.hintText, // 🎯 optional အဖြစ် လက်ခံထားသည်
   });
 
   @override
@@ -38,33 +41,49 @@ class CustomTextField extends StatelessWidget {
                   color: Colors.black87,
                   fontFamily: 'sans-serif',
                 ),
-                children:  [
-                  if(isRequired)
-                 const TextSpan(
-                    text: ' *',
-                    style: TextStyle(color: Colors.red, fontWeight: FontWeight.bold),
-                  ),
+                children: [
+                  if (isRequired)
+                    const TextSpan(
+                      text: ' *',
+                      style: TextStyle(
+                        color: Colors.red,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
                 ],
               ),
             ),
           ),
         ),
-        const SizedBox(width: 8),
+        const SizedBox(width: 12),
         Expanded(
           child: TextFormField(
             controller: controller,
             validator: validator,
             inputFormatters: [
-              if (maxLength != null) LengthLimitingTextInputFormatter(maxLength),
+              if (maxLength != null)
+                LengthLimitingTextInputFormatter(maxLength),
             ],
-            onChanged: onChanged, // ← plugged in
+            onChanged: onChanged,
             autovalidateMode: AutovalidateMode.onUserInteraction,
             style: const TextStyle(fontWeight: FontWeight.w500, color: Colors.black87,),
             decoration: InputDecoration(
               filled: true,
               fillColor: Colors.white,
-              contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+              contentPadding: const EdgeInsets.symmetric(
+                horizontal: 16,
+                vertical: 12,
+              ),
               errorStyle: const TextStyle(fontSize: 12, color: Colors.red),
+
+              // 🎯 Hint Text နှင့် ၎င်း၏ Style အား သတ်မှတ်ခြင်း
+              hintText: hintText,
+              hintStyle: TextStyle(
+                fontSize: 14,
+                fontWeight: FontWeight.normal,
+                color: Colors.grey.shade400, // ဖတ်ရသက်သာပြီး သပ်ရပ်သော အရောင်
+              ),
+
               enabledBorder: OutlineInputBorder(
                 borderRadius: BorderRadius.circular(8),
                 borderSide: BorderSide(color: Colors.grey.shade300, width: 1),
