@@ -442,174 +442,109 @@ class _TripFormLayoutState extends ConsumerState<TripFormLayout>
 
               // Row 3: Vehicle Name | Accommodation
               pair(
-                CustomTextField(
-                  label: "Vehicle Name",
-                  maxLength: 20,
-                  controller: _getSafeController('vehicleName'),
-                  validator: (v) => FormValidators.required(v, 'Vehicle Name'),
+                CustomDropdownField(
+                  label: "State/Region",
+                  dialogWidth: 300,   
+                  dialogHeight: 250,
+                  value: (locationState!.allStates.any((s) => s.name == widget.values['stateRegion']))
+                      ? widget.values['stateRegion'] as String? : null,
+                  hint: "Select State/Region",
+                  items: locationState.allStates.map((s) => s.name.toString()).toList(),
+                  validator: (v) => FormValidators.requiredDropdown(v, 'State/Region'),
+                  onChanged: (v) {
+                    if (v != widget.values['stateRegion']) {
+                      widget.onValueChanged('stateRegion', v);
+                      widget.onValueChanged('district', null);
+                      widget.onValueChanged('districtId', null);
+                      widget.onValueChanged('township', null);
+                      widget.onValueChanged('townshipId', null);
+                      
+                      try {
+                        final selectedState = locationState.allStates.firstWhere((s) => s.name == v);
+                        widget.onValueChanged('stateRegionId', selectedState.id);
+                      } catch (_) {}
+
+                      ref.read(locationProvider.notifier).selectState(v);
+                    }
+                  }, spacing: 16,
+
                 ),
-                CustomTextField(
-                  label: "Accommodation",
-                  maxLength: 20,
-                  controller: _getSafeController('accommodation'),
-                  validator: (v) => FormValidators.required(v, 'Accommodation'),
+                 CustomDropdownField(
+                  label: "District",
+                  dialogWidth: 300,   
+                  dialogHeight: 250,
+                  value: (locationState.availableDistricts.contains(widget.values['district']))
+                      ? widget.values['district'] as String? : null,
+                  hint: "Select District",
+                  items: locationState.availableDistricts,
+                  validator: (v) => FormValidators.requiredDropdown(v, 'District'),
+                  onChanged: (v) {
+                    if (v != widget.values['district']) {
+                      widget.onValueChanged('district', v);
+                      widget.onValueChanged('township', null);
+                      widget.onValueChanged('townshipId', null);
+
+                      try {
+                        final selectedState = locationState.allStates.firstWhere((s) => s.name == widget.values['stateRegion']);
+                        final selectedDist = selectedState.districts.firstWhere((d) => d.name == v);
+                        widget.onValueChanged('districtId', selectedDist.districtId);
+                      } catch (_) {}
+
+                      ref.read(locationProvider.notifier).selectDistrict(v);
+                    }
+                  }, spacing: 16,
                 ),
               ),
               const SizedBox(height: 16),
 
-              // Rows 4 & 5: Location Details
-              if (locationAsync.hasError)
-                _errorWidget('Failed to load locations', () {
-                  ref.read(locationProvider.notifier).retry();
-                })
-              else ...[
-                pair(
-                  CustomTextField(
-                    label: "Address in Myanmar",
-                    maxLength: 20,
-                    controller: _getSafeController('addressInMyanmar'),
-                    validator: (v) =>
-                        FormValidators.required(v, 'Address in Myanmar'),
-                  ),
-                  CustomDropdownField(
-                    label: "State/Region",
-                    dialogWidth: 300,
-                    dialogHeight: 250,
-                    value:
-                        (locationState!.allStates.any(
-                          (s) => s.name == widget.values['stateRegion'],
-                        ))
-                        ? widget.values['stateRegion'] as String?
-                        : null,
-                    hint: "Select State/Region",
-                    items: locationState.allStates
-                        .map((s) => s.name.toString())
-                        .toList(),
-                    validator: (v) =>
-                        FormValidators.requiredDropdown(v, 'State/Region'),
-                    onChanged: (v) {
-                      if (v != widget.values['stateRegion']) {
-                        widget.onValueChanged('stateRegion', v);
-                        widget.onValueChanged('district', null);
-                        widget.onValueChanged('districtId', null);
-                        widget.onValueChanged('township', null);
-                        widget.onValueChanged('townshipId', null);
-
-                        try {
-                          final selectedState = locationState.allStates
-                              .firstWhere((s) => s.name == v);
-                          widget.onValueChanged(
-                            'stateRegionId',
-                            selectedState.id,
-                          );
-                        } catch (_) {}
-
-                        ref.read(locationProvider.notifier).selectState(v);
-                      }
-                    },
-                    spacing: 16,
-                  ),
-                ),
-                const SizedBox(height: 16),
-
-                pair(
-                  CustomDropdownField(
-                    label: "District",
-                    dialogWidth: 300,
-                    dialogHeight: 250,
-                    value:
-                        (locationState.availableDistricts.contains(
-                          widget.values['district'],
-                        ))
-                        ? widget.values['district'] as String?
-                        : null,
-                    hint: "Select District",
-                    items: locationState.availableDistricts,
-                    validator: (v) =>
-                        FormValidators.requiredDropdown(v, 'District'),
-                    onChanged: (v) {
-                      if (v != widget.values['district']) {
-                        widget.onValueChanged('district', v);
-                        widget.onValueChanged('township', null);
-                        widget.onValueChanged('townshipId', null);
-
-                        try {
-                          final selectedState = locationState.allStates
-                              .firstWhere(
-                                (s) => s.name == widget.values['stateRegion'],
-                              );
-                          final selectedDist = selectedState.districts
-                              .firstWhere((d) => d.name == v);
-                          widget.onValueChanged(
-                            'districtId',
-                            selectedDist.districtId,
-                          );
-                        } catch (_) {}
-
-                        ref.read(locationProvider.notifier).selectDistrict(v);
-                      }
-                    },
-                    spacing: 16,
-                  ),
-                  CustomDropdownField(
-                    label: "Township",
-                    dialogWidth: 300,
-                    dialogHeight: 250,
-                    value:
-                        (locationState.availableTownships.contains(
-                          widget.values['township'],
-                        ))
-                        ? widget.values['township'] as String?
-                        : null,
-                    hint: "Select Township",
-                    items: locationState.availableTownships,
-                    validator: (v) =>
-                        FormValidators.requiredDropdown(v, 'Township'),
-                    onChanged: (v) {
-                      if (v != widget.values['township']) {
-                        widget.onValueChanged('township', v);
-                        try {
-                          final selectedState = locationState.allStates
-                              .firstWhere(
-                                (s) => s.name == widget.values['stateRegion'],
-                              );
-                          final selectedDist = selectedState.districts
-                              .firstWhere(
-                                (d) => d.name == widget.values['district'],
-                              );
-                          final selectedTown = selectedDist.townships
-                              .firstWhere((t) => t.name == v);
-                          widget.onValueChanged('townshipId', selectedTown.id);
-                        } catch (_) {}
-                      }
-                    },
-                    spacing: 16,
-                  ),
-                ),
-              ],
-              const SizedBox(height: 16),
-
-              // Row 6: Mobile Number | Purpose of Visit
               pair(
-                CustomTextField(
-                  label: "Mobile Number (MM)",
-                  maxLength: 11,
-                  hintText: "09xxxxxxxxx",
-                  controller: _getSafeController('mobileNumberMM'),
-                  validator: (v) => FormValidators.required(v, 'Mobile Number'),
+                CustomDropdownField(
+                  label: "Township",
+                  dialogWidth: 300,   
+                  dialogHeight: 250,
+                  value: (locationState.availableTownships.contains(widget.values['township']))
+                      ? widget.values['township'] as String? : null,
+                  hint: "Select Township",
+                  items: locationState.availableTownships,
+                  validator: (v) => FormValidators.requiredDropdown(v, 'Township'),
+                  onChanged: (v) {
+                    if (v != widget.values['township']) {
+                      widget.onValueChanged('township', v);
+                      try {
+                        final selectedState = locationState.allStates.firstWhere((s) => s.name == widget.values['stateRegion']);
+                        final selectedDist = selectedState.districts.firstWhere((d) => d.name == widget.values['district']);
+                        final selectedTown = selectedDist.townships.firstWhere((t) => t.name == v);
+                        widget.onValueChanged('townshipId', selectedTown.id);
+                      } catch (_) {}
+                    }
+                  }, spacing: 16,
                 ),
-                _buildPurposeField(),
+                CustomTextField(
+                  label: "Address in Myanmar",
+                  maxLength: 20,
+                  controller: _getSafeController('addressInMyanmar'),
+                  validator: (v) => FormValidators.required(v, 'Address in Myanmar'),
+                ),
               ),
-              const SizedBox(height: 16),
+            ],
+            const SizedBox(height: 16),
+            pair(
+              CustomTextField(
+                label: "Mobile Number (MM)",
+                maxLength: 11,
+                controller: _getSafeController('mobileNumberMM'),
+                validator: (v) => FormValidators.required(v, 'Mobile Number'),
+              ),
+              _buildPurposeField(),
+            ),
+            const SizedBox(height: 16),
 
-              // Row 7: Previous City
-              _halfRow(
-                isDesktop,
-                CustomTextField(
-                  label: "Previous City",
-                  controller: _getSafeController('previousCity'),
-                  validator: (v) => FormValidators.required(v, 'Previous City'),
-                ),
+            // Row 7: Previous City
+            _halfRow(isDesktop,
+              CustomTextField(
+                label: "Previous City",
+                controller: _getSafeController('previousCity'),
+                validator: (v) => FormValidators.required(v, 'Previous City'),
               ),
               const SizedBox(height: 30),
 
