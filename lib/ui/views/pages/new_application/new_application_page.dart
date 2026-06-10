@@ -13,7 +13,8 @@ import 'package:mmac/ui/views/widgets/footer.dart';
 import '../../widgets/form_progress_bar.dart';
 
 class NewApplication extends ConsumerStatefulWidget {
-  const NewApplication({super.key});
+  final String? initialCountry;
+  const NewApplication({super.key,this.initialCountry});
 
   @override
   ConsumerState<NewApplication> createState() => _NewApplicationState();
@@ -83,7 +84,19 @@ with AutomaticKeepAliveClientMixin
     'hasSymptoms': null,
     'carryingRestricted': null,
   };
-
+@override
+  void initState() {
+    super.initState();
+    if (widget.initialCountry != null) {
+      if (widget.initialCountry == 'Myanmar') {
+        _formValues['country'] = 'Myanmar';
+        _formValues['countryCode'] = 'MMR';
+      } else {
+        _formValues['country'] = null;
+        _formValues['countryCode'] = null;
+      }
+    }
+  }
   @override
   void dispose() {
     _step1Controllers.forEach((_, controller) => controller.dispose());
