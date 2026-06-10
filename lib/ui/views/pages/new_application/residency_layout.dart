@@ -58,7 +58,7 @@ class ResidencyLayout extends StatelessWidget {
                               ResidencySelectorCard(
                                 title: "Myanmar Citizen /\nPermanent Resident",
                                 imagePath: "assets/images/nrc.jpg", 
-                                onTap: () => onResidencySelected('Myanmar'), // 👈 Callback သုံး၍ သက်ဆိုင်ရာ data လှမ်းပို့ပါသည်
+                                onTap: () => onResidencySelected('Myanmar'), 
                               ),
                               const SizedBox(width: 32), 
                               ResidencySelectorCard(

@@ -373,12 +373,6 @@ class _TripFormLayoutState extends ConsumerState<TripFormLayout>
               })
             else ...[
               pair(
-                CustomTextField(
-                  label: "Address in Myanmar",
-                  maxLength: 20,
-                  controller: _getSafeController('addressInMyanmar'),
-                  validator: (v) => FormValidators.required(v, 'Address in Myanmar'),
-                ),
                 CustomDropdownField(
                   label: "State/Region",
                   dialogWidth: 300,   
@@ -404,12 +398,9 @@ class _TripFormLayoutState extends ConsumerState<TripFormLayout>
                       ref.read(locationProvider.notifier).selectState(v);
                     }
                   }, spacing: 16,
-                ),
-              ),
-              const SizedBox(height: 16),
 
-              pair(
-                CustomDropdownField(
+                ),
+                 CustomDropdownField(
                   label: "District",
                   dialogWidth: 300,   
                   dialogHeight: 250,
@@ -434,6 +425,10 @@ class _TripFormLayoutState extends ConsumerState<TripFormLayout>
                     }
                   }, spacing: 16,
                 ),
+              ),
+              const SizedBox(height: 16),
+
+              pair(
                 CustomDropdownField(
                   label: "Township",
                   dialogWidth: 300,   
@@ -455,11 +450,15 @@ class _TripFormLayoutState extends ConsumerState<TripFormLayout>
                     }
                   }, spacing: 16,
                 ),
+                CustomTextField(
+                  label: "Address in Myanmar",
+                  maxLength: 20,
+                  controller: _getSafeController('addressInMyanmar'),
+                  validator: (v) => FormValidators.required(v, 'Address in Myanmar'),
+                ),
               ),
             ],
             const SizedBox(height: 16),
-
-            // Row 6: Mobile Number | Purpose of Visit
             pair(
               CustomTextField(
                 label: "Mobile Number (MM)",
