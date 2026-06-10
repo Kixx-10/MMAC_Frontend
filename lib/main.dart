@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:mmac/ui/views/pages/main_layout.dart';
+//import 'package:mmac/ui/views/pages/new_application/residency_layout.dart';
 
 void main() {
   runApp(
@@ -9,7 +10,6 @@ void main() {
     ),
   );
 }
-
 class MyApp extends StatelessWidget {
   const MyApp({super.key});
 
@@ -18,6 +18,7 @@ class MyApp extends StatelessWidget {
     return const MaterialApp(
       debugShowCheckedModeBanner: false,
       home: MainLayout(), 
+      //home:ResidencyLayout()
     );
   }
 }

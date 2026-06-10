@@ -46,8 +46,8 @@ class _MobileCodeSearchDialogState extends State<MobileCodeSearchDialog> {
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
       title: const Text("Select Country Code", style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
       content: SizedBox(
-        width: 400,
-        height: 350,
+        width: 250,
+        height: 250,
         child: Column(
           children: [
             TextField(

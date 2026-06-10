@@ -3,6 +3,7 @@
 import 'package:flutter/material.dart';
 import 'package:mmac/ui/views/pages/new_application/new_application_page.dart';
 import 'package:mmac/ui/views/pages/home.dart';
+import 'package:mmac/ui/views/pages/new_application/residency_layout.dart';
 import 'package:mmac/ui/views/pages/update_application.dart';
 import 'package:mmac/ui/views/pages/faqs.dart';
 import 'package:mmac/ui/views/widgets/national_header.dart';
@@ -17,30 +18,12 @@ class MainLayout extends StatefulWidget {
 class _MainLayoutState extends State<MainLayout>
     with SingleTickerProviderStateMixin {
   late TabController _tabController;
-  late List<Widget> _pages;
+  String? _selectedResidency;
 
   @override
   void initState() {
     super.initState();
     _tabController = TabController(length: 4, vsync: this);
-
-    _pages = [
-      Home(
-        onStartNewApplication: () {
-          _tabController.animateTo(1);
-        },
-        onStartUpdateWorkflow: () {
-          _tabController.animateTo(2);
-        },
-      ),
-      const NewApplication(),
-      const UpdateApplication(),
-      FAQS(
-        onReturnHome: () {
-          _tabController.animateTo(0);
-        },
-      ),
-    ];
   }
 
   @override
@@ -133,6 +116,13 @@ class _MainLayoutState extends State<MainLayout>
                                 _buildCustomTab("Update Application"),
                                 _buildCustomTab("FAQs"),
                               ],
+                              onTap: (index) {
+                                if (index == 1) {
+                                  setState(() {
+                                    _selectedResidency = null;
+                                  });
+                                }
+                              },
                             ),
                           ),
                         ),
@@ -147,7 +137,40 @@ class _MainLayoutState extends State<MainLayout>
       ),
       body: TabBarView(
         controller: _tabController, 
-        children: _pages,
+        children: [
+          // ၁။ HOME PAGE
+          Home(
+            onStartNewApplication: () {
+              setState(() {
+                _selectedResidency = null; 
+              });
+              _tabController.animateTo(1);
+            },
+            onStartUpdateWorkflow: () {
+              _tabController.animateTo(2);
+            },
+          ),
+          
+          _selectedResidency == null
+              ? ResidencyLayout(
+                  onResidencySelected: (residencyType) {
+                    setState(() {
+                      _selectedResidency = residencyType; 
+                    });
+                  },
+                )
+              : NewApplication(initialCountry: _selectedResidency),
+
+          // ၃။ UPDATE APPLICATION PAGE
+          const UpdateApplication(),
+
+          // ၄။ FAQS PAGE
+          FAQS(
+            onReturnHome: () {
+              _tabController.animateTo(0);
+            },
+          ),
+        ],
       ),
     );
   }

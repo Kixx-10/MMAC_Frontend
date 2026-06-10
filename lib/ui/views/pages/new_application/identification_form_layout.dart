@@ -260,41 +260,46 @@ class _IdentificationFormLayoutState
                 setState(() => _showDateErrors = false);
               },
             ),
-            CustomDropdownField(
-              label: "Country",
-              value: widget.values['country'],
-              hint: "Select Country",
-              labelWidth: lw,
-              dialogWidth: 250,
-              dialogHeight: 250,
-              items: _countryNameList,
-              validator: (v) => FormValidators.requiredDropdown(v, 'Country'),
-              onChanged: (v) {
-                widget.onValueChanged('country', v);
-                if (v != null) {
-                  ref.read(countryProvider.notifier).selectCountry(v);
-                  try {
-                    final matched = _rawCountryObjects.firstWhere(
-                      (c) => c.countryName == v,
-                    );
-                    widget.onValueChanged('countryCode', matched.countryCode);
-                  } catch (e) {
-                    debugPrint("Country model mapping error: $e");
-                  }
-                }
-                if (v != 'Myanmar' && v != 'MMR') {
-                  widget.controllers['nrc']?.clear();
-                  widget.controllers['fatherName']?.clear();
-                  if (!mounted) return;
-                  setState(() {
-                    _selectedNrcStateCode = null;
-                    _selectedTownshipCode = null;
-                    _selectedNrcType = null;
-                    _nrcNumberController.clear();
-                  });
-                }
-              }, spacing: 8,
-            ),
+            AbsorbPointer(
+  // if myanmr set read only
+  absorbing: widget.values['country'] == 'Myanmar' || widget.values['country'] == 'MMR',
+  child: CustomDropdownField(
+    label: "Country",
+    value: widget.values['country'],
+    hint: "Select Country",
+    labelWidth: lw,
+    dialogWidth: 250,
+    dialogHeight: 250,
+    items: _countryNameList,
+    validator: (v) => FormValidators.requiredDropdown(v, 'Country'),
+    onChanged: (v) {
+      widget.onValueChanged('country', v);
+      if (v != null) {
+        ref.read(countryProvider.notifier).selectCountry(v);
+        try {
+          final matched = _rawCountryObjects.firstWhere(
+            (c) => c.countryName == v,
+          );
+          widget.onValueChanged('countryCode', matched.countryCode);
+        } catch (e) {
+          debugPrint("Country model mapping error: $e");
+        }
+      }
+      if (v != 'Myanmar' && v != 'MMR') {
+        widget.controllers['nrc']?.clear();
+        widget.controllers['fatherName']?.clear();
+        if (!mounted) return;
+        setState(() {
+          _selectedNrcStateCode = null;
+          _selectedTownshipCode = null;
+          _selectedNrcType = null;
+          _nrcNumberController.clear();
+        });
+      }
+    },
+    spacing: 8,
+  ),
+),
           ),
           const SizedBox(height: 20),
 
@@ -308,179 +313,171 @@ class _IdentificationFormLayoutState
             ),
 
             // ─── Mobile Number Field ───
-            Row(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Padding(
-                  padding: const EdgeInsets.only(top: 14),
-                  child: SizedBox(
-                    width: lw,
-                    child: RichText(
-                      text: const TextSpan(
-                        text: "Mobile Number",
+Row(
+  crossAxisAlignment: CrossAxisAlignment.start,
+  children: [
+    Padding(
+      padding: const EdgeInsets.only(top: 14),
+      child: SizedBox(
+        width: lw,
+        child: RichText(
+          text: const TextSpan(
+            text: "Mobile Number",
+            style: TextStyle(
+              fontSize: 14,
+              fontWeight: FontWeight.w500,
+              color: Colors.black87,
+              fontFamily: 'sans-serif',
+            ),
+            children: [
+              TextSpan(
+                text: ' *',
+                style: TextStyle(
+                  color: Colors.red,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    ),
+    const SizedBox(width: 8),
+    Expanded(
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start, 
+        children: [
+          SizedBox(
+            width: 80,
+            child: InkWell(
+              onTap: () {
+                showDialog<String>(
+                  context: context,
+                  builder: (context) => MobileCodeSearchDialog(
+                    countryCodes: _countryCodes,
+                    selectedValue: widget.values['mobileCode'],
+                  ),
+                ).then((code) {
+                  if (code != null) {
+                    widget.onValueChanged('mobileCode', code);
+                    _updateMobileControllerValue();
+                  }
+                });
+              },
+              borderRadius: BorderRadius.circular(8),
+              child: Container(
+                height: 48, 
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 8,
+                ),
+                alignment: Alignment.center,
+                decoration: BoxDecoration(
+                  color: Colors.white,
+                  borderRadius: BorderRadius.circular(8),
+                  border: Border.all(
+                    color: Colors.grey.shade300,
+                    width: 1,
+                  ),
+                ),
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    Expanded(
+                      child: Text(
+                        widget.values['mobileCode'] ?? "Code",
                         style: TextStyle(
-                          fontSize: 14,
+                          fontSize: 13,
+                          color: widget.values['mobileCode'] != null
+                              ? Colors.black87
+                              : Colors.grey.shade400,
                           fontWeight: FontWeight.w500,
-                          color: Colors.black87,
-                          fontFamily: 'sans-serif',
                         ),
-                        children: [
-                          TextSpan(
-                            text: ' *',
-                            style: TextStyle(
-                              color: Colors.red,
-                              fontWeight: FontWeight.bold,
-                            ),
-                          ),
-                        ],
+                        overflow: TextOverflow.ellipsis,
                       ),
                     ),
-                  ),
-                ),
-                const SizedBox(width: 8),
-                Expanded(
-                  child: IntrinsicHeight(
-                    child: Row(
-                      crossAxisAlignment: CrossAxisAlignment.stretch,
-                      children: [
-                        SizedBox(
-                          width: 80,
-                          child: InkWell(
-                            onTap: () {
-                              showDialog<String>(
-                                context: context,
-                                builder: (context) => MobileCodeSearchDialog(
-                                  countryCodes: _countryCodes,
-                                  selectedValue: widget.values['mobileCode'],
-                                ),
-                              ).then((code) {
-                                if (code != null) {
-                                  widget.onValueChanged('mobileCode', code);
-                                  _updateMobileControllerValue();
-                                }
-                              });
-                            },
-                            borderRadius: BorderRadius.circular(8),
-                            child: Container(
-                              padding: const EdgeInsets.symmetric(
-                                horizontal: 8,
-                              ),
-                              alignment: Alignment.center,
-                              decoration: BoxDecoration(
-                                color: Colors.white,
-                                borderRadius: BorderRadius.circular(8),
-                                border: Border.all(
-                                  color: Colors.grey.shade300,
-                                  width: 1,
-                                ),
-                              ),
-                              child: Row(
-                                mainAxisAlignment:
-                                    MainAxisAlignment.spaceBetween,
-                                children: [
-                                  Expanded(
-                                    child: Text(
-                                      widget.values['mobileCode'] ?? "Code",
-                                      style: TextStyle(
-                                        fontSize: 13,
-                                        color:
-                                            widget.values['mobileCode'] != null
-                                            ? Colors.black87
-                                            : Colors.grey.shade400,
-                                        fontWeight: FontWeight.w500,
-                                      ),
-                                      overflow: TextOverflow.ellipsis,
-                                    ),
-                                  ),
-                                  const Icon(
-                                    Icons.arrow_drop_down,
-                                    size: 18,
-                                    color: Colors.black54,
-                                  ),
-                                ],
-                              ),
-                            ),
-                          ),
-                        ),
-                        // Phone Number Text Field
-                        Expanded(
-                          child: TextFormField(
-                            controller: _mobileNumberController,
-                            keyboardType: TextInputType.phone,
-                            inputFormatters: [
-                              FilteringTextInputFormatter.digitsOnly,
-                              LengthLimitingTextInputFormatter(20),
-                            ],
-                            style: const TextStyle(
-                              fontSize: 13,
-                              fontWeight: FontWeight.w500,
-                            ),
-                            decoration: InputDecoration(
-                              filled: true,
-                              fillColor: Colors.white,
-                              hintText: "Enter phone number",
-                              hintStyle: TextStyle(
-                                color: Colors.grey.shade400,
-                                fontSize: 13,
-                              ),
-
-                              // 🎯 ဤနေရာရှိ vertical padding တန်ဖိုး (၁၄၊ ၁၆ သို့မဟုတ် ၁၈) ကို ပြောင်းလဲခြင်းဖြင့်
-                              // ကျန်ရှိနေသော Text Box များ၏ အမြင့်အတိုင်း ကွက်တိဖြစ်အောင် စိတ်ကြိုက် တိုးမြှင့်ညှိနှိုင်းနိုင်ပါသည်
-                              contentPadding: const EdgeInsets.symmetric(
-                                horizontal: 10,
-                                vertical: 16,
-                              ),
-
-                              enabledBorder: OutlineInputBorder(
-                                borderRadius: BorderRadius.circular(8),
-                                borderSide: BorderSide(
-                                  color: Colors.grey.shade300,
-                                  width: 1,
-                                ),
-                              ),
-                              focusedBorder: OutlineInputBorder(
-                                borderRadius: BorderRadius.circular(8),
-                                borderSide: const BorderSide(
-                                  color: Colors.blue,
-                                  width: 1.5,
-                                ),
-                              ),
-                              errorBorder: OutlineInputBorder(
-                                borderRadius: BorderRadius.circular(8),
-                                borderSide: const BorderSide(
-                                  color: Colors.red,
-                                  width: 1,
-                                ),
-                              ),
-                              focusedErrorBorder: OutlineInputBorder(
-                                borderRadius: BorderRadius.circular(8),
-                                borderSide: const BorderSide(
-                                  color: Colors.red,
-                                  width: 1.5,
-                                ),
-                              ),
-                            ),
-                            onChanged: (v) => _updateMobileControllerValue(),
-                            validator: (v) {
-                              final String? code = widget.values['mobileCode'];
-                              final String number =
-                                  _mobileNumberController.text;
-                              if (code == null) {
-                                return 'Please select country code';
-                              }
-                              if (number.isEmpty) {
-                                return 'Mobile Number is required';
-                              }
-                              return null;
-                            },
-                          ),
-                        ),
-                      ],
+                    const Icon(
+                      Icons.arrow_drop_down,
+                      size: 18,
+                      color: Colors.black54,
                     ),
+                  ],
+                ),
+              ),
+            ),
+          ),
+          // Phone Number Text Field
+          Expanded(
+            child: TextFormField(
+              controller: _mobileNumberController,
+              keyboardType: TextInputType.phone,
+              inputFormatters: [
+                FilteringTextInputFormatter.digitsOnly,
+                LengthLimitingTextInputFormatter(15),
+              ],
+              style: const TextStyle(
+                fontSize: 13,
+                fontWeight: FontWeight.w500,
+              ),
+              decoration: InputDecoration(
+                filled: true,
+                fillColor: Colors.white,
+                hintText: "Enter phone number",
+                hintStyle: TextStyle(
+                  color: Colors.grey.shade400,
+                  fontSize: 13,
+                ),
+                contentPadding: const EdgeInsets.symmetric(
+                  horizontal: 10,
+                  vertical: 16,
+                ),
+                enabledBorder: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(8),
+                  borderSide: BorderSide(
+                    color: Colors.grey.shade300,
+                    width: 1,
                   ),
                 ),
-              ],
+                focusedBorder: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(8),
+                  borderSide: const BorderSide(
+                    color: Colors.blue,
+                    width: 1.5,
+                  ),
+                ),
+                errorBorder: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(8),
+                  borderSide: const BorderSide(
+                    color: Colors.red,
+                    width: 1,
+                  ),
+                ),
+                focusedErrorBorder: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(8),
+                  borderSide: const BorderSide(
+                    color: Colors.red,
+                    width: 1.5,
+                  ),
+                ),
+              ),
+              onChanged: (v) => _updateMobileControllerValue(),
+              validator: (v) {
+                final String? code = widget.values['mobileCode'];
+                final String number = _mobileNumberController.text;
+                if (code == null) {
+                  return 'Please select country code';
+                }
+                if (number.isEmpty) {
+                  return 'Mobile Number is required';
+                }
+                return null;
+              },
             ),
+          ),
+        ],
+      ),
+    ),
+  ],
+),
           ),
           const SizedBox(height: 20),
           pair(
@@ -489,7 +486,17 @@ class _IdentificationFormLayoutState
               controller: widget.controllers['visaNumber']!,
               maxLength: 50,
               labelWidth: lw,
-             // validator: (v) => FormValidators.required(v, 'Visa Number'),
+              isRequired: false,
+             validator: (v) {
+              return null; 
+               },
+               onChanged: (v) {
+    if (v.trim().isEmpty) {
+      widget.onValueChanged('visaNo', null); 
+    } else {
+      widget.onValueChanged('visaNo', v); 
+    }
+  },
             ),
             CustomTextField(
               label: "Passport Number",
