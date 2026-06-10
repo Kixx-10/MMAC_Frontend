@@ -1,8 +1,11 @@
 // lib/ui/views/pages/update_application/update_application_page.dart
 
+// ignore_for_file: curly_braces_in_flow_control_structures
+
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:mmac/data/controllers/update_application_provider.dart';
 import 'package:mmac/ui/views/widgets/footer.dart'; // Senior's standard footer
 
 class UpdateApplication extends ConsumerStatefulWidget {
@@ -38,42 +41,43 @@ class _UpdateApplicationState extends ConsumerState<UpdateApplication>
   String _text(String key) => _searchControllers[key]?.text.trim() ?? '';
 
   // --- Logic Execution Gate ---
+  // --- Inside _UpdateApplicationState ---
+
   void _handleFindApplication() {
-    if (_searchFormKey.currentState!.validate()) {
-      // 1. Logs data clearly to developer console as requested
-      debugPrint('===========================================================');
-      debugPrint('LOG FOR DEV: Verification Entry Form Triggered Successfully');
-      debugPrint('Target QR-Ref : ${_text('qrReference')}');
-      debugPrint('Target Email  : ${_text('email')}');
-      debugPrint('Target Passport: ${_text('passportNumber')}');
-      debugPrint('===========================================================');
-
-      // 2. Visual snackbar feedback
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(
-            'Verifying Identity for QR: ${_text('qrReference')}...',
-          ),
-          backgroundColor: Colors.teal.shade800,
-          behavior: SnackBarBehavior.floating,
-          margin: const EdgeInsets.all(16),
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
-        ),
-      );
-
-      // TODO: Future Integration Point
-      // When the UpdateProvider is ready, we will pass these verified arguments
-      // and redirect into the main NewApplication page for absolute reusability:
-      //
-      // Navigator.pushNamed(context, '/new-application', arguments: {
-      //   'isUpdateMode': true,
-      //   'qrReference': _text('qrReference'),
-      // });
+    if (_searchFormKey.currentState?.validate() ?? false) {
+      // Read the provider and call the search logic
+      ref
+          .read(updateApplicationProvider.notifier)
+          .findApplication(
+            qrReference: _text('qrReference'),
+            email: _text('email'),
+            passportNumber: _text('passportNumber'),
+            onError: (errorMessage) {
+              // Show error banner if not found or network error
+              ScaffoldMessenger.of(context).showSnackBar(
+                SnackBar(
+                  content: Text(errorMessage),
+                  backgroundColor: Colors.red.shade700,
+                ),
+              );
+            },
+            onSuccess: () {
+              // Show success message
+              ScaffoldMessenger.of(context).showSnackBar(
+                const SnackBar(
+                  content: Text("Application successfully retrieved!"),
+                  backgroundColor: Colors.green,
+                ),
+              );
+            },
+          );
     }
   }
 
   @override
   Widget build(BuildContext context) {
+    final searchState = ref.watch(updateApplicationProvider);
+    final isLoading = searchState.isLoading;
     super.build(context);
     return Scaffold(
       backgroundColor: const Color(0xFFF4F6F9),
@@ -248,7 +252,7 @@ class _UpdateApplicationState extends ConsumerState<UpdateApplication>
                           child: ElevatedButton(
                             onPressed: _handleFindApplication,
                             style: ElevatedButton.styleFrom(
-                              backgroundColor: Colors.teal.shade800,
+                              backgroundColor: Colors.lightBlue.shade700,
                               foregroundColor: Colors.white,
                               padding: const EdgeInsets.symmetric(
                                 horizontal: 36,
@@ -259,14 +263,23 @@ class _UpdateApplicationState extends ConsumerState<UpdateApplication>
                               ),
                               elevation: 0,
                             ),
-                            child: const Text(
-                              'Find Application',
-                              style: TextStyle(
-                                fontSize: 14,
-                                fontWeight: FontWeight.bold,
-                                letterSpacing: 0.5,
-                              ),
-                            ),
+                            child: isLoading
+                                ? const SizedBox(
+                                    width: 20,
+                                    height: 20,
+                                    child: CircularProgressIndicator(
+                                      color: Colors.white,
+                                      strokeWidth: 2,
+                                    ),
+                                  )
+                                : const Text(
+                                    'Find Application',
+                                    style: TextStyle(
+                                      fontSize: 14,
+                                      fontWeight: FontWeight.bold,
+                                      letterSpacing: 0.5,
+                                    ),
+                                  ),
                           ),
                         ),
                       ],
