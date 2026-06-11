@@ -142,17 +142,6 @@ class _TripFormLayoutState extends ConsumerState<TripFormLayout>
   Widget _column(Widget t, Widget b) =>
       Column(children: [t, const SizedBox(height: 16), b]);
 
-  Widget _halfRow(bool isDesktop, Widget field) {
-    if (!isDesktop) return field;
-    return Row(
-      children: [
-        Expanded(child: field),
-        const SizedBox(width: 40),
-        const Expanded(child: SizedBox()),
-      ],
-    );
-  }
-
   Widget _errorWidget(String message, VoidCallback onRetry) {
     return Container(
       padding: const EdgeInsets.all(12),
@@ -428,7 +417,7 @@ class _TripFormLayoutState extends ConsumerState<TripFormLayout>
                   CustomTextField(
                     label: "Vehicle Number",
                     controller: _getSafeController('vehicleNumber'),
-                    maxLength: 10,
+                    maxLength: 15,
                     validator: (v) =>
                         FormValidators.required(v, 'Vehicle Number'),
                   ),
@@ -436,8 +425,18 @@ class _TripFormLayoutState extends ConsumerState<TripFormLayout>
               ],
               const SizedBox(height: 16),
 
-              // Row 3: State/Region | District
+              // Row 3: Vehicle Name | State/Region
               pair(
+                CustomTextField(
+                  label: "Vehicle Name",
+                  hintText: "Flight, Vessel, Bus name etc.",
+                  controller: _getSafeController('vehicleName'),
+                  maxLength: 50,
+                  validator: (v) => FormValidators.required(v, 'Vehicle Name'),
+                  onChanged: (v) {
+                    widget.onValueChanged('vehicleName', v);
+                  },
+                ),
                 CustomDropdownField(
                   label: "State/Region",
                   dialogWidth: 300,
@@ -471,6 +470,11 @@ class _TripFormLayoutState extends ConsumerState<TripFormLayout>
                   },
                   spacing: 16,
                 ),
+              ),
+              const SizedBox(height: 16),
+
+              // Row 4: District | Township
+              pair(
                 CustomDropdownField(
                   label: "District",
                   dialogWidth: 300,
@@ -488,7 +492,6 @@ class _TripFormLayoutState extends ConsumerState<TripFormLayout>
                       widget.onValueChanged('district', v);
                       widget.onValueChanged('township', null);
                       widget.onValueChanged('townshipId', null);
-
                       try {
                         final selectedState = locationState.allStates
                             .firstWhere((s) => s.name == widget.values['stateRegion']);
@@ -505,11 +508,6 @@ class _TripFormLayoutState extends ConsumerState<TripFormLayout>
                   },
                   spacing: 16,
                 ),
-              ),
-              const SizedBox(height: 16),
-
-              // Row 4: Township | Address in Myanmar
-              pair(
                 CustomDropdownField(
                   label: "Township",
                   dialogWidth: 300,
@@ -538,17 +536,32 @@ class _TripFormLayoutState extends ConsumerState<TripFormLayout>
                   },
                   spacing: 16,
                 ),
+              ),
+              const SizedBox(height: 16),
+
+              // Row 5: Address in Myanmar | Accommodation
+              pair(
                 CustomTextField(
                   label: "Address in Myanmar",
-                  maxLength: 20,
+                  maxLength: 150,
                   controller: _getSafeController('addressInMyanmar'),
                   validator: (v) =>
                       FormValidators.required(v, 'Address in Myanmar'),
                 ),
+                CustomTextField(
+                  label: "Accommodation",
+                  controller: _getSafeController('accommodation'),
+                  maxLength: 100,
+                  validator: (v) =>
+                      FormValidators.required(v, 'Accommodation'),
+                  onChanged: (v) {
+                    widget.onValueChanged('accommodation', v);
+                  },
+                ),
               ),
               const SizedBox(height: 16),
 
-              // Row 5: Mobile Number | Purpose of Visit
+              // Row 6: Mobile Number | Purpose of Visit
               pair(
                 CustomTextField(
                   label: "Mobile Number (MM)",
@@ -561,14 +574,14 @@ class _TripFormLayoutState extends ConsumerState<TripFormLayout>
               ),
               const SizedBox(height: 16),
 
-              // Row 6: Previous City
-              _halfRow(
-                isDesktop,
+              // Row 7: Previous City | Layout Spacer
+              pair(
                 CustomTextField(
                   label: "Previous City",
                   controller: _getSafeController('previousCity'),
                   validator: (v) => FormValidators.required(v, 'Previous City'),
                 ),
+                const SizedBox(),
               ),
               const SizedBox(height: 30),
 

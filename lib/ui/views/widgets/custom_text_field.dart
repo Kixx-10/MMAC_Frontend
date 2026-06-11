@@ -9,7 +9,8 @@ class CustomTextField extends StatelessWidget {
   final int? maxLength;
   final ValueChanged<String>? onChanged;
   final bool isRequired;
-  final String? hintText; // 🎯 hintText အတွက် parameter အသစ် ထည့်သွင်းခြင်း
+  final String? hintText;
+  final double spacing; // 🎯 hintText အတွက် parameter အသစ် ထည့်သွင်းခြင်း
 
   const CustomTextField({
     super.key,
@@ -20,7 +21,8 @@ class CustomTextField extends StatelessWidget {
     this.maxLength,
     this.onChanged,
     this.isRequired = true,
-    this.hintText, // 🎯 optional အဖြစ် လက်ခံထားသည်
+    this.hintText, 
+    this.spacing=8// 🎯 optional အဖြစ် လက်ခံထားသည်
   });
 
   @override
@@ -55,7 +57,7 @@ class CustomTextField extends StatelessWidget {
             ),
           ),
         ),
-        const SizedBox(width: 12),
+         SizedBox(width: spacing),
         Expanded(
           child: TextFormField(
             controller: controller,
