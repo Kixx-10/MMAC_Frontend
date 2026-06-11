@@ -15,9 +15,9 @@ class SubmitRequestModel {
   final String arrivalDate;
   final String modeOfTravelId;
   final String portOfArrivalId;
-  final String? vehicleNumber;
-  final String? vehicleName;
-  final String? accommodation;
+  final String vehicleNumber;
+  final String vehicleName;
+  final String accommodation;
   final String? visaNo;
   final String? nrc;            
   final String? fatherName;     
