@@ -20,6 +20,23 @@ class Home extends StatefulWidget {
 
 class _HomeState extends State<Home> {
   @override
+  void initState() {
+    super.initState();
+  }
+
+  // Future<void> _checkActiveSession() async {
+  //   final sessionData = await FormSessionService.loadDraft();
+
+  //   if (sessionData != null && mounted) {
+  //     // 🎯 ဖြည့်လက်စ Draft ရှိနေရင် Home Page ကို ဆက်မပြတော့ဘဲ Form ဆီ တန်းပို့လိုက်မည်
+  //     Navigator.pushReplacement(
+  //       context,
+  //       MaterialPageRoute(builder: (context) => const NewApplication()),
+  //     );
+  //   }
+  // }
+
+  @override
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: const Color(0xFFF8F9FA),

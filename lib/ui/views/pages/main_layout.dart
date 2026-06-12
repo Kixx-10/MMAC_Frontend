@@ -7,6 +7,7 @@ import 'package:mmac/ui/views/pages/new_application/residency_layout.dart';
 import 'package:mmac/ui/views/pages/update_application.dart';
 import 'package:mmac/ui/views/pages/faqs.dart';
 import 'package:mmac/ui/views/widgets/national_header.dart';
+import 'package:mmac/utils/form_session_service.dart';
 
 class MainLayout extends StatefulWidget {
   const MainLayout({super.key});
@@ -20,10 +21,51 @@ class _MainLayoutState extends State<MainLayout>
   late TabController _tabController;
   String? _selectedResidency;
 
+  bool _isSessionLoading = true;
   @override
   void initState() {
     super.initState();
     _tabController = TabController(length: 4, vsync: this);
+    _checkActiveSessionOnLoad();
+  }
+
+  Future<void> _checkActiveSessionOnLoad() async {
+    try {
+      final sessionData = await FormSessionService.loadDraft();
+
+      if (sessionData != null && mounted) {
+        final values = sessionData['values'] as Map<String, dynamic>?;
+        if (values != null && values['residencyType'] != null) {
+          // Draft အဟောင်းရှိပါက Tab 1 (New App) သို့ ပြောင်းပြီး Residency ကို အသင့်ရွေးပေးထားမည်
+          _tabController.index = 1;
+          _selectedResidency = values['residencyType'];
+        }
+      }
+    } catch (e) {
+      debugPrint("Session check error on load: $e");
+    } finally {
+      if (mounted) {
+        setState(() {
+          _isSessionLoading = false;
+        });
+      }
+    }
+  }
+
+  // 🎯 Tab သို့မဟုတ် ခလုတ်နှိပ်လျှင် Draft ရှိမရှိ စစ်ဆေးပြီးမှ Residency ပြ/မပြ ဆုံးဖြတ်မည့် Logic
+  Future<void> _resumeOrStartNew() async {
+    final sessionData = await FormSessionService.loadDraft();
+    if (sessionData != null &&
+        sessionData['values'] != null &&
+        sessionData['values']['residencyType'] != null) {
+      setState(() {
+        _selectedResidency = sessionData['values']['residencyType'];
+      });
+    } else {
+      setState(() {
+        _selectedResidency = null;
+      });
+    }
   }
 
   @override
@@ -96,20 +138,24 @@ class _MainLayoutState extends State<MainLayout>
                         child: Align(
                           alignment: Alignment.centerRight,
                           child: SizedBox(
-                            width: isMobile ? null : 700, 
+                            width: isMobile ? null : 700,
                             child: TabBar(
                               controller: _tabController,
-                              isScrollable: isMobile, 
-                              dividerColor: Colors.transparent, 
-                              labelColor: Colors.blue.shade800, 
-                              unselectedLabelColor: Colors.grey.shade600, 
+                              isScrollable: isMobile,
+                              dividerColor: Colors.transparent,
+                              labelColor: Colors.blue.shade800,
+                              unselectedLabelColor: Colors.grey.shade600,
                               labelStyle: const TextStyle(
                                 fontWeight: FontWeight.bold,
                                 fontFamily: 'sans-serif',
                               ),
-                              unselectedLabelStyle: const TextStyle(fontWeight: FontWeight.w500),
+                              unselectedLabelStyle: const TextStyle(
+                                fontWeight: FontWeight.w500,
+                              ),
                               indicatorColor: Colors.blue.shade800,
-                              labelPadding: const EdgeInsets.symmetric(horizontal: 4),
+                              labelPadding: const EdgeInsets.symmetric(
+                                horizontal: 4,
+                              ),
                               tabs: [
                                 _buildCustomTab("Home"),
                                 _buildCustomTab("New Application"),
@@ -118,9 +164,7 @@ class _MainLayoutState extends State<MainLayout>
                               ],
                               onTap: (index) {
                                 if (index == 1) {
-                                  setState(() {
-                                    _selectedResidency = null;
-                                  });
+                                  _resumeOrStartNew(); // 🎯 ဇွတ် null မပေးတော့ဘဲ Draft ရှိရင် ပြန်ဆက်မည်
                                 }
                               },
                             ),
@@ -135,43 +179,48 @@ class _MainLayoutState extends State<MainLayout>
           ),
         ),
       ),
-      body: TabBarView(
-        controller: _tabController, 
-        children: [
-          // ၁။ HOME PAGE
-          Home(
-            onStartNewApplication: () {
-              setState(() {
-                _selectedResidency = null; 
-              });
-              _tabController.animateTo(1);
-            },
-            onStartUpdateWorkflow: () {
-              _tabController.animateTo(2);
-            },
-          ),
-          
-          _selectedResidency == null
-              ? ResidencyLayout(
-                  onResidencySelected: (residencyType) {
-                    setState(() {
-                      _selectedResidency = residencyType; 
-                    });
+      // 🎯 Session ရှာနေတုန်း Body ကို အလွတ် (သို့ Loading) ပြထားမည်
+      body: _isSessionLoading
+          ? const Center(child: CircularProgressIndicator())
+          : TabBarView(
+              controller: _tabController,
+              children: [
+                // ၁။ HOME PAGE
+                Home(
+                  onStartNewApplication: () async {
+                    // 🎯 ဒီမှာ Residency ကို အရင်စစ်မယ်၊ ပြီးမှ Tab ပြောင်းမယ်
+                    await _resumeOrStartNew();
+
+                    // 🎯 ပြီးမှ Tab 1 ကို ရွှေ့မယ်
+                    _tabController.animateTo(1);
                   },
-                )
-              : NewApplication(initialCountry: _selectedResidency),
+                  onStartUpdateWorkflow: () {
+                    _tabController.animateTo(2);
+                  },
+                ),
 
-          // ၃။ UPDATE APPLICATION PAGE
-          const UpdateApplication(),
+                // ၂။ NEW APPLICATION OR RESIDENCY
+                _selectedResidency == null
+                    ? ResidencyLayout(
+                        onResidencySelected: (residencyType) {
+                          setState(() {
+                            _selectedResidency = residencyType;
+                          });
+                        },
+                      )
+                    : NewApplication(initialCountry: _selectedResidency),
 
-          // ၄။ FAQS PAGE
-          FAQS(
-            onReturnHome: () {
-              _tabController.animateTo(0);
-            },
-          ),
-        ],
-      ),
+                // ၃။ UPDATE APPLICATION PAGE
+                const UpdateApplication(),
+
+                // ၄။ FAQS PAGE
+                FAQS(
+                  onReturnHome: () {
+                    _tabController.animateTo(0);
+                  },
+                ),
+              ],
+            ),
     );
   }
 }

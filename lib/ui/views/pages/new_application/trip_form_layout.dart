@@ -57,22 +57,59 @@ class _TripFormLayoutState extends ConsumerState<TripFormLayout>
         widget.values['purposeOfVisit'].toString().isNotEmpty) {
       _otherPurposeController.text = widget.values['purposeOfVisit'];
     }
-    Future.microtask(() {
+
+    Future.microtask(() async {
       if (!mounted) return;
-      final locationState = ref.read(locationProvider);
-      if (locationState.valueOrNull?.allStates.isEmpty ?? true) {
-        ref.read(locationProvider.notifier).retry();
-      }
-      final currentMode = widget.values['modeOfTravel'];
-      final modeId = currentMode == "Land"
-          ? 2
-          : currentMode == "Sea"
-              ? 3
-              : 1;
-      ref
-          .read(portOfArrivalProvider.notifier)
-          .loadPortOfArrrivalByModeId(modeId);
+
+      // 1. Purpose နဲ့ Port တွေကို အရင် Load မည်
       _loadPurposeFromJson();
+      try {
+        final currentMode = widget.values['modeOfTravel'];
+        final modeId = currentMode == "Land"
+            ? 2
+            : currentMode == "Sea"
+            ? 3
+            : 1;
+        ref
+            .read(portOfArrivalProvider.notifier)
+            .loadPortOfArrrivalByModeId(modeId);
+      } catch (_) {}
+
+      // 🎯 The Magic Fix: Direct Synchronous Cascade (ရိုးရှင်းပြီး အမှားကင်းတဲ့နည်းလမ်း)
+      try {
+        // ၁။ API ကနေ State တွေ အကုန်ကျလာတဲ့အထိ အရင်စောင့်မယ်
+        var locState = await ref.read(locationProvider.future);
+        if (locState.allStates.isEmpty) {
+          await ref.read(locationProvider.notifier).retry();
+          locState = await ref.read(locationProvider.future);
+        }
+
+        // ၂။ အချက်အလက်တွေ အဆင်သင့်ဖြစ်ပြီဆိုရင် အဆင့်ဆင့် တိုက်ရိုက် Restore လုပ်မယ်
+        if (mounted && locState.allStates.isNotEmpty) {
+          final savedState = widget.values['stateRegion'];
+          final savedDistrict = widget.values['district'];
+          final savedTownship = widget.values['township'];
+
+          if (savedState != null) {
+            // အဆင့် ၁: State ကို ရွေးလိုက်တာနဲ့ District စာရင်း ချက်ချင်းထွက်လာမယ်
+            ref.read(locationProvider.notifier).selectState(savedState);
+
+            if (savedDistrict != null) {
+              // အဆင့် ၂: District ကို ရွေးလိုက်တာနဲ့ Township စာရင်း ချက်ချင်းထွက်လာမယ်
+              ref.read(locationProvider.notifier).selectDistrict(savedDistrict);
+
+              if (savedTownship != null) {
+                // အဆင့် ၃: Township ကို ရွေးပေးလိုက်မယ်
+                ref
+                    .read(locationProvider.notifier)
+                    .selectTownship(savedTownship);
+              }
+            }
+          }
+        }
+      } catch (e) {
+        debugPrint("❌ Location Restore Error: $e");
+      }
     });
   }
 
@@ -126,18 +163,27 @@ class _TripFormLayoutState extends ConsumerState<TripFormLayout>
             "Health",
           ].contains(widget.values['purposeOfVisit']));
 
+  // 🎯 Controller ထဲကို Session ထဲက ဒေတာတွေ မှန်မှန်ကန်ကန် စီးဝင်သွားအောင် ပြင်ဆင်ခြင်း
   TextEditingController _getSafeController(String key) {
-    return widget.controllers[key] ?? TextEditingController();
+    if (!widget.controllers.containsKey(key)) {
+      widget.controllers[key] = TextEditingController(
+        text: widget.values[key]?.toString() ?? '',
+      );
+    } else if (widget.controllers[key]!.text.isEmpty &&
+        widget.values[key] != null) {
+      widget.controllers[key]!.text = widget.values[key].toString();
+    }
+    return widget.controllers[key]!;
   }
 
   Widget _row(Widget l, Widget r) => Row(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Expanded(child: l),
-          const SizedBox(width: 40),
-          Expanded(child: r),
-        ],
-      );
+    crossAxisAlignment: CrossAxisAlignment.start,
+    children: [
+      Expanded(child: l),
+      const SizedBox(width: 40),
+      Expanded(child: r),
+    ],
+  );
 
   Widget _column(Widget t, Widget b) =>
       Column(children: [t, const SizedBox(height: 16), b]);
@@ -260,13 +306,14 @@ class _TripFormLayoutState extends ConsumerState<TripFormLayout>
     }
     return CustomDropdownField(
       label: "Purpose of Visit",
-      value: widget.values['selectedPurposeDropdown'] ??
+      value:
+          widget.values['selectedPurposeDropdown'] ??
           ([
-            "Visit",
-            "Business",
-            "Education",
-            "Health",
-          ].contains(widget.values['purposeOfVisit'])
+                "Visit",
+                "Business",
+                "Education",
+                "Health",
+              ].contains(widget.values['purposeOfVisit'])
               ? widget.values['purposeOfVisit']
               : null),
       hint: "Select Purpose",
@@ -329,8 +376,8 @@ class _TripFormLayoutState extends ConsumerState<TripFormLayout>
                   lastDate: DateTime(2100),
                   errorText:
                       _showDateErrors && widget.values['arrivalDate'] == null
-                          ? 'Arrival Date is required'
-                          : null,
+                      ? 'Arrival Date is required'
+                      : null,
                   onPicked: (d) {
                     widget.onValueChanged('arrivalDate', d);
                     setState(() => _showDateErrors = false);
@@ -350,12 +397,16 @@ class _TripFormLayoutState extends ConsumerState<TripFormLayout>
                       final modeId = v == "Land"
                           ? 2
                           : v == "Sea"
-                              ? 3
-                              : 1;
+                          ? 3
+                          : 1;
                       widget.onValueChanged('modeOfTravel', v);
                       widget.onValueChanged('modeOfTravelId', modeId);
                       widget.onValueChanged('portOfArrival', null);
                       widget.onValueChanged('portOfArrivalId', null);
+                      widget.onValueChanged('district', null);
+                      widget.onValueChanged('districtId', null);
+                      widget.onValueChanged('township', null);
+                      widget.onValueChanged('townshipId', null);
                       ref
                           .read(portOfArrivalProvider.notifier)
                           .loadPortOfArrrivalByModeId(modeId);
@@ -373,8 +424,8 @@ class _TripFormLayoutState extends ConsumerState<TripFormLayout>
                   final modeId = mode == "Land"
                       ? 2
                       : mode == "Sea"
-                          ? 3
-                          : 1;
+                      ? 3
+                      : 1;
                   ref
                       .read(portOfArrivalProvider.notifier)
                       .loadPortOfArrrivalByModeId(modeId);
@@ -383,9 +434,12 @@ class _TripFormLayoutState extends ConsumerState<TripFormLayout>
                 pair(
                   CustomDropdownField(
                     label: "Port of Arrival",
-                    value: (portState!.portOfArrivalList.any(
-                      (p) => p.portOfArrivalName == widget.values['portOfArrival'],
-                    ))
+                    value:
+                        (portState!.portOfArrivalList.any(
+                          (p) =>
+                              p.portOfArrivalName ==
+                              widget.values['portOfArrival'],
+                        ))
                         ? widget.values['portOfArrival'] as String?
                         : null,
                     hint: "Select Port",
@@ -420,6 +474,9 @@ class _TripFormLayoutState extends ConsumerState<TripFormLayout>
                     maxLength: 15,
                     validator: (v) =>
                         FormValidators.required(v, 'Vehicle Number'),
+                    onChanged: (v) {
+                      widget.onValueChanged('vehicleNumber', v);
+                    },
                   ),
                 ),
               ],
@@ -441,8 +498,10 @@ class _TripFormLayoutState extends ConsumerState<TripFormLayout>
                   label: "State/Region",
                   dialogWidth: 300,
                   dialogHeight: 250,
-                  value: (locationState!.allStates
-                          .any((s) => s.name == widget.values['stateRegion']))
+                  value:
+                      (locationState!.allStates.any(
+                        (s) => s.name == widget.values['stateRegion'],
+                      ))
                       ? widget.values['stateRegion'] as String?
                       : null,
                   hint: "Select State/Region",
@@ -462,7 +521,10 @@ class _TripFormLayoutState extends ConsumerState<TripFormLayout>
                       try {
                         final selectedState = locationState.allStates
                             .firstWhere((s) => s.name == v);
-                        widget.onValueChanged('stateRegionId', selectedState.id);
+                        widget.onValueChanged(
+                          'stateRegionId',
+                          selectedState.id,
+                        );
                       } catch (_) {}
 
                       ref.read(locationProvider.notifier).selectState(v);
@@ -479,8 +541,10 @@ class _TripFormLayoutState extends ConsumerState<TripFormLayout>
                   label: "District",
                   dialogWidth: 300,
                   dialogHeight: 250,
-                  value: (locationState.availableDistricts
-                          .contains(widget.values['district']))
+                  value:
+                      (locationState.availableDistricts.contains(
+                        widget.values['district'],
+                      ))
                       ? widget.values['district'] as String?
                       : null,
                   hint: "Select District",
@@ -494,9 +558,12 @@ class _TripFormLayoutState extends ConsumerState<TripFormLayout>
                       widget.onValueChanged('townshipId', null);
                       try {
                         final selectedState = locationState.allStates
-                            .firstWhere((s) => s.name == widget.values['stateRegion']);
-                        final selectedDist = selectedState.districts
-                            .firstWhere((d) => d.name == v);
+                            .firstWhere(
+                              (s) => s.name == widget.values['stateRegion'],
+                            );
+                        final selectedDist = selectedState.districts.firstWhere(
+                          (d) => d.name == v,
+                        );
                         widget.onValueChanged(
                           'districtId',
                           selectedDist.districtId,
@@ -512,8 +579,10 @@ class _TripFormLayoutState extends ConsumerState<TripFormLayout>
                   label: "Township",
                   dialogWidth: 300,
                   dialogHeight: 250,
-                  value: (locationState.availableTownships
-                          .contains(widget.values['township']))
+                  value:
+                      (locationState.availableTownships.contains(
+                        widget.values['township'],
+                      ))
                       ? widget.values['township'] as String?
                       : null,
                   hint: "Select Township",
@@ -524,12 +593,16 @@ class _TripFormLayoutState extends ConsumerState<TripFormLayout>
                     if (v != widget.values['township']) {
                       widget.onValueChanged('township', v);
                       try {
-                        final selectedState = locationState.allStates.firstWhere(
-                            (s) => s.name == widget.values['stateRegion']);
+                        final selectedState = locationState.allStates
+                            .firstWhere(
+                              (s) => s.name == widget.values['stateRegion'],
+                            );
                         final selectedDist = selectedState.districts.firstWhere(
-                            (d) => d.name == widget.values['district']);
-                        final selectedTown = selectedDist.townships
-                            .firstWhere((t) => t.name == v);
+                          (d) => d.name == widget.values['district'],
+                        );
+                        final selectedTown = selectedDist.townships.firstWhere(
+                          (t) => t.name == v,
+                        );
                         widget.onValueChanged('townshipId', selectedTown.id);
                       } catch (_) {}
                     }
@@ -547,13 +620,15 @@ class _TripFormLayoutState extends ConsumerState<TripFormLayout>
                   controller: _getSafeController('addressInMyanmar'),
                   validator: (v) =>
                       FormValidators.required(v, 'Address in Myanmar'),
+                  onChanged: (v) {
+                    widget.onValueChanged('addressInMyanmar', v);
+                  },
                 ),
                 CustomTextField(
                   label: "Accommodation",
                   controller: _getSafeController('accommodation'),
                   maxLength: 100,
-                  validator: (v) =>
-                      FormValidators.required(v, 'Accommodation'),
+                  validator: (v) => FormValidators.required(v, 'Accommodation'),
                   onChanged: (v) {
                     widget.onValueChanged('accommodation', v);
                   },
@@ -569,6 +644,9 @@ class _TripFormLayoutState extends ConsumerState<TripFormLayout>
                   maxLength: 11,
                   controller: _getSafeController('mobileNumberMM'),
                   validator: (v) => FormValidators.required(v, 'Mobile Number'),
+                  onChanged: (v) {
+                    widget.onValueChanged('mobileNumberMM', v);
+                  },
                 ),
                 _buildPurposeField(),
               ),
@@ -580,6 +658,9 @@ class _TripFormLayoutState extends ConsumerState<TripFormLayout>
                   label: "Previous City",
                   controller: _getSafeController('previousCity'),
                   validator: (v) => FormValidators.required(v, 'Previous City'),
+                  onChanged: (v) {
+                    widget.onValueChanged('previousCity', v);
+                  },
                 ),
                 const SizedBox(),
               ),
