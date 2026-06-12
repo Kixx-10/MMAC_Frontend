@@ -4,12 +4,9 @@ import 'package:mmac/ui/views/pages/main_layout.dart';
 //import 'package:mmac/ui/views/pages/new_application/residency_layout.dart';
 
 void main() {
-  runApp(
-    const ProviderScope(
-      child: MyApp(),
-    ),
-  );
+  runApp(const ProviderScope(child: MyApp()));
 }
+
 class MyApp extends StatelessWidget {
   const MyApp({super.key});
 
@@ -17,7 +14,7 @@ class MyApp extends StatelessWidget {
   Widget build(BuildContext context) {
     return const MaterialApp(
       debugShowCheckedModeBanner: false,
-      home: MainLayout(), 
+      home: MainLayout(),
       //home:ResidencyLayout()
     );
   }

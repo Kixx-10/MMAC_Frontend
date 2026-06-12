@@ -1,3 +1,5 @@
+// lib/ui/views/pages/new_application/identification_form_layout.dart
+
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -68,34 +70,59 @@ class _IdentificationFormLayoutState
     super.initState();
     widget.onReady(this);
 
+    // 🎯 Restore Values for Dropdowns & TextFields
+    _selectedNrcStateCode = widget.values['nrcStateCode'];
+    _selectedTownshipCode = widget.values['nrcTownshipCode'];
+    _selectedNrcType = widget.values['nrcTypeCode'];
+    _nrcNumberController.text = widget.values['nrcRawNumber'] ?? '';
+
     _countryCodes = CountryCodeData.codes;
     final String existingMobile = widget.controllers['mobile']?.text ?? '';
-  final String? currentCode = widget.values['mobileCode'];
-  if (existingMobile.isNotEmpty && currentCode != null && existingMobile.startsWith(currentCode)) {
-    _mobileNumberController.text = existingMobile.substring(currentCode.length);
-  }
+    final String? currentCode = widget.values['mobileCode'];
+
+    if (existingMobile.isNotEmpty &&
+        currentCode != null &&
+        existingMobile.startsWith(currentCode)) {
+      _mobileNumberController.text = existingMobile.substring(
+        currentCode.length,
+      );
+    }
+
+    // 🎯 The Pro Fix: Asynchronous Domino Effect
     Future.microtask(() async {
-      ref
-          .read(countryProvider.future)
-          .then((state) {
-            if (!mounted) return;
-            setState(() {
-              _rawCountryObjects.clear();
-              _countryNameList.clear();
-              _rawCountryObjects.addAll(state.countryList);
-              _countryNameList.addAll(
-                state.countryList.map((c) => c.countryName).toList(),
-              );
-              _isLoading = false;
-            });
-          })
-          .catchError((e) {
-            debugPrint("❌ Failed to load countries from API: $e");
-            if (!mounted) return;
-            setState(() {
-              _isLoading = false;
-            });
+      // 1. Load Countries Data
+      try {
+        final countryState = await ref.read(countryProvider.future);
+        if (mounted) {
+          setState(() {
+            _rawCountryObjects.clear();
+            _countryNameList.clear();
+            _rawCountryObjects.addAll(countryState.countryList);
+            _countryNameList.addAll(
+              countryState.countryList.map((c) => c.countryName).toList(),
+            );
+            _isLoading = false;
           });
+        }
+      } catch (e) {
+        debugPrint("❌ Failed to load countries from API: $e");
+        if (mounted) setState(() => _isLoading = false);
+      }
+
+      // 2. Restore NRC Cascade Dropdowns
+      if (_selectedNrcStateCode != null && mounted) {
+        try {
+          final nrcData = await ref.read(nrcProvider.future);
+          final matchedState = nrcData.nrcStateList.firstWhere(
+            (s) => s.idCode == _selectedNrcStateCode,
+          );
+          // 🎯 မှော်ဆန်တဲ့အချက် - Draft ထဲက State ID ကို Provider ဆီ ပို့ပေးလိုက်ခြင်းဖြင့်
+          // Provider က သက်ဆိုင်ရာ မြို့နယ် (Townships) တွေကို အလိုအလျောက် ပြန်ထုတ်ပေးသွားပါမယ်။
+          ref.read(nrcProvider.notifier).selectNrcState(matchedState.id);
+        } catch (e) {
+          debugPrint("❌ Failed to restore NRC provider state: $e");
+        }
+      }
     });
   }
 
@@ -111,9 +138,12 @@ class _IdentificationFormLayoutState
     final String number = _mobileNumberController.text.trim();
 
     if (code != null && number.isNotEmpty) {
-      widget.controllers['mobile']?.text = "$code$number";
+      final fullNumber = "$code$number";
+      widget.controllers['mobile']?.text = fullNumber;
+      widget.onValueChanged('mobile', fullNumber);
     } else {
       widget.controllers['mobile']?.text = "";
+      widget.onValueChanged('mobile', "");
     }
   }
 
@@ -134,24 +164,23 @@ class _IdentificationFormLayoutState
           (st) => st.idCode == _selectedNrcStateCode,
         );
         stateMM = matchedState.codeMM;
-      } catch (e) {
-        debugPrint("State codeMM mapping error: $e");
-      }
+      } catch (e) {}
 
       try {
         final matchedTownship = townshipList.firstWhere(
           (ts) => ts.idCode == _selectedTownshipCode,
         );
         townshipMM = matchedTownship.codeMM;
-      } catch (e) {
-        debugPrint("Township codeMM mapping error: $e");
-      }
+      } catch (e) {}
+
       final fullNrcMyanmar =
           "$stateMM/$townshipMM($_selectedNrcType)${_nrcNumberController.text}";
 
       widget.controllers['nrc']?.text = fullNrcMyanmar;
+      widget.onValueChanged('nrc', fullNrcMyanmar);
     } else {
       widget.controllers['nrc']?.text = "";
+      widget.onValueChanged('nrc', "");
     }
   }
 
@@ -230,6 +259,9 @@ class _IdentificationFormLayoutState
               maxLength: 50,
               labelWidth: lw,
               validator: (v) => FormValidators.required(v, 'Full Name'),
+              onChanged: (value) {
+                widget.onValueChanged('fullName', value);
+              },
             ),
             CustomDropdownField(
               label: "Gender",
@@ -244,7 +276,8 @@ class _IdentificationFormLayoutState
                 widget.onValueChanged('gender', value);
               },
               validator: (value) =>
-                  value == null ? "Please select gender" : null, spacing: 8,
+                  value == null ? "Please select gender" : null,
+              spacing: 8,
             ),
           ),
           const SizedBox(height: 20),
@@ -266,45 +299,43 @@ class _IdentificationFormLayoutState
               },
             ),
             AbsorbPointer(
-  // if myanmr set read only
-  absorbing: widget.values['country'] == 'Myanmar' || widget.values['country'] == 'MMR',
-  child: CustomDropdownField(
-    label: "Country",
-    value: widget.values['country'],
-    hint: "Select Country",
-    labelWidth: lw,
-    dialogWidth: 250,
-    dialogHeight: 250,
-    items: _countryNameList,
-    validator: (v) => FormValidators.requiredDropdown(v, 'Country'),
-    onChanged: (v) {
-      widget.onValueChanged('country', v);
-      if (v != null) {
-        ref.read(countryProvider.notifier).selectCountry(v);
-        try {
-          final matched = _rawCountryObjects.firstWhere(
-            (c) => c.countryName == v,
-          );
-          widget.onValueChanged('countryCode', matched.countryCode);
-        } catch (e) {
-          debugPrint("Country model mapping error: $e");
-        }
-      }
-      if (v != 'Myanmar' && v != 'MMR') {
-        widget.controllers['nrc']?.clear();
-        widget.controllers['fatherName']?.clear();
-        if (!mounted) return;
-        setState(() {
-          _selectedNrcStateCode = null;
-          _selectedTownshipCode = null;
-          _selectedNrcType = null;
-          _nrcNumberController.clear();
-        });
-      }
-    },
-    spacing: 8,
-  ),
-),
+              absorbing:
+                  widget.values['country'] == 'Myanmar' ||
+                  widget.values['country'] == 'MMR',
+              child: CustomDropdownField(
+                label: "Country",
+                value: widget.values['country'],
+                hint: "Select Country",
+                labelWidth: lw,
+                dialogWidth: 250,
+                dialogHeight: 250,
+                items: _countryNameList,
+                validator: (v) => FormValidators.requiredDropdown(v, 'Country'),
+                onChanged: (v) {
+                  widget.onValueChanged('country', v);
+                  if (v != null) {
+                    try {
+                      final matched = _rawCountryObjects.firstWhere(
+                        (c) => c.countryName == v,
+                      );
+                      widget.onValueChanged('countryCode', matched.countryCode);
+                    } catch (e) {}
+                  }
+                  if (v != 'Myanmar' && v != 'MMR') {
+                    widget.controllers['nrc']?.clear();
+                    widget.controllers['fatherName']?.clear();
+                    if (!mounted) return;
+                    setState(() {
+                      _selectedNrcStateCode = null;
+                      _selectedTownshipCode = null;
+                      _selectedNrcType = null;
+                      _nrcNumberController.clear();
+                    });
+                  }
+                },
+                spacing: 8,
+              ),
+            ),
           ),
           const SizedBox(height: 20),
 
@@ -315,174 +346,174 @@ class _IdentificationFormLayoutState
               labelWidth: lw,
               maxLength: 30,
               validator: FormValidators.email,
+              onChanged: (value) {
+                widget.onValueChanged('email', value);
+              },
             ),
 
             // ─── Mobile Number Field ───
-Row(
-  crossAxisAlignment: CrossAxisAlignment.start,
-  children: [
-    Padding(
-      padding: const EdgeInsets.only(top: 14),
-      child: SizedBox(
-        width: lw,
-        child: RichText(
-          text: const TextSpan(
-            text: "Mobile Number",
-            style: TextStyle(
-              fontSize: 14,
-              fontWeight: FontWeight.w500,
-              color: Colors.black87,
-              fontFamily: 'sans-serif',
-            ),
-            children: [
-              TextSpan(
-                text: ' *',
-                style: TextStyle(
-                  color: Colors.red,
-                  fontWeight: FontWeight.bold,
-                ),
-              ),
-            ],
-          ),
-        ),
-      ),
-    ),
-    const SizedBox(width: 8),
-    Expanded(
-      child: Row(
-        crossAxisAlignment: CrossAxisAlignment.start, 
-        children: [
-          SizedBox(
-            width: 80,
-            child: InkWell(
-              onTap: () {
-                showDialog<String>(
-                  context: context,
-                  builder: (context) => MobileCodeSearchDialog(
-                    countryCodes: _countryCodes,
-                    selectedValue: widget.values['mobileCode'],
-                  ),
-                ).then((code) {
-                  if (code != null) {
-                    widget.onValueChanged('mobileCode', code);
-                    _updateMobileControllerValue();
-                  }
-                });
-              },
-              borderRadius: BorderRadius.circular(8),
-              child: Container(
-                height: 48, 
-                padding: const EdgeInsets.symmetric(
-                  horizontal: 8,
-                ),
-                alignment: Alignment.center,
-                decoration: BoxDecoration(
-                  color: Colors.white,
-                  borderRadius: BorderRadius.circular(8),
-                  border: Border.all(
-                    color: Colors.grey.shade300,
-                    width: 1,
-                  ),
-                ),
-                child: Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    Expanded(
-                      child: Text(
-                        widget.values['mobileCode'] ?? "Code",
+            Row(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Padding(
+                  padding: const EdgeInsets.only(top: 14),
+                  child: SizedBox(
+                    width: lw,
+                    child: RichText(
+                      text: const TextSpan(
+                        text: "Mobile Number",
                         style: TextStyle(
-                          fontSize: 13,
-                          color: widget.values['mobileCode'] != null
-                              ? Colors.black87
-                              : Colors.grey.shade400,
+                          fontSize: 14,
                           fontWeight: FontWeight.w500,
+                          color: Colors.black87,
+                          fontFamily: 'sans-serif',
                         ),
-                        overflow: TextOverflow.ellipsis,
+                        children: [
+                          TextSpan(
+                            text: ' *',
+                            style: TextStyle(
+                              color: Colors.red,
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
+                        ],
                       ),
                     ),
-                    const Icon(
-                      Icons.arrow_drop_down,
-                      size: 18,
-                      color: Colors.black54,
-                    ),
-                  ],
+                  ),
                 ),
-              ),
-            ),
-          ),
-          // Phone Number Text Field
-          Expanded(
-            child: TextFormField(
-              controller: _mobileNumberController,
-              keyboardType: TextInputType.phone,
-              inputFormatters: [
-                FilteringTextInputFormatter.digitsOnly,
-                LengthLimitingTextInputFormatter(15),
+                const SizedBox(width: 8),
+                Expanded(
+                  child: Row(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      SizedBox(
+                        width: 80,
+                        child: InkWell(
+                          onTap: () {
+                            showDialog<String>(
+                              context: context,
+                              builder: (context) => MobileCodeSearchDialog(
+                                countryCodes: _countryCodes,
+                                selectedValue: widget.values['mobileCode'],
+                              ),
+                            ).then((code) {
+                              if (code != null) {
+                                widget.onValueChanged('mobileCode', code);
+                                _updateMobileControllerValue();
+                              }
+                            });
+                          },
+                          borderRadius: BorderRadius.circular(8),
+                          child: Container(
+                            height: 48,
+                            padding: const EdgeInsets.symmetric(horizontal: 8),
+                            alignment: Alignment.center,
+                            decoration: BoxDecoration(
+                              color: Colors.white,
+                              borderRadius: BorderRadius.circular(8),
+                              border: Border.all(
+                                color: Colors.grey.shade300,
+                                width: 1,
+                              ),
+                            ),
+                            child: Row(
+                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                              children: [
+                                Expanded(
+                                  child: Text(
+                                    widget.values['mobileCode'] ?? "Code",
+                                    style: TextStyle(
+                                      fontSize: 13,
+                                      color: widget.values['mobileCode'] != null
+                                          ? Colors.black87
+                                          : Colors.grey.shade400,
+                                      fontWeight: FontWeight.w500,
+                                    ),
+                                    overflow: TextOverflow.ellipsis,
+                                  ),
+                                ),
+                                const Icon(
+                                  Icons.arrow_drop_down,
+                                  size: 18,
+                                  color: Colors.black54,
+                                ),
+                              ],
+                            ),
+                          ),
+                        ),
+                      ),
+                      Expanded(
+                        child: TextFormField(
+                          controller: _mobileNumberController,
+                          keyboardType: TextInputType.phone,
+                          inputFormatters: [
+                            FilteringTextInputFormatter.digitsOnly,
+                            LengthLimitingTextInputFormatter(15),
+                          ],
+                          style: const TextStyle(
+                            fontSize: 13,
+                            fontWeight: FontWeight.w500,
+                          ),
+                          decoration: InputDecoration(
+                            filled: true,
+                            fillColor: Colors.white,
+                            hintText: "Enter phone number",
+                            hintStyle: TextStyle(
+                              color: Colors.grey.shade400,
+                              fontSize: 13,
+                            ),
+                            contentPadding: const EdgeInsets.symmetric(
+                              horizontal: 10,
+                              vertical: 16,
+                            ),
+                            enabledBorder: OutlineInputBorder(
+                              borderRadius: BorderRadius.circular(8),
+                              borderSide: BorderSide(
+                                color: Colors.grey.shade300,
+                                width: 1,
+                              ),
+                            ),
+                            focusedBorder: OutlineInputBorder(
+                              borderRadius: BorderRadius.circular(8),
+                              borderSide: const BorderSide(
+                                color: Colors.blue,
+                                width: 1.5,
+                              ),
+                            ),
+                            errorBorder: OutlineInputBorder(
+                              borderRadius: BorderRadius.circular(8),
+                              borderSide: const BorderSide(
+                                color: Colors.red,
+                                width: 1,
+                              ),
+                            ),
+                            focusedErrorBorder: OutlineInputBorder(
+                              borderRadius: BorderRadius.circular(8),
+                              borderSide: const BorderSide(
+                                color: Colors.red,
+                                width: 1.5,
+                              ),
+                            ),
+                          ),
+                          onChanged: (v) => _updateMobileControllerValue(),
+                          validator: (v) {
+                            final String? code = widget.values['mobileCode'];
+                            final String number = _mobileNumberController.text;
+                            if (code == null) {
+                              return 'Please select country code';
+                            }
+                            if (number.isEmpty) {
+                              return 'Mobile Number is required';
+                            }
+                            return null;
+                          },
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
               ],
-              style: const TextStyle(
-                fontSize: 13,
-                fontWeight: FontWeight.w500,
-              ),
-              decoration: InputDecoration(
-                filled: true,
-                fillColor: Colors.white,
-                hintText: "Enter phone number",
-                hintStyle: TextStyle(
-                  color: Colors.grey.shade400,
-                  fontSize: 13,
-                ),
-                contentPadding: const EdgeInsets.symmetric(
-                  horizontal: 10,
-                  vertical: 16,
-                ),
-                enabledBorder: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(8),
-                  borderSide: BorderSide(
-                    color: Colors.grey.shade300,
-                    width: 1,
-                  ),
-                ),
-                focusedBorder: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(8),
-                  borderSide: const BorderSide(
-                    color: Colors.blue,
-                    width: 1.5,
-                  ),
-                ),
-                errorBorder: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(8),
-                  borderSide: const BorderSide(
-                    color: Colors.red,
-                    width: 1,
-                  ),
-                ),
-                focusedErrorBorder: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(8),
-                  borderSide: const BorderSide(
-                    color: Colors.red,
-                    width: 1.5,
-                  ),
-                ),
-              ),
-              onChanged: (v) => _updateMobileControllerValue(),
-              validator: (v) {
-                final String? code = widget.values['mobileCode'];
-                final String number = _mobileNumberController.text;
-                if (code == null) {
-                  return 'Please select country code';
-                }
-                if (number.isEmpty) {
-                  return 'Mobile Number is required';
-                }
-                return null;
-              },
             ),
-          ),
-        ],
-      ),
-    ),
-  ],
-),
           ),
           const SizedBox(height: 20),
           pair(
@@ -492,16 +523,14 @@ Row(
               maxLength: 50,
               labelWidth: lw,
               isRequired: false,
-             validator: (v) {
-              return null; 
-               },
-               onChanged: (v) {
-    if (v.trim().isEmpty) {
-      widget.onValueChanged('visaNo', null); 
-    } else {
-      widget.onValueChanged('visaNo', v); 
-    }
-  },
+              validator: (v) => null,
+              onChanged: (v) {
+                if (v.trim().isEmpty) {
+                  widget.onValueChanged('visaNumber', null);
+                } else {
+                  widget.onValueChanged('visaNumber', v);
+                }
+              },
             ),
             CustomTextField(
               label: "Passport Number",
@@ -509,6 +538,9 @@ Row(
               maxLength: 20,
               labelWidth: lw,
               validator: (v) => FormValidators.required(v, 'Passport Number'),
+              onChanged: (value) {
+                widget.onValueChanged('passportNumber', value);
+              },
             ),
           ),
           const SizedBox(height: 20),
@@ -525,6 +557,8 @@ Row(
 
                   final int? currentProviderStateId =
                       nrcState?.selectedNrcStateId;
+
+                  // 🎯 Dropdown Button အတွက် တန်ဖိုးများကို အကာအကွယ်ပေးထားခြင်း
                   final int? activeStateId =
                       stateList.any((st) => st.id == currentProviderStateId)
                       ? currentProviderStateId
@@ -573,6 +607,8 @@ Row(
                             _selectedNrcStateCode = match.idCode;
                             _selectedTownshipCode = null;
                           });
+                          widget.onValueChanged('nrcStateCode', match.idCode);
+                          widget.onValueChanged('nrcTownshipCode', null);
                           _updateNrcControllerValue();
                         }
                       },
@@ -607,6 +643,7 @@ Row(
                       onChanged: (v) {
                         if (!mounted) return;
                         setState(() => _selectedTownshipCode = v);
+                        widget.onValueChanged('nrcTownshipCode', v);
                         _updateNrcControllerValue();
                       },
                     ),
@@ -636,6 +673,7 @@ Row(
                       onChanged: (v) {
                         if (!mounted) return;
                         setState(() => _selectedNrcType = v);
+                        widget.onValueChanged('nrcTypeCode', v);
                         _updateNrcControllerValue();
                       },
                     ),
@@ -675,7 +713,10 @@ Row(
                         focusedBorder: InputBorder.none,
                         contentPadding: EdgeInsets.zero,
                       ),
-                      onChanged: (v) => _updateNrcControllerValue(),
+                      onChanged: (v) {
+                        _updateNrcControllerValue();
+                        widget.onValueChanged('nrcRawNumber', v);
+                      },
                     ),
                   );
 
@@ -687,6 +728,18 @@ Row(
                     numberField: numberField,
                   );
                 }
+
+                Widget fatherNameField = CustomTextField(
+                  label: "Father Name",
+                  maxLength: 50,
+                  controller: widget.controllers['fatherName']!,
+                  labelWidth: lw,
+                  validator: (v) =>
+                      FormValidators.fatherName(v, isMyanmar: isMyanmar),
+                  onChanged: (value) {
+                    widget.onValueChanged('fatherName', value);
+                  },
+                );
 
                 if (isDesktop) {
                   return Row(
@@ -724,18 +777,7 @@ Row(
                         ),
                       ),
                       const SizedBox(width: 40),
-                      Expanded(
-                        child: CustomTextField(
-                          label: "Father Name",
-                          maxLength: 50,
-                          controller: widget.controllers['fatherName']!,
-                          labelWidth: lw,
-                          validator: (v) => FormValidators.fatherName(
-                            v,
-                            isMyanmar: isMyanmar,
-                          ),
-                        ),
-                      ),
+                      Expanded(child: fatherNameField),
                     ],
                   );
                 } else {
@@ -771,14 +813,7 @@ Row(
                         ],
                       ),
                       const SizedBox(height: 16),
-                      CustomTextField(
-                        label: "Father Name",
-                        controller: widget.controllers['fatherName']!,
-                        labelWidth: lw,
-                        maxLength: 50,
-                        validator: (v) =>
-                            FormValidators.fatherName(v, isMyanmar: isMyanmar),
-                      ),
+                      fatherNameField,
                     ],
                   );
                 }
@@ -843,11 +878,10 @@ Row(
                       'issuedCountryCode',
                       matched.countryCode,
                     );
-                  } catch (e) {
-                    debugPrint("Issued Country model mapping error: $e");
-                  }
+                  } catch (e) {}
                 }
-              }, spacing: 8,
+              },
+              spacing: 8,
             ),
             CustomTextField(
               label: "Address",
@@ -855,6 +889,9 @@ Row(
               labelWidth: lw,
               maxLength: 100,
               validator: (v) => FormValidators.required(v, 'Address'),
+              onChanged: (value) {
+                widget.onValueChanged('address', value);
+              },
             ),
           ),
           const SizedBox(height: 28),
