@@ -1,5 +1,3 @@
-// lib/ui/views/pages/new_application/new_application_page.dart
-
 // ignore_for_file: curly_braces_in_flow_control_structures
 
 import 'package:flutter/material.dart';
@@ -8,7 +6,7 @@ import 'package:mmac/data/controllers/submit_provider.dart';
 import 'package:mmac/data/models/submit_request_model.dart';
 import 'package:mmac/ui/views/pages/new_application/declaration_layout.dart';
 import 'package:mmac/ui/views/pages/new_application/identification_form_layout.dart';
-import 'package:mmac/ui/views/pages/new_application/qr_generation_layout.dart';
+import 'package:mmac/ui/views/pages/new_application/qr_generate_screen.dart';
 import 'package:mmac/ui/views/pages/new_application/review_layout.dart';
 import 'package:mmac/ui/views/pages/new_application/trip_form_layout.dart';
 import 'package:mmac/ui/views/pages/update_application.dart';
@@ -40,8 +38,9 @@ class _NewApplicationState extends ConsumerState<NewApplication>
   int currentStep = 1;
   final int totalSteps = 4;
   String _generatedApplicationNo = '';
-
   bool _isSessionLoading = true;
+
+  SubmitRequestModel? _submittedData;
 
   final GlobalKey<FormState> _step1FormKey = GlobalKey<FormState>();
   IdentificationFormLayoutInterface? _step1Interface;
@@ -236,10 +235,10 @@ class _NewApplicationState extends ConsumerState<NewApplication>
 
       _step2Controllers['vehicleNumber']?.text = fetchedData.vehicleNumber;
       _step2Controllers['vehicleName']?.text = fetchedData.vehicleName;
-      _step2Controllers['accommodation']?.text = fetchedData.accommodation;
+      _step2Controllers['accommodation']?.text = fetchedData.accommodation!;
       _step2Controllers['addressInMyanmar']?.text =
           fetchedData.addressInMyanmar;
-      _step2Controllers['mobileNumberMM']?.text = fetchedData.mobileNumberMM;
+      _step2Controllers['mobileNumberMM']?.text = fetchedData.mobileNumberMM!;
       _step2Controllers['previousCity']?.text = fetchedData.previousCity!;
 
       // ၂။ Form Values (Dropdown & Dates) များကို သိမ်းဆည်းခြင်း
@@ -446,6 +445,7 @@ class _NewApplicationState extends ConsumerState<NewApplication>
       if (response != null) {
         FormSessionService.clearDraft();
         setState(() {
+          _submittedData = requestModel;
           _generatedApplicationNo = response.applicationNo;
           currentStep = 5;
         });
@@ -609,8 +609,9 @@ class _NewApplicationState extends ConsumerState<NewApplication>
           },
         );
       case 5:
-        return QrGenereate(
+        return QrGenerateScreen(
           applicationNo: _generatedApplicationNo,
+          requestData: _submittedData!,
           onFinish: _resetForm,
         );
       default:

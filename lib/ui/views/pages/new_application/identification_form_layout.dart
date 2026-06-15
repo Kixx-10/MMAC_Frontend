@@ -1,17 +1,19 @@
 // lib/ui/views/pages/new_application/identification_form_layout.dart
 
+// ignore_for_file: empty_catches
+
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:mmac/data/controllers/country_provider.dart';
 import 'package:mmac/data/controllers/nrc_provider.dart';
+import 'package:mmac/ui/views/pages/new_application/widget/nrc_selector_widget.dart';
 import '../../../../utils/form_validators.dart';
 import '../../../../utils/country_codes.dart';
 import '../../widgets/custom_text_field.dart';
 import '../../widgets/custom_date_field.dart';
 import '../../widgets/custom_dropdown_field.dart';
 import '../../widgets/mobile_code_search_dialog.dart';
-import '../../widgets/nrc_selector_field.dart';
 
 abstract class IdentificationFormLayoutInterface {
   bool validate();
@@ -44,6 +46,7 @@ class _IdentificationFormLayoutState
     extends ConsumerState<IdentificationFormLayout>
     implements IdentificationFormLayoutInterface {
   bool _showDateErrors = false;
+  bool _showNrcError = false;
   bool _isLoading = true;
 
   final List<dynamic> _rawCountryObjects = [];
@@ -70,7 +73,6 @@ class _IdentificationFormLayoutState
     super.initState();
     widget.onReady(this);
 
-    // 🎯 Restore Values for Dropdowns & TextFields
     _selectedNrcStateCode = widget.values['nrcStateCode'];
     _selectedTownshipCode = widget.values['nrcTownshipCode'];
     _selectedNrcType = widget.values['nrcTypeCode'];
@@ -88,9 +90,7 @@ class _IdentificationFormLayoutState
       );
     }
 
-    // 🎯 The Pro Fix: Asynchronous Domino Effect
     Future.microtask(() async {
-      // 1. Load Countries Data
       try {
         final countryState = await ref.read(countryProvider.future);
         if (mounted) {
@@ -109,15 +109,12 @@ class _IdentificationFormLayoutState
         if (mounted) setState(() => _isLoading = false);
       }
 
-      // 2. Restore NRC Cascade Dropdowns
       if (_selectedNrcStateCode != null && mounted) {
         try {
           final nrcData = await ref.read(nrcProvider.future);
           final matchedState = nrcData.nrcStateList.firstWhere(
             (s) => s.idCode == _selectedNrcStateCode,
           );
-          // 🎯 မှော်ဆန်တဲ့အချက် - Draft ထဲက State ID ကို Provider ဆီ ပို့ပေးလိုက်ခြင်းဖြင့်
-          // Provider က သက်ဆိုင်ရာ မြို့နယ် (Townships) တွေကို အလိုအလျောက် ပြန်ထုတ်ပေးသွားပါမယ်။
           ref.read(nrcProvider.notifier).selectNrcState(matchedState.id);
         } catch (e) {
           debugPrint("❌ Failed to restore NRC provider state: $e");
@@ -151,7 +148,11 @@ class _IdentificationFormLayoutState
     if (_selectedNrcStateCode != null &&
         _selectedTownshipCode != null &&
         _selectedNrcType != null &&
-        _nrcNumberController.text.isNotEmpty) {
+        _nrcNumberController.text.trim().length == 6) {
+      if (_showNrcError) {
+        setState(() => _showNrcError = false);
+      }
+
       final nrcStateData = ref.read(nrcProvider).valueOrNull;
       final stateList = nrcStateData?.nrcStateList ?? [];
       final townshipList = nrcStateData?.availableNrcTownships ?? [];
@@ -174,7 +175,7 @@ class _IdentificationFormLayoutState
       } catch (e) {}
 
       final fullNrcMyanmar =
-          "$stateMM/$townshipMM($_selectedNrcType)${_nrcNumberController.text}";
+          "$stateMM/$townshipMM($_selectedNrcType)${_nrcNumberController.text.trim()}";
 
       widget.controllers['nrc']?.text = fullNrcMyanmar;
       widget.onValueChanged('nrc', fullNrcMyanmar);
@@ -187,8 +188,50 @@ class _IdentificationFormLayoutState
   @override
   bool validate() {
     if (!mounted) return false;
-    setState(() => _showDateErrors = true);
-    return widget.formKey.currentState!.validate();
+
+    final bool isMyanmar =
+        widget.values['country'] == 'Myanmar' ||
+        widget.values['country'] == 'MMR';
+
+    setState(() {
+      _showDateErrors = true;
+
+      if (isMyanmar) {
+        if (_selectedNrcStateCode == null ||
+            _selectedTownshipCode == null ||
+            _selectedNrcType == null ||
+            _nrcNumberController.text.trim().length != 6) {
+          _showNrcError = true;
+        } else {
+          _showNrcError = false;
+        }
+      } else {
+        _showNrcError = false;
+      }
+    });
+
+    final String? passportExpiryError = FormValidators.passportExpiry(
+      expiryDate: widget.values['expiryDate'],
+      issuedDate: widget.values['issuedDate'],
+      isMyanmar: isMyanmar,
+    );
+
+    bool isExpiryValid = passportExpiryError == null;
+
+    final bool basicFormValid = widget.formKey.currentState!.validate();
+
+    if (isMyanmar) {
+      return basicFormValid &&
+          !_showNrcError &&
+          isExpiryValid &&
+          widget.values['dateOfBirth'] != null &&
+          widget.values['issuedDate'] != null;
+    }
+
+    return basicFormValid &&
+        isExpiryValid &&
+        widget.values['dateOfBirth'] != null &&
+        widget.values['issuedDate'] != null;
   }
 
   @override
@@ -213,26 +256,6 @@ class _IdentificationFormLayoutState
     final nrcAsync = ref.watch(nrcProvider);
     final nrcState = nrcAsync.valueOrNull;
 
-    Widget buildCustomDropdownContainer({
-      required Widget child,
-      bool isFocused = false,
-    }) {
-      return Container(
-        padding: const EdgeInsets.symmetric(horizontal: 8),
-        alignment: Alignment.center,
-        height: 45,
-        decoration: BoxDecoration(
-          color: Colors.white,
-          borderRadius: BorderRadius.circular(8),
-          border: Border.all(
-            color: isFocused ? Colors.blue : Colors.grey.shade300,
-            width: isFocused ? 1.5 : 1,
-          ),
-        ),
-        child: DropdownButtonHideUnderline(child: child),
-      );
-    }
-
     Widget pair(Widget a, Widget b) {
       if (isDesktop) {
         return Row(
@@ -247,657 +270,601 @@ class _IdentificationFormLayoutState
       return Column(children: [a, const SizedBox(height: 16), b]);
     }
 
-    return Form(
-      key: widget.formKey,
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          pair(
-            CustomTextField(
-              label: "Full Name",
-              controller: widget.controllers['fullName']!,
-              maxLength: 50,
-              labelWidth: lw,
-              validator: (v) => FormValidators.required(v, 'Full Name'),
-              onChanged: (value) {
-                widget.onValueChanged('fullName', value);
-              },
-            ),
-            CustomDropdownField(
-              label: "Gender",
-              hint: "Select Gender",
-              labelWidth: lw,
-              dialogWidth: 200,
-              dialogHeight: 100,
-              value: widget.values['gender'],
-              items: const ["Male", "Female"],
-              showSearch: false,
-              onChanged: (value) {
-                widget.onValueChanged('gender', value);
-              },
-              validator: (value) =>
-                  value == null ? "Please select gender" : null,
-              spacing: 8,
-            ),
-          ),
-          const SizedBox(height: 20),
+    String? getExpiryErrorText() {
+      if (!_showDateErrors) return null;
 
-          pair(
-            CustomDateField(
-              label: "Date of Birth",
-              value: widget.values['dateOfBirth'],
-              labelWidth: lw,
-              firstDate: DateTime(1900),
-              lastDate: DateTime.now(),
-              errorText: _showDateErrors && widget.values['dateOfBirth'] == null
-                  ? 'Date of Birth is required'
-                  : null,
-              onPicked: (d) {
-                widget.onValueChanged('dateOfBirth', d);
-                if (!mounted) return;
-                setState(() => _showDateErrors = false);
-              },
-            ),
-            AbsorbPointer(
-              absorbing:
-                  widget.values['country'] == 'Myanmar' ||
-                  widget.values['country'] == 'MMR',
-              child: CustomDropdownField(
-                label: "Country",
-                value: widget.values['country'],
-                hint: "Select Country",
-                labelWidth: lw,
-                dialogWidth: 250,
-                dialogHeight: 250,
-                items: _countryNameList,
-                validator: (v) => FormValidators.requiredDropdown(v, 'Country'),
-                onChanged: (v) {
-                  widget.onValueChanged('country', v);
-                  if (v != null) {
-                    try {
-                      final matched = _rawCountryObjects.firstWhere(
-                        (c) => c.countryName == v,
-                      );
-                      widget.onValueChanged('countryCode', matched.countryCode);
-                    } catch (e) {}
-                  }
-                  if (v != 'Myanmar' && v != 'MMR') {
-                    widget.controllers['nrc']?.clear();
-                    widget.controllers['fatherName']?.clear();
-                    if (!mounted) return;
-                    setState(() {
-                      _selectedNrcStateCode = null;
-                      _selectedTownshipCode = null;
-                      _selectedNrcType = null;
-                      _nrcNumberController.clear();
-                    });
-                  }
-                },
-                spacing: 8,
+      return FormValidators.passportExpiry(
+        expiryDate: widget.values['expiryDate'],
+        issuedDate: widget.values['issuedDate'],
+        isMyanmar: isMyanmar,
+      );
+    }
+
+    // ─── COMPONENT EXTRACTION BLOCK ───
+
+    final fullNameField = CustomTextField(
+      label: "Full Name",
+      controller: widget.controllers['fullName']!,
+      maxLength: 50,
+      labelWidth: lw,
+      validator: (v) => FormValidators.required(v, 'Full Name'),
+      onChanged: (value) {
+        widget.onValueChanged('fullName', value);
+      },
+    );
+
+    final genderField = CustomDropdownField(
+      label: "Gender",
+      hint: "Select Gender",
+      labelWidth: lw,
+      dialogWidth: 200,
+      dialogHeight: 100,
+      value: widget.values['gender'],
+      items: const ["Male", "Female"],
+      showSearch: false,
+      onChanged: (value) {
+        widget.onValueChanged('gender', value);
+      },
+      validator: (value) => value == null ? "Please select gender" : null,
+      spacing: 8,
+    );
+
+    final dateOfBirthField = CustomDateField(
+      label: "Date of Birth",
+      value: widget.values['dateOfBirth'],
+      labelWidth: lw,
+      firstDate: DateTime(1900),
+      lastDate: DateTime.now(),
+      errorText: _showDateErrors && widget.values['dateOfBirth'] == null
+          ? 'Date of Birth is required'
+          : null,
+      onPicked: (d) {
+        widget.onValueChanged('dateOfBirth', d);
+        if (!mounted) return;
+        setState(() => _showDateErrors = false);
+      },
+    );
+
+    final countryField = AbsorbPointer(
+      absorbing:
+          widget.values['country'] == 'Myanmar' ||
+          widget.values['country'] == 'MMR',
+      child: CustomDropdownField(
+        label: "Country",
+        value: widget.values['country'],
+        hint: "Select Country",
+        labelWidth: lw,
+        dialogWidth: 250,
+        dialogHeight: 250,
+        items: _countryNameList,
+        validator: (v) => FormValidators.requiredDropdown(v, 'Country'),
+        onChanged: (v) {
+          widget.onValueChanged('country', v);
+          if (v != null) {
+            try {
+              final matched = _rawCountryObjects.firstWhere(
+                (c) => c.countryName == v,
+              );
+              widget.onValueChanged('countryCode', matched.countryCode);
+            } catch (e) {}
+          }
+          if (v != 'Myanmar' && v != 'MMR') {
+            widget.controllers['nrc']?.clear();
+            widget.controllers['fatherName']?.clear();
+            if (!mounted) return;
+            setState(() {
+              _selectedNrcStateCode = null;
+              _selectedTownshipCode = null;
+              _selectedNrcType = null;
+              _nrcNumberController.clear();
+              _showNrcError = false;
+            });
+          }
+        },
+        spacing: 8,
+      ),
+    );
+
+    final emailField = CustomTextField(
+      label: "Email",
+      controller: widget.controllers['email']!,
+      labelWidth: lw,
+      maxLength: 30,
+      validator: FormValidators.email,
+      onChanged: (value) {
+        widget.onValueChanged('email', value);
+      },
+    );
+
+    final mobileField = Row(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Padding(
+          padding: const EdgeInsets.only(top: 14),
+          child: SizedBox(
+            width: lw,
+            child: RichText(
+              text: const TextSpan(
+                text: "Mobile Number",
+                style: TextStyle(
+                  fontSize: 14,
+                  fontWeight: FontWeight.w500,
+                  color: Colors.black87,
+                  fontFamily: 'sans-serif',
+                ),
+                children: [
+                  TextSpan(
+                    text: ' *',
+                    style: TextStyle(
+                      color: Colors.red,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                ],
               ),
             ),
           ),
-          const SizedBox(height: 20),
-
-          pair(
-            CustomTextField(
-              label: "Email",
-              controller: widget.controllers['email']!,
-              labelWidth: lw,
-              maxLength: 30,
-              validator: FormValidators.email,
-              onChanged: (value) {
-                widget.onValueChanged('email', value);
-              },
-            ),
-
-            // ─── Mobile Number Field ───
-            Row(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Padding(
-                  padding: const EdgeInsets.only(top: 14),
-                  child: SizedBox(
-                    width: lw,
-                    child: RichText(
-                      text: const TextSpan(
-                        text: "Mobile Number",
-                        style: TextStyle(
-                          fontSize: 14,
-                          fontWeight: FontWeight.w500,
-                          color: Colors.black87,
-                          fontFamily: 'sans-serif',
-                        ),
-                        children: [
-                          TextSpan(
-                            text: ' *',
-                            style: TextStyle(
-                              color: Colors.red,
-                              fontWeight: FontWeight.bold,
-                            ),
-                          ),
-                        ],
+        ),
+        const SizedBox(width: 8),
+        Expanded(
+          child: Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              SizedBox(
+                width: 80,
+                child: InkWell(
+                  onTap: () {
+                    showDialog<String>(
+                      context: context,
+                      builder: (context) => MobileCodeSearchDialog(
+                        countryCodes: _countryCodes,
+                        selectedValue: widget.values['mobileCode'],
                       ),
-                    ),
-                  ),
-                ),
-                const SizedBox(width: 8),
-                Expanded(
-                  child: Row(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      SizedBox(
-                        width: 80,
-                        child: InkWell(
-                          onTap: () {
-                            showDialog<String>(
-                              context: context,
-                              builder: (context) => MobileCodeSearchDialog(
-                                countryCodes: _countryCodes,
-                                selectedValue: widget.values['mobileCode'],
-                              ),
-                            ).then((code) {
-                              if (code != null) {
-                                widget.onValueChanged('mobileCode', code);
-                                _updateMobileControllerValue();
-                              }
-                            });
-                          },
-                          borderRadius: BorderRadius.circular(8),
-                          child: Container(
-                            height: 48,
-                            padding: const EdgeInsets.symmetric(horizontal: 8),
-                            alignment: Alignment.center,
-                            decoration: BoxDecoration(
-                              color: Colors.white,
-                              borderRadius: BorderRadius.circular(8),
-                              border: Border.all(
-                                color: Colors.grey.shade300,
-                                width: 1,
-                              ),
-                            ),
-                            child: Row(
-                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                              children: [
-                                Expanded(
-                                  child: Text(
-                                    widget.values['mobileCode'] ?? "Code",
-                                    style: TextStyle(
-                                      fontSize: 13,
-                                      color: widget.values['mobileCode'] != null
-                                          ? Colors.black87
-                                          : Colors.grey.shade400,
-                                      fontWeight: FontWeight.w500,
-                                    ),
-                                    overflow: TextOverflow.ellipsis,
-                                  ),
-                                ),
-                                const Icon(
-                                  Icons.arrow_drop_down,
-                                  size: 18,
-                                  color: Colors.black54,
-                                ),
-                              ],
-                            ),
-                          ),
-                        ),
-                      ),
-                      Expanded(
-                        child: TextFormField(
-                          controller: _mobileNumberController,
-                          keyboardType: TextInputType.phone,
-                          inputFormatters: [
-                            FilteringTextInputFormatter.digitsOnly,
-                            LengthLimitingTextInputFormatter(15),
-                          ],
-                          style: const TextStyle(
-                            fontSize: 13,
-                            fontWeight: FontWeight.w500,
-                          ),
-                          decoration: InputDecoration(
-                            filled: true,
-                            fillColor: Colors.white,
-                            hintText: "Enter phone number",
-                            hintStyle: TextStyle(
-                              color: Colors.grey.shade400,
-                              fontSize: 13,
-                            ),
-                            contentPadding: const EdgeInsets.symmetric(
-                              horizontal: 10,
-                              vertical: 16,
-                            ),
-                            enabledBorder: OutlineInputBorder(
-                              borderRadius: BorderRadius.circular(8),
-                              borderSide: BorderSide(
-                                color: Colors.grey.shade300,
-                                width: 1,
-                              ),
-                            ),
-                            focusedBorder: OutlineInputBorder(
-                              borderRadius: BorderRadius.circular(8),
-                              borderSide: const BorderSide(
-                                color: Colors.blue,
-                                width: 1.5,
-                              ),
-                            ),
-                            errorBorder: OutlineInputBorder(
-                              borderRadius: BorderRadius.circular(8),
-                              borderSide: const BorderSide(
-                                color: Colors.red,
-                                width: 1,
-                              ),
-                            ),
-                            focusedErrorBorder: OutlineInputBorder(
-                              borderRadius: BorderRadius.circular(8),
-                              borderSide: const BorderSide(
-                                color: Colors.red,
-                                width: 1.5,
-                              ),
-                            ),
-                          ),
-                          onChanged: (v) => _updateMobileControllerValue(),
-                          validator: (v) {
-                            final String? code = widget.values['mobileCode'];
-                            final String number = _mobileNumberController.text;
-                            if (code == null) {
-                              return 'Please select country code';
-                            }
-                            if (number.isEmpty) {
-                              return 'Mobile Number is required';
-                            }
-                            return null;
-                          },
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-              ],
-            ),
-          ),
-          const SizedBox(height: 20),
-          pair(
-            CustomTextField(
-              label: "Visa Number",
-              controller: widget.controllers['visaNumber']!,
-              maxLength: 50,
-              labelWidth: lw,
-              isRequired: false,
-              validator: (v) => null,
-              onChanged: (v) {
-                if (v.trim().isEmpty) {
-                  widget.onValueChanged('visaNumber', null);
-                } else {
-                  widget.onValueChanged('visaNumber', v);
-                }
-              },
-            ),
-            CustomTextField(
-              label: "Passport Number",
-              controller: widget.controllers['passportNumber']!,
-              maxLength: 20,
-              labelWidth: lw,
-              validator: (v) => FormValidators.required(v, 'Passport Number'),
-              onChanged: (value) {
-                widget.onValueChanged('passportNumber', value);
-              },
-            ),
-          ),
-          const SizedBox(height: 20),
-
-          if (isMyanmar) ...[
-            LayoutBuilder(
-              builder: (context, constraints) {
-                final bool isNrcRowDesktop = constraints.maxWidth > 550;
-
-                Widget nrcFields() {
-                  final List<dynamic> stateList = nrcState?.nrcStateList ?? [];
-                  final List<dynamic> townshipList =
-                      nrcState?.availableNrcTownships ?? [];
-
-                  final int? currentProviderStateId =
-                      nrcState?.selectedNrcStateId;
-
-                  // 🎯 Dropdown Button အတွက် တန်ဖိုးများကို အကာအကွယ်ပေးထားခြင်း
-                  final int? activeStateId =
-                      stateList.any((st) => st.id == currentProviderStateId)
-                      ? currentProviderStateId
-                      : null;
-
-                  final String? activeTownshipCode =
-                      townshipList.any(
-                        (ts) => ts.idCode == _selectedTownshipCode,
-                      )
-                      ? _selectedTownshipCode
-                      : null;
-
-                  final String? activeNrcType =
-                      _nrcTypes.any((t) => t['code'] == _selectedNrcType)
-                      ? _selectedNrcType
-                      : null;
-
-                  final stateDropdown = buildCustomDropdownContainer(
-                    child: DropdownButton<int>(
-                      value: activeStateId,
-                      isExpanded: true,
-                      isDense: true,
-                      icon: const Icon(
-                        Icons.arrow_drop_down,
-                        size: 18,
-                        color: Colors.black54,
-                      ),
-                      style: const TextStyle(
-                        fontSize: 13,
-                        color: Colors.black87,
-                        fontWeight: FontWeight.w500,
-                      ),
-                      menuMaxHeight: 350,
-                      items: stateList.map<DropdownMenuItem<int>>((st) {
-                        return DropdownMenuItem<int>(
-                          value: st.id,
-                          child: Text(st.codeMM),
-                        );
-                      }).toList(),
-                      onChanged: (id) {
-                        if (id != null) {
-                          ref.read(nrcProvider.notifier).selectNrcState(id);
-                          final match = stateList.firstWhere((s) => s.id == id);
-                          if (!mounted) return;
-                          setState(() {
-                            _selectedNrcStateCode = match.idCode;
-                            _selectedTownshipCode = null;
-                          });
-                          widget.onValueChanged('nrcStateCode', match.idCode);
-                          widget.onValueChanged('nrcTownshipCode', null);
-                          _updateNrcControllerValue();
-                        }
-                      },
-                    ),
-                  );
-
-                  final townshipDropdown = buildCustomDropdownContainer(
-                    child: DropdownButton<String>(
-                      value: activeTownshipCode,
-                      isExpanded: true,
-                      isDense: true,
-                      icon: const Icon(
-                        Icons.arrow_drop_down,
-                        size: 18,
-                        color: Colors.black54,
-                      ),
-                      style: const TextStyle(
-                        fontSize: 12,
-                        color: Colors.black87,
-                        fontWeight: FontWeight.w500,
-                      ),
-                      menuMaxHeight: 350,
-                      items: townshipList.map<DropdownMenuItem<String>>((ts) {
-                        return DropdownMenuItem<String>(
-                          value: ts.idCode,
-                          child: Text(
-                            ts.codeMM,
-                            overflow: TextOverflow.ellipsis,
-                          ),
-                        );
-                      }).toList(),
-                      onChanged: (v) {
-                        if (!mounted) return;
-                        setState(() => _selectedTownshipCode = v);
-                        widget.onValueChanged('nrcTownshipCode', v);
-                        _updateNrcControllerValue();
-                      },
-                    ),
-                  );
-
-                  final typeDropdown = buildCustomDropdownContainer(
-                    child: DropdownButton<String>(
-                      value: activeNrcType,
-                      isExpanded: true,
-                      isDense: true,
-                      icon: const Icon(
-                        Icons.arrow_drop_down,
-                        size: 18,
-                        color: Colors.black54,
-                      ),
-                      style: const TextStyle(
-                        fontSize: 12,
-                        color: Colors.black87,
-                        fontWeight: FontWeight.w500,
-                      ),
-                      items: _nrcTypes.map<DropdownMenuItem<String>>((t) {
-                        return DropdownMenuItem<String>(
-                          value: t['code'],
-                          child: Text(t['label']!),
-                        );
-                      }).toList(),
-                      onChanged: (v) {
-                        if (!mounted) return;
-                        setState(() => _selectedNrcType = v);
-                        widget.onValueChanged('nrcTypeCode', v);
-                        _updateNrcControllerValue();
-                      },
-                    ),
-                  );
-
-                  final numberField = Container(
-                    height: 44,
-                    padding: const EdgeInsets.symmetric(horizontal: 10),
+                    ).then((code) {
+                      if (code != null) {
+                        widget.onValueChanged('mobileCode', code);
+                        _updateMobileControllerValue();
+                      }
+                    });
+                  },
+                  borderRadius: BorderRadius.circular(8),
+                  child: Container(
+                    height: 48,
+                    padding: const EdgeInsets.symmetric(horizontal: 8),
                     alignment: Alignment.center,
                     decoration: BoxDecoration(
                       color: Colors.white,
                       borderRadius: BorderRadius.circular(8),
                       border: Border.all(color: Colors.grey.shade300, width: 1),
                     ),
-                    child: TextFormField(
-                      controller: _nrcNumberController,
-                      keyboardType: TextInputType.number,
-                      inputFormatters: [
-                        FilteringTextInputFormatter.allow(
-                          RegExp(r'[\u1040-\u1049]'),
-                        ),
-                        LengthLimitingTextInputFormatter(6),
-                      ],
-                      style: const TextStyle(
-                        fontSize: 13,
-                        fontWeight: FontWeight.w500,
-                      ),
-                      decoration: InputDecoration(
-                        hintText: "၁၂၃၄၅၆",
-                        hintStyle: TextStyle(
-                          color: Colors.grey.shade400,
-                          fontSize: 13,
-                        ),
-                        isDense: true,
-                        border: InputBorder.none,
-                        enabledBorder: InputBorder.none,
-                        focusedBorder: InputBorder.none,
-                        contentPadding: EdgeInsets.zero,
-                      ),
-                      onChanged: (v) {
-                        _updateNrcControllerValue();
-                        widget.onValueChanged('nrcRawNumber', v);
-                      },
-                    ),
-                  );
-
-                  return NrcSelectorField(
-                    isDesktop: isNrcRowDesktop,
-                    stateDropdown: stateDropdown,
-                    townshipDropdown: townshipDropdown,
-                    typeDropdown: typeDropdown,
-                    numberField: numberField,
-                  );
-                }
-
-                Widget fatherNameField = CustomTextField(
-                  label: "Father Name",
-                  maxLength: 50,
-                  controller: widget.controllers['fatherName']!,
-                  labelWidth: lw,
-                  validator: (v) =>
-                      FormValidators.fatherName(v, isMyanmar: isMyanmar),
-                  onChanged: (value) {
-                    widget.onValueChanged('fatherName', value);
-                  },
-                );
-
-                if (isDesktop) {
-                  return Row(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Expanded(
-                        child: Row(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            SizedBox(
-                              width: lw,
-                              child: Padding(
-                                padding: const EdgeInsets.only(top: 12),
-                                child: RichText(
-                                  text: const TextSpan(
-                                    text: "NRC",
-                                    style: TextStyle(
-                                      fontSize: 14,
-                                      fontWeight: FontWeight.w500,
-                                      color: Colors.black87,
-                                    ),
-                                    children: [
-                                      TextSpan(
-                                        text: ' *',
-                                        style: TextStyle(color: Colors.red),
-                                      ),
-                                    ],
-                                  ),
-                                ),
-                              ),
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        Expanded(
+                          child: Text(
+                            widget.values['mobileCode'] ?? "Code",
+                            style: TextStyle(
+                              fontSize: 13,
+                              color: widget.values['mobileCode'] != null
+                                  ? Colors.black87
+                                  : Colors.grey.shade400,
+                              fontWeight: FontWeight.w500,
                             ),
-                            const SizedBox(width: 8),
-                            Expanded(child: nrcFields()),
+                            overflow: TextOverflow.ellipsis,
+                          ),
+                        ),
+                        const Icon(
+                          Icons.arrow_drop_down,
+                          size: 18,
+                          color: Colors.black54,
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+              ),
+              Expanded(
+                child: TextFormField(
+                  controller: _mobileNumberController,
+                  keyboardType: TextInputType.phone,
+                  inputFormatters: [
+                    FilteringTextInputFormatter.digitsOnly,
+                    LengthLimitingTextInputFormatter(15),
+                  ],
+                  style: const TextStyle(
+                    fontSize: 13,
+                    fontWeight: FontWeight.w500,
+                  ),
+                  decoration: InputDecoration(
+                    filled: true,
+                    fillColor: Colors.white,
+                    hintText: "Enter phone number",
+                    hintStyle: TextStyle(
+                      color: Colors.grey.shade400,
+                      fontSize: 13,
+                    ),
+                    contentPadding: const EdgeInsets.symmetric(
+                      horizontal: 10,
+                      vertical: 16,
+                    ),
+                    enabledBorder: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(8),
+                      borderSide: BorderSide(
+                        color: Colors.grey.shade300,
+                        width: 1,
+                      ),
+                    ),
+                    focusedBorder: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(8),
+                      borderSide: const BorderSide(
+                        color: Colors.blue,
+                        width: 1.5,
+                      ),
+                    ),
+                    errorBorder: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(8),
+                      borderSide: const BorderSide(color: Colors.red, width: 1),
+                    ),
+                    focusedErrorBorder: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(8),
+                      borderSide: const BorderSide(
+                        color: Colors.red,
+                        width: 1.5,
+                      ),
+                    ),
+                  ),
+                  onChanged: (v) => _updateMobileControllerValue(),
+                  validator: (v) {
+                    final String? code = widget.values['mobileCode'];
+                    final String number = _mobileNumberController.text;
+                    if (code == null) {
+                      return 'Please select country code';
+                    }
+                    if (number.isEmpty) {
+                      return 'Mobile Number is required';
+                    }
+                    return null;
+                  },
+                ),
+              ),
+            ],
+          ),
+        ),
+      ],
+    );
+
+    final visaNumberField = CustomTextField(
+      label: "Visa Number",
+      controller: widget.controllers['visaNumber']!,
+      maxLength: 50,
+      labelWidth: lw,
+      isRequired: false,
+      validator: (v) => null,
+      onChanged: (v) {
+        if (v.trim().isEmpty) {
+          widget.onValueChanged('visaNumber', null);
+        } else {
+          widget.onValueChanged('visaNumber', v);
+        }
+      },
+    );
+
+    final passportNumberField = CustomTextField(
+      label: "Passport Number",
+      controller: widget.controllers['passportNumber']!,
+      maxLength: 20,
+      labelWidth: lw,
+      validator: (v) => FormValidators.required(v, 'Passport Number'),
+      onChanged: (value) {
+        widget.onValueChanged('passportNumber', value);
+      },
+    );
+
+    final issuedDateField = CustomDateField(
+      label: "Issued Date",
+      value: widget.values['issuedDate'],
+      labelWidth: lw,
+      firstDate: DateTime(1900),
+      lastDate: DateTime.now(),
+      errorText: _showDateErrors && widget.values['issuedDate'] == null
+          ? 'Issued Date is required'
+          : null,
+      onPicked: (d) {
+        widget.onValueChanged('issuedDate', d);
+        if (!mounted) return;
+        setState(() => _showDateErrors = false);
+      },
+    );
+
+    final expiryDateField = CustomDateField(
+      label: "Expiry Date",
+      value: widget.values['expiryDate'],
+      labelWidth: lw,
+      firstDate: DateTime(1900),
+      lastDate: DateTime(2100),
+      errorText: getExpiryErrorText(),
+      onPicked: (d) {
+        widget.onValueChanged('expiryDate', d);
+        if (!mounted) return;
+        setState(() => _showDateErrors = false);
+      },
+    );
+
+    final issuedCountryField = CustomDropdownField(
+      label: "Issued Country",
+      value: widget.values['issuedCountry'],
+      hint: "Select Country",
+      items: _countryNameList,
+      labelWidth: lw,
+      dialogWidth: 250,
+      dialogHeight: 250,
+      validator: (v) => FormValidators.requiredDropdown(v, 'Issued Country'),
+      onChanged: (v) {
+        widget.onValueChanged('issuedCountry', v);
+        if (v != null) {
+          try {
+            final matched = _rawCountryObjects.firstWhere(
+              (c) => c.countryName == v,
+            );
+            widget.onValueChanged('issuedCountryCode', matched.countryCode);
+          } catch (e) {}
+        }
+      },
+      spacing: 8,
+    );
+
+    final addressField = CustomTextField(
+      label: "Address",
+      controller: widget.controllers['address']!,
+      labelWidth: lw,
+      maxLength: 100,
+      validator: (v) => FormValidators.required(v, 'Address'),
+      onChanged: (value) {
+        widget.onValueChanged('address', value);
+      },
+    );
+
+    // Dynamic layout generator structured matching your handwritten sheets
+    final nrcAndFatherNameSection = LayoutBuilder(
+      builder: (context, constraints) {
+        final bool isNrcRowDesktop = constraints.maxWidth > 550;
+
+        Widget nrcFields() {
+          final List<dynamic> stateList = nrcState?.nrcStateList ?? [];
+          final List<dynamic> townshipList =
+              nrcState?.availableNrcTownships ?? [];
+          final int? currentProviderStateId = nrcState?.selectedNrcStateId;
+          final int? activeStateId =
+              stateList.any((st) => st.id == currentProviderStateId)
+              ? currentProviderStateId
+              : null;
+
+          final numberField = Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 10),
+            child: TextFormField(
+              controller: _nrcNumberController,
+              keyboardType: TextInputType.number,
+              inputFormatters: [
+                FilteringTextInputFormatter.allow(RegExp(r'[\u1040-\u1049]')),
+                LengthLimitingTextInputFormatter(6),
+              ],
+              style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w500),
+              decoration: InputDecoration(
+                hintText: "၁၂၃၄၅၆",
+                hintStyle: TextStyle(color: Colors.grey.shade400, fontSize: 13),
+                isDense: true,
+                border: InputBorder.none,
+                enabledBorder: InputBorder.none,
+                focusedBorder: InputBorder.none,
+                contentPadding: EdgeInsets.zero,
+              ),
+              onChanged: (v) {
+                _updateNrcControllerValue();
+                widget.onValueChanged('nrcRawNumber', v);
+              },
+            ),
+          );
+
+          return Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              NrcSelectorWidget(
+                isDesktop: isNrcRowDesktop,
+                selectedNrcStateCode: _selectedNrcStateCode,
+                selectedTownshipCode: _selectedTownshipCode,
+                selectedNrcType: _selectedNrcType,
+                numberField: numberField,
+                hasError: _showNrcError,
+                stateList: stateList,
+                townshipList: townshipList,
+                nrcTypes: _nrcTypes,
+                activeStateId: activeStateId,
+                onStateChanged: (id, idCode) {
+                  ref.read(nrcProvider.notifier).selectNrcState(id);
+                  if (!mounted) return;
+                  setState(() {
+                    _selectedNrcStateCode = idCode;
+                    _selectedTownshipCode = null;
+                  });
+                  widget.onValueChanged('nrcStateCode', idCode);
+                  widget.onValueChanged('nrcTownshipCode', null);
+                  _updateNrcControllerValue();
+                },
+                onTownshipChanged: (v) {
+                  if (!mounted) return;
+                  setState(() => _selectedTownshipCode = v);
+                  widget.onValueChanged('nrcTownshipCode', v);
+                  _updateNrcControllerValue();
+                },
+                onTypeChanged: (v) {
+                  if (!mounted) return;
+                  setState(() => _selectedNrcType = v);
+                  widget.onValueChanged('nrcTypeCode', v);
+                  _updateNrcControllerValue();
+                },
+              ),
+              if (_showNrcError)
+                const Padding(
+                  padding: EdgeInsets.only(top: 6, left: 4),
+                  child: Text(
+                    'Please complete all Myanmar NRC fields properly (6 digits)',
+                    style: TextStyle(color: Colors.red, fontSize: 11),
+                  ),
+                ),
+            ],
+          );
+        }
+
+        Widget fatherNameWidget = CustomTextField(
+          label: "Father Name",
+          maxLength: 50,
+          controller: widget.controllers['fatherName']!,
+          labelWidth: lw,
+          validator: (v) => FormValidators.fatherName(v, isMyanmar: isMyanmar),
+          onChanged: (value) {
+            widget.onValueChanged('fatherName', value);
+          },
+        );
+
+        if (isDesktop) {
+          return Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Expanded(
+                child: Row(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    SizedBox(
+                      width: lw,
+                      child: Padding(
+                        padding: const EdgeInsets.only(top: 12),
+                        child: RichText(
+                          text: const TextSpan(
+                            text: "NRC",
+                            style: TextStyle(
+                              fontSize: 14,
+                              fontWeight: FontWeight.w500,
+                              color: Colors.black87,
+                            ),
+                            children: [
+                              TextSpan(
+                                text: ' *',
+                                style: TextStyle(color: Colors.red),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ),
+                    ),
+                    const SizedBox(width: 8),
+                    Expanded(child: nrcFields()),
+                  ],
+                ),
+              ),
+              const SizedBox(width: 40),
+              Expanded(child: fatherNameWidget),
+            ],
+          );
+        } else {
+          return Column(
+            children: [
+              Row(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  SizedBox(
+                    width: lw,
+                    child: Padding(
+                      padding: const EdgeInsets.only(top: 12),
+                      child: RichText(
+                        text: const TextSpan(
+                          text: "NRC",
+                          style: TextStyle(
+                            fontSize: 14,
+                            fontWeight: FontWeight.w500,
+                            color: Colors.black87,
+                          ),
+                          children: [
+                            TextSpan(
+                              text: ' *',
+                              style: TextStyle(color: Colors.red),
+                            ),
                           ],
                         ),
                       ),
-                      const SizedBox(width: 40),
-                      Expanded(child: fatherNameField),
-                    ],
-                  );
-                } else {
-                  return Column(
-                    children: [
-                      Row(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          SizedBox(
-                            width: lw,
-                            child: Padding(
-                              padding: const EdgeInsets.only(top: 12),
-                              child: RichText(
-                                text: const TextSpan(
-                                  text: "NRC",
-                                  style: TextStyle(
-                                    fontSize: 14,
-                                    fontWeight: FontWeight.w500,
-                                    color: Colors.black87,
-                                  ),
-                                  children: [
-                                    TextSpan(
-                                      text: ' *',
-                                      style: TextStyle(color: Colors.red),
-                                    ),
-                                  ],
-                                ),
-                              ),
-                            ),
-                          ),
-                          const SizedBox(width: 8),
-                          Expanded(child: nrcFields()),
-                        ],
-                      ),
-                      const SizedBox(height: 16),
-                      fatherNameField,
-                    ],
-                  );
-                }
-              },
-            ),
-            const SizedBox(height: 20),
-          ],
+                    ),
+                  ),
+                  const SizedBox(width: 8),
+                  Expanded(child: nrcFields()),
+                ],
+              ),
+              const SizedBox(height: 16),
+              fatherNameWidget,
+            ],
+          );
+        }
+      },
+    );
 
-          pair(
-            CustomDateField(
-              label: "Issued Date",
-              value: widget.values['issuedDate'],
-              labelWidth: lw,
-              firstDate: DateTime(1900),
-              lastDate: DateTime.now(),
-              errorText: _showDateErrors && widget.values['issuedDate'] == null
-                  ? 'Issued Date is required'
-                  : null,
-              onPicked: (d) {
-                widget.onValueChanged('issuedDate', d);
-                if (!mounted) return;
-                setState(() => _showDateErrors = false);
-              },
-            ),
-            CustomDateField(
-              label: "Expiry Date",
-              value: widget.values['expiryDate'],
-              labelWidth: lw,
-              firstDate: DateTime.now(),
-              lastDate: DateTime(2100),
-              errorText: _showDateErrors && widget.values['expiryDate'] == null
-                  ? 'Expiry Date is required'
-                  : null,
-              onPicked: (d) {
-                widget.onValueChanged('expiryDate', d);
-                if (!mounted) return;
-                setState(() => _showDateErrors = false);
-              },
-            ),
-          ),
-          const SizedBox(height: 20),
+    // ─── CONDITIONAL COMPOSITION MATRIX ───
+    List<Widget> formLayout;
 
-          pair(
-            CustomDropdownField(
-              label: "Issued Country",
-              value: widget.values['issuedCountry'],
-              hint: "Select Country",
-              items: _countryNameList,
-              labelWidth: lw,
-              dialogWidth: 250,
-              dialogHeight: 250,
-              validator: (v) =>
-                  FormValidators.requiredDropdown(v, 'Issued Country'),
-              onChanged: (v) {
-                widget.onValueChanged('issuedCountry', v);
-                if (v != null) {
-                  try {
-                    final matched = _rawCountryObjects.firstWhere(
-                      (c) => c.countryName == v,
-                    );
-                    widget.onValueChanged(
-                      'issuedCountryCode',
-                      matched.countryCode,
-                    );
-                  } catch (e) {}
-                }
-              },
-              spacing: 8,
-            ),
-            CustomTextField(
-              label: "Address",
-              controller: widget.controllers['address']!,
-              labelWidth: lw,
-              maxLength: 100,
-              validator: (v) => FormValidators.required(v, 'Address'),
-              onChanged: (value) {
-                widget.onValueChanged('address', value);
-              },
-            ),
-          ),
-          const SizedBox(height: 28),
+    if (isMyanmar) {
+      // 1:1 Match with "For Native" Layout Checklist
+      formLayout = [
+        pair(fullNameField, genderField),
+        const SizedBox(height: 20),
+        pair(dateOfBirthField, countryField),
+        const SizedBox(height: 20),
+        nrcAndFatherNameSection,
+        const SizedBox(height: 20),
+        pair(emailField, mobileField),
+        const SizedBox(height: 20),
+        pair(passportNumberField, issuedCountryField),
+        const SizedBox(height: 20),
+        pair(issuedDateField, expiryDateField),
+        const SizedBox(height: 20),
+        isDesktop
+            ? Row(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Expanded(child: addressField),
+                  const SizedBox(
+                    width: 40,
+                  ), // Matches the spacing inside your pair() method
+                  const Expanded(
+                    child: SizedBox.shrink(),
+                  ), // Invisible right-column placeholder
+                ],
+              )
+            : addressField, // Keeps standard layout for mobile screens
 
-          widget.actionButtons,
-        ],
+        const SizedBox(height: 28),
+        widget.actionButtons,
+      ];
+    } else {
+      // 1:1 Match with "For Foreigner" Layout Checklist
+      formLayout = [
+        pair(fullNameField, genderField),
+        const SizedBox(height: 20),
+        pair(dateOfBirthField, countryField),
+        const SizedBox(height: 20),
+        pair(emailField, mobileField),
+        const SizedBox(height: 20),
+        pair(passportNumberField, issuedCountryField),
+        const SizedBox(height: 20),
+        pair(issuedDateField, expiryDateField),
+        const SizedBox(height: 20),
+        pair(addressField, visaNumberField), // Paired bottom row layout
+        const SizedBox(height: 28),
+        widget.actionButtons,
+      ];
+    }
+
+    return Form(
+      key: widget.formKey,
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: formLayout,
       ),
     );
   }

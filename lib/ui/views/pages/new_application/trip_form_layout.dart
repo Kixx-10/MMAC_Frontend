@@ -19,7 +19,6 @@ class TripFormLayout extends ConsumerStatefulWidget {
   final Widget actionButtons;
   final Function(String, dynamic) onValueChanged;
   final void Function(TripFormLayoutInterface) onReady;
-
   const TripFormLayout({
     super.key,
     required this.controllers,
@@ -27,6 +26,7 @@ class TripFormLayout extends ConsumerStatefulWidget {
     required this.actionButtons,
     required this.onValueChanged,
     required this.onReady,
+  
   });
 
   @override
@@ -38,15 +38,16 @@ class _TripFormLayoutState extends ConsumerState<TripFormLayout>
   final GlobalKey<FormState> _formKey = GlobalKey<FormState>();
   bool _showDateErrors = false;
   List<String> _purposeList = [];
-
+  List<String> _accommodationList = [];
   // "Others" text controller
   final TextEditingController _otherPurposeController = TextEditingController();
+  final TextEditingController _otherAccommodationController = TextEditingController();
 
   @override
   void initState() {
     super.initState();
     widget.onReady(this);
-
+    // Purpose Session Restore
     if (widget.values['purposeOfVisit'] != null &&
         ![
           "Visit",
@@ -57,12 +58,24 @@ class _TripFormLayoutState extends ConsumerState<TripFormLayout>
         widget.values['purposeOfVisit'].toString().isNotEmpty) {
       _otherPurposeController.text = widget.values['purposeOfVisit'];
     }
-
+    //accommodation restore
+    if (widget.values['accommodation'] != null &&
+        ![
+          "Hotel",
+          "Motel / Inn",
+          "Company Staff Quarter",
+          "Relative's House / Friend's House",
+          "Apartment / Condo",
+          "Monastery / Religious Center",
+          "Embassy Housing",
+        ].contains(widget.values['accommodation']) &&
+        widget.values['accommodation'].toString().isNotEmpty) {
+      _otherAccommodationController.text = widget.values['accommodation'];
+    }
     Future.microtask(() async {
       if (!mounted) return;
-
-      // 1. Purpose နဲ့ Port တွေကို အရင် Load မည်
       _loadPurposeFromJson();
+      _loadAccommodationFromJson();
       try {
         final currentMode = widget.values['modeOfTravel'];
         final modeId = currentMode == "Land"
@@ -74,32 +87,22 @@ class _TripFormLayoutState extends ConsumerState<TripFormLayout>
             .read(portOfArrivalProvider.notifier)
             .loadPortOfArrrivalByModeId(modeId);
       } catch (_) {}
-
-      // 🎯 The Magic Fix: Direct Synchronous Cascade (ရိုးရှင်းပြီး အမှားကင်းတဲ့နည်းလမ်း)
+      
       try {
-        // ၁။ API ကနေ State တွေ အကုန်ကျလာတဲ့အထိ အရင်စောင့်မယ်
         var locState = await ref.read(locationProvider.future);
         if (locState.allStates.isEmpty) {
           await ref.read(locationProvider.notifier).retry();
           locState = await ref.read(locationProvider.future);
         }
-
-        // ၂။ အချက်အလက်တွေ အဆင်သင့်ဖြစ်ပြီဆိုရင် အဆင့်ဆင့် တိုက်ရိုက် Restore လုပ်မယ်
         if (mounted && locState.allStates.isNotEmpty) {
           final savedState = widget.values['stateRegion'];
           final savedDistrict = widget.values['district'];
           final savedTownship = widget.values['township'];
-
           if (savedState != null) {
-            // အဆင့် ၁: State ကို ရွေးလိုက်တာနဲ့ District စာရင်း ချက်ချင်းထွက်လာမယ်
             ref.read(locationProvider.notifier).selectState(savedState);
-
             if (savedDistrict != null) {
-              // အဆင့် ၂: District ကို ရွေးလိုက်တာနဲ့ Township စာရင်း ချက်ချင်းထွက်လာမယ်
               ref.read(locationProvider.notifier).selectDistrict(savedDistrict);
-
               if (savedTownship != null) {
-                // အဆင့် ၃: Township ကို ရွေးပေးလိုက်မယ်
                 ref
                     .read(locationProvider.notifier)
                     .selectTownship(savedTownship);
@@ -116,6 +119,7 @@ class _TripFormLayoutState extends ConsumerState<TripFormLayout>
   @override
   void dispose() {
     _otherPurposeController.dispose();
+    _otherAccommodationController.dispose();
     super.dispose();
   }
 
@@ -140,6 +144,36 @@ class _TripFormLayoutState extends ConsumerState<TripFormLayout>
     }
   }
 
+  Future<void> _loadAccommodationFromJson() async {
+    try {
+      final String response = await rootBundle.loadString(
+        'assets/data/accommodations.json', 
+      );
+      if (mounted) {
+        setState(() {
+          _accommodationList = List<String>.from(jsonDecode(response));
+          _accommodationList.remove("Others");
+          _accommodationList.add("Others"); 
+        });
+      }
+    } catch (_) {
+      if (mounted) {
+        setState(() {
+          _accommodationList = [
+            "Hotel",
+            "Motel / Inn",
+            "Company Staff Quarter",
+            "Relative's House / Friend's House",
+            "Apartment / Condo",
+            "Monastery / Religious Center",
+            "Embassy Housing",
+            "Others"
+          ];
+        });
+      }
+    }
+  }
+
   @override
   bool validate() {
     if (!mounted) {
@@ -147,7 +181,6 @@ class _TripFormLayoutState extends ConsumerState<TripFormLayout>
       final bool isFormValid = _formKey.currentState?.validate() ?? true;
       return hasArrivalDate && isFormValid;
     }
-
     setState(() => _showDateErrors = true);
     return _formKey.currentState!.validate();
   }
@@ -163,7 +196,20 @@ class _TripFormLayoutState extends ConsumerState<TripFormLayout>
             "Health",
           ].contains(widget.values['purposeOfVisit']));
 
-  // 🎯 Controller ထဲကို Session ထဲက ဒေတာတွေ မှန်မှန်ကန်ကန် စီးဝင်သွားအောင် ပြင်ဆင်ခြင်း
+  bool get _isOtherAccommodation =>
+      widget.values['selectedAccommodationDropdown'] == "Others" ||
+      (widget.values['accommodation'] != null &&
+          widget.values['accommodation'].toString().isNotEmpty &&
+          ![
+            "Hotel",
+            "Motel / Inn",
+            "Company Staff Quarter",
+            "Relative's House / Friend's House",
+            "Apartment / Condo",
+            "Monastery / Religious Center",
+            "Embassy Housing",
+          ].contains(widget.values['accommodation']));
+
   TextEditingController _getSafeController(String key) {
     if (!widget.controllers.containsKey(key)) {
       widget.controllers[key] = TextEditingController(
@@ -218,96 +264,34 @@ class _TripFormLayoutState extends ConsumerState<TripFormLayout>
 
   Widget _buildPurposeField() {
     if (_isOtherPurpose) {
-      return Row(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Padding(
-            padding: const EdgeInsets.only(top: 14),
-            child: SizedBox(
-              width: 140,
-              child: RichText(
-                text: const TextSpan(
-                  text: 'Purpose of Visit',
-                  style: TextStyle(
-                    fontSize: 14,
-                    fontWeight: FontWeight.w500,
-                    color: Colors.black87,
-                  ),
-                  children: [
-                    TextSpan(
-                      text: ' *',
-                      style: TextStyle(
-                        color: Colors.red,
-                        fontWeight: FontWeight.bold,
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-            ),
+      return CustomTextField(
+        label: "Purpose of Visit",
+        hintText: "Please specify your purpose...",
+        controller: _otherPurposeController,
+        validator: (v) => FormValidators.required(v, 'Purpose detail'),
+        onChanged: (v) {
+          widget.onValueChanged('purposeOfVisit', v);
+        },
+        suffixIcon: IconButton(
+          icon: const Icon(
+            Icons.arrow_drop_down_circle_outlined,
+            color: Colors.grey,
           ),
-          const SizedBox(width: 8),
-          Expanded(
-            child: TextFormField(
-              controller: _otherPurposeController,
-              autofocus: true,
-              autovalidateMode: AutovalidateMode.onUserInteraction,
-              validator: (v) => FormValidators.required(v, 'Purpose detail'),
-              onChanged: (v) {
-                widget.onValueChanged('purposeOfVisit', v);
-              },
-              style: const TextStyle(
-                fontWeight: FontWeight.w500,
-                color: Colors.black87,
-              ),
-              decoration: InputDecoration(
-                hintText: "Please specify your purpose...",
-                hintStyle: TextStyle(color: Colors.grey.shade400, fontSize: 14),
-                filled: true,
-                fillColor: Colors.white,
-                contentPadding: const EdgeInsets.symmetric(
-                  horizontal: 16,
-                  vertical: 12,
-                ),
-                suffixIcon: IconButton(
-                  icon: const Icon(
-                    Icons.arrow_drop_down_circle_outlined,
-                    color: Colors.grey,
-                  ),
-                  tooltip: "Back to dropdown",
-                  onPressed: () {
-                    _otherPurposeController.clear();
-                    widget.onValueChanged('selectedPurposeDropdown', null);
-                    widget.onValueChanged('purposeOfVisit', null);
-                    setState(() {});
-                  },
-                ),
-                enabledBorder: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(8),
-                  borderSide: BorderSide(color: Colors.grey.shade300, width: 1),
-                ),
-                focusedBorder: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(8),
-                  borderSide: const BorderSide(color: Colors.blue, width: 1.5),
-                ),
-                errorBorder: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(8),
-                  borderSide: const BorderSide(color: Colors.red, width: 1),
-                ),
-                focusedErrorBorder: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(8),
-                  borderSide: const BorderSide(color: Colors.red, width: 1.5),
-                ),
-              ),
-            ),
-          ),
-        ],
+          tooltip: "Back to dropdown",
+          onPressed: () {
+            _otherPurposeController.clear();
+            widget.onValueChanged('selectedPurposeDropdown', null);
+            widget.onValueChanged('purposeOfVisit', null);
+            setState(() {});
+          },
+        ),
       );
     }
     return CustomDropdownField(
       label: "Purpose of Visit",
-      value:
-          widget.values['selectedPurposeDropdown'] ??
+      dialogWidth: 300,
+      dialogHeight: 250,
+      value: widget.values['selectedPurposeDropdown'] ??
           ([
                 "Visit",
                 "Business",
@@ -327,6 +311,66 @@ class _TripFormLayoutState extends ConsumerState<TripFormLayout>
             widget.onValueChanged('purposeOfVisit', v);
           } else {
             widget.onValueChanged('purposeOfVisit', '');
+          }
+          setState(() {});
+        }
+      },
+      spacing: 16,
+    );
+  }
+
+  Widget _buildAccommodationField() {
+    if (_isOtherAccommodation) {
+      return CustomTextField(
+        label: "Accommodation",
+        hintText: "Please specify your accommodation...",
+        controller: _otherAccommodationController,
+        validator: (v) => FormValidators.required(v, 'Accommodation detail'),
+        onChanged: (v) {
+          widget.onValueChanged('accommodation', v);
+        },
+        suffixIcon: IconButton(
+          icon: const Icon(
+            Icons.arrow_drop_down_circle_outlined,
+            color: Colors.grey,
+          ),
+          tooltip: "Back to dropdown",
+          onPressed: () {
+            _otherAccommodationController.clear();
+            widget.onValueChanged('selectedAccommodationDropdown', null);
+            widget.onValueChanged('accommodation', null);
+            setState(() {});
+          },
+        ),
+      );
+    }
+    return CustomDropdownField(
+      label: "Accommodation",
+      dialogWidth: 300,
+      dialogHeight: 250,
+      value: widget.values['selectedAccommodationDropdown'] ??
+          ([
+            "Hotel",
+            "Motel / Inn",
+            "Company Staff Quarter",
+            "Relative's House / Friend's House",
+            "Apartment / Condo",
+            "Monastery / Religious Center",
+            "Embassy Housing",
+          ].contains(widget.values['accommodation'])
+              ? widget.values['accommodation']
+              : null),
+      hint: "Select Accommodation",
+      items: _accommodationList,
+      validator: (v) => FormValidators.requiredDropdown(v, 'Accommodation'),
+      onChanged: (v) {
+        if (v != null) {
+          widget.onValueChanged('selectedAccommodationDropdown', v);
+          if (v != "Others") {
+            _otherAccommodationController.clear();
+            widget.onValueChanged('accommodation', v);
+          } else {
+            widget.onValueChanged('accommodation', '');
           }
           setState(() {});
         }
@@ -356,18 +400,20 @@ class _TripFormLayoutState extends ConsumerState<TripFormLayout>
         ),
       );
     }
+
     return LayoutBuilder(
       builder: (context, constraints) {
         final bool isDesktop = constraints.maxWidth > 500;
         Widget pair(Widget a, Widget b) =>
             isDesktop ? _row(a, b) : _column(a, b);
-
+final bool isMyanmar = widget.values['country'] == 'Myanmar' || 
+                           widget.values['country'] == 'MMR';
         return Form(
           key: _formKey,
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              // Row 1: Arrival Date | Mode of Travel
+              // 1️⃣ Row 1: Arrival Date | Mode of Travel
               pair(
                 CustomDateField(
                   label: "Arrival Date",
@@ -417,7 +463,7 @@ class _TripFormLayoutState extends ConsumerState<TripFormLayout>
               ),
               const SizedBox(height: 16),
 
-              // Row 2: Port of Arrival | Vehicle Number
+              // 2️⃣ Row 2: Port of Arrival | Purpose of Visit
               if (portAsync.hasError)
                 _errorWidget('Port of arrival failed to load', () {
                   final mode = widget.values['modeOfTravel'];
@@ -434,12 +480,9 @@ class _TripFormLayoutState extends ConsumerState<TripFormLayout>
                 pair(
                   CustomDropdownField(
                     label: "Port of Arrival",
-                    value:
-                        (portState!.portOfArrivalList.any(
-                          (p) =>
-                              p.portOfArrivalName ==
-                              widget.values['portOfArrival'],
-                        ))
+                    value: (portState!.portOfArrivalList.any(
+                      (p) => p.portOfArrivalName == widget.values['portOfArrival'],
+                    ))
                         ? widget.values['portOfArrival'] as String?
                         : null,
                     hint: "Select Port",
@@ -468,25 +511,15 @@ class _TripFormLayoutState extends ConsumerState<TripFormLayout>
                     },
                     spacing: 16,
                   ),
-                  CustomTextField(
-                    label: "Vehicle Number",
-                    controller: _getSafeController('vehicleNumber'),
-                    maxLength: 15,
-                    validator: (v) =>
-                        FormValidators.required(v, 'Vehicle Number'),
-                    onChanged: (v) {
-                      widget.onValueChanged('vehicleNumber', v);
-                    },
-                  ),
+                  _buildPurposeField(),
                 ),
               ],
               const SizedBox(height: 16),
 
-              // Row 3: Vehicle Name | State/Region
+              // 3️⃣ Row 3: Vehicle Name | Vehicle Number
               pair(
                 CustomTextField(
                   label: "Vehicle Name",
-                  hintText: "Flight, Vessel, Bus name etc.",
                   controller: _getSafeController('vehicleName'),
                   maxLength: 50,
                   validator: (v) => FormValidators.required(v, 'Vehicle Name'),
@@ -494,14 +527,28 @@ class _TripFormLayoutState extends ConsumerState<TripFormLayout>
                     widget.onValueChanged('vehicleName', v);
                   },
                 ),
+                CustomTextField(
+                  label: "Vehicle Number",
+                  controller: _getSafeController('vehicleNumber'),
+                  maxLength: 15,
+                  validator: (v) =>
+                      FormValidators.required(v, 'Vehicle Number'),
+                  onChanged: (v) {
+                    widget.onValueChanged('vehicleNumber', v);
+                  },
+                ),
+              ),
+              const SizedBox(height: 16),
+
+              // 4️⃣ Row 4: State/Region | District
+              pair(
                 CustomDropdownField(
                   label: "State/Region",
                   dialogWidth: 300,
                   dialogHeight: 250,
-                  value:
-                      (locationState!.allStates.any(
-                        (s) => s.name == widget.values['stateRegion'],
-                      ))
+                  value: (locationState!.allStates.any(
+                    (s) => s.name == widget.values['stateRegion'],
+                  ))
                       ? widget.values['stateRegion'] as String?
                       : null,
                   hint: "Select State/Region",
@@ -532,19 +579,13 @@ class _TripFormLayoutState extends ConsumerState<TripFormLayout>
                   },
                   spacing: 16,
                 ),
-              ),
-              const SizedBox(height: 16),
-
-              // Row 4: District | Township
-              pair(
                 CustomDropdownField(
                   label: "District",
                   dialogWidth: 300,
                   dialogHeight: 250,
-                  value:
-                      (locationState.availableDistricts.contains(
-                        widget.values['district'],
-                      ))
+                  value: (locationState.availableDistricts.contains(
+                    widget.values['district'],
+                  ))
                       ? widget.values['district'] as String?
                       : null,
                   hint: "Select District",
@@ -575,14 +616,18 @@ class _TripFormLayoutState extends ConsumerState<TripFormLayout>
                   },
                   spacing: 16,
                 ),
+              ),
+              const SizedBox(height: 16),
+
+              // 5️⃣ Row 5: Township | Address in Myanmar
+              pair(
                 CustomDropdownField(
                   label: "Township",
                   dialogWidth: 300,
                   dialogHeight: 250,
-                  value:
-                      (locationState.availableTownships.contains(
-                        widget.values['township'],
-                      ))
+                  value: (locationState.availableTownships.contains(
+                    widget.values['township'],
+                  ))
                       ? widget.values['township'] as String?
                       : null,
                   hint: "Select Township",
@@ -609,11 +654,6 @@ class _TripFormLayoutState extends ConsumerState<TripFormLayout>
                   },
                   spacing: 16,
                 ),
-              ),
-              const SizedBox(height: 16),
-
-              // Row 5: Address in Myanmar | Accommodation
-              pair(
                 CustomTextField(
                   label: "Address in Myanmar",
                   maxLength: 150,
@@ -624,35 +664,10 @@ class _TripFormLayoutState extends ConsumerState<TripFormLayout>
                     widget.onValueChanged('addressInMyanmar', v);
                   },
                 ),
-                CustomTextField(
-                  label: "Accommodation",
-                  controller: _getSafeController('accommodation'),
-                  maxLength: 100,
-                  validator: (v) => FormValidators.required(v, 'Accommodation'),
-                  onChanged: (v) {
-                    widget.onValueChanged('accommodation', v);
-                  },
-                ),
               ),
               const SizedBox(height: 16),
 
-              // Row 6: Mobile Number | Purpose of Visit
-              pair(
-                CustomTextField(
-                  label: "Mobile Number (MM)",
-                  hintText: "09xxxxxxxx",
-                  maxLength: 11,
-                  controller: _getSafeController('mobileNumberMM'),
-                  validator: (v) => FormValidators.required(v, 'Mobile Number'),
-                  onChanged: (v) {
-                    widget.onValueChanged('mobileNumberMM', v);
-                  },
-                ),
-                _buildPurposeField(),
-              ),
-              const SizedBox(height: 16),
-
-              // Row 7: Previous City | Layout Spacer
+              // 6️⃣ Row 6: Previous City | Mobile Number (MM)
               pair(
                 CustomTextField(
                   label: "Previous City",
@@ -662,8 +677,26 @@ class _TripFormLayoutState extends ConsumerState<TripFormLayout>
                     widget.onValueChanged('previousCity', v);
                   },
                 ),
-                const SizedBox(),
+                isMyanmar
+                    ? CustomTextField(
+                        label: "Mobile Number(MM)",
+                        hintText: "09XXXXXXXXX",
+                        maxLength: 11,
+                        controller: _getSafeController('mobileNumberMM'),
+                        validator: (v) => FormValidators.required(v, 'Mobile Number'),
+                        onChanged: (v) {
+                          widget.onValueChanged('mobileNumberMM', v);
+                        },
+                      )
+                    : _buildAccommodationField()
               ),
+              //const SizedBox(height: 16),
+
+              // 7️⃣ Row 7: Accommodation | Layout Spacer
+              // pair(
+              //   _buildAccommodationField(),
+              //   const SizedBox(), 
+              // ),
               const SizedBox(height: 30),
 
               // Action Buttons
