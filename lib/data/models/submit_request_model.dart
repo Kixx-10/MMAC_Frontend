@@ -27,9 +27,9 @@ class SubmitRequestModel {
   final String townshipId;
   final String? mobileNumberMM;
   final String purposeOfVisit;
-  final String? previousCity;
-  final String? healthDeclaration;
-  final String? digitalDeclarations;
+  final String previousCity;
+  final String healthDeclaration;
+  final String digitalDeclarations;
   SubmitRequestModel({
     required this.fullName,
     required this.gender,

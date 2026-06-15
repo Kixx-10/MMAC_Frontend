@@ -1,5 +1,3 @@
-// ignore_for_file: curly_braces_in_flow_control_structures
-
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:mmac/data/controllers/submit_provider.dart';
@@ -17,8 +15,7 @@ import '../../widgets/form_progress_bar.dart';
 class NewApplication extends ConsumerStatefulWidget {
   final String? initialCountry;
   final VoidCallback? onBackPressed;
-  final bool isUpdateMode;
-
+  final isUpdateMode;
   const NewApplication({
     super.key,
     this.initialCountry,
@@ -93,7 +90,6 @@ class _NewApplicationState extends ConsumerState<NewApplication>
     'selectedPurposeDropdown': null,
     'hasSymptoms': null,
     'carryingRestricted': null,
-    // 🎯 NRC Dropdown state များကို သိမ်းရန် ထပ်ထည့်ထားသည်
     'nrcStateCode': null,
     'nrcTownshipCode': null,
     'nrcTypeCode': null,
@@ -239,7 +235,8 @@ class _NewApplicationState extends ConsumerState<NewApplication>
       _step2Controllers['addressInMyanmar']?.text =
           fetchedData.addressInMyanmar;
       _step2Controllers['mobileNumberMM']?.text = fetchedData.mobileNumberMM!;
-      _step2Controllers['previousCity']?.text = fetchedData.previousCity!;
+      _step2Controllers['previousCity']?.text = fetchedData.previousCity;
+      _step2Controllers['previousCity']?.text = fetchedData.previousCity;
 
       // ၂။ Form Values (Dropdown & Dates) များကို သိမ်းဆည်းခြင်း
       _formValues['gender'] = fetchedData.gender == 'M' ? 'Male' : 'Female';
