@@ -10,7 +10,8 @@ class CustomTextField extends StatelessWidget {
   final ValueChanged<String>? onChanged;
   final bool isRequired;
   final String? hintText;
-  final double spacing; // 🎯 hintText အတွက် parameter အသစ် ထည့်သွင်းခြင်း
+  final double spacing; 
+  final Widget? suffixIcon;
 
   const CustomTextField({
     super.key,
@@ -22,7 +23,8 @@ class CustomTextField extends StatelessWidget {
     this.onChanged,
     this.isRequired = true,
     this.hintText, 
-    this.spacing=8// 🎯 optional အဖြစ် လက်ခံထားသည်
+    this.spacing=8,
+    this.suffixIcon,
   });
 
   @override
@@ -78,12 +80,12 @@ class CustomTextField extends StatelessWidget {
               ),
               errorStyle: const TextStyle(fontSize: 12, color: Colors.red),
 
-              // 🎯 Hint Text နှင့် ၎င်း၏ Style အား သတ်မှတ်ခြင်း
+              suffixIcon: suffixIcon,
               hintText: hintText,
               hintStyle: TextStyle(
                 fontSize: 14,
                 fontWeight: FontWeight.normal,
-                color: Colors.grey.shade400, // ဖတ်ရသက်သာပြီး သပ်ရပ်သော အရောင်
+                color: Colors.grey.shade400, 
               ),
 
               enabledBorder: OutlineInputBorder(
