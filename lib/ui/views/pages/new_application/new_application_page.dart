@@ -16,8 +16,8 @@ import '../../widgets/form_progress_bar.dart';
 class NewApplication extends ConsumerStatefulWidget {
   final String? initialCountry;
   final VoidCallback? onBackPressed;
-
-  const NewApplication({super.key, this.initialCountry, this.onBackPressed});
+  final isUpdateMode;
+  const NewApplication({super.key, this.initialCountry, this.onBackPressed, this.isUpdateMode=false});
 
   @override
   ConsumerState<NewApplication> createState() => _NewApplicationState();
@@ -86,7 +86,6 @@ class _NewApplicationState extends ConsumerState<NewApplication>
     'selectedPurposeDropdown': null,
     'hasSymptoms': null,
     'carryingRestricted': null,
-    // 🎯 NRC Dropdown state များကို သိမ်းရန် ထပ်ထည့်ထားသည်
     'nrcStateCode': null,
     'nrcTownshipCode': null,
     'nrcTypeCode': null,
