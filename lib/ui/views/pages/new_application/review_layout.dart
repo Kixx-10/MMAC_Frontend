@@ -188,6 +188,25 @@ class ReviewLayout extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final bool isMyanmar = values['country'] == 'Myanmar' || values['country'] == 'MMR';
+
+    // 🎯 Dynamically generate Trip Details widgets list to avoid empty slots or broken UI grids
+    final List<Widget> tripDetailsTiles = [
+      _reviewTile('Arrival Date', _formatDate(values['arrivalDate'])),
+      _reviewTile('Mode of Travel', values['modeOfTravel'] ?? ''),
+      _reviewTile('Port of Arrival', values['portOfArrival'] ?? ''),
+      _reviewTile('Vehicle Number', controllers['vehicleNumber']?.text ?? ''),
+      _reviewTile('Vehicle Name', controllers['vehicleName']?.text ?? ''),
+      if (!isMyanmar) _reviewTile('Accommodation', values['accommodation'] ?? '—'),
+      _reviewTile('Address in Myanmar', controllers['addressInMyanmar']?.text ?? ''),
+      _reviewTile('State/Region', values['stateRegion'] ?? ''),
+      _reviewTile('District', values['district'] ?? ''),
+      _reviewTile('Township', values['township'] ?? ''),
+      if (isMyanmar) _reviewTile('Mobile (MM)', controllers['mobileNumberMM']?.text ?? ''),
+      _reviewTile('Purpose of Visit', values['purposeOfVisit'] ?? ''),
+      _reviewTile('Previous City', controllers['previousCity']?.text ?? ''),
+    ];
+
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -256,21 +275,7 @@ class ReviewLayout extends StatelessWidget {
           title: 'Trip Details', 
           icon: Icons.local_airport_outlined, 
           step: 2,
-          children: [
-            _reviewTile('Arrival Date', _formatDate(values['arrivalDate'])),
-            _reviewTile('Mode of Travel', values['modeOfTravel'] ?? ''),
-            _reviewTile('Port of Arrival', values['portOfArrival'] ?? ''),
-            _reviewTile('Vehicle Number', controllers['vehicleNumber']?.text ?? ''),
-            _reviewTile('Vehicle Name', controllers['vehicleName']?.text ?? ''),
-            _reviewTile('Accommodation', controllers['accommodation']?.text ?? ''),
-            _reviewTile('Address in Myanmar', controllers['addressInMyanmar']?.text ?? ''),
-            _reviewTile('State/Region', values['stateRegion'] ?? ''),
-            _reviewTile('District', values['district'] ?? ''),
-            _reviewTile('Township', values['township'] ?? ''),
-            _reviewTile('Mobile (MM)', controllers['mobileNumberMM']?.text ?? ''),
-            _reviewTile('Purpose of Visit', values['purposeOfVisit'] ?? ''),
-            _reviewTile('Previous City', controllers['previousCity']?.text ?? ''),
-          ],
+          children: tripDetailsTiles, // 🎯 Clean list without conditional index bugs
         ),
 
         // ══ STEP 3: Health & Declarations ════════════════════════════════════

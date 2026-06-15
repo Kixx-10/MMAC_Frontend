@@ -16,8 +16,8 @@ import '../../widgets/form_progress_bar.dart';
 class NewApplication extends ConsumerStatefulWidget {
   final String? initialCountry;
   final VoidCallback? onBackPressed;
-
-  const NewApplication({super.key, this.initialCountry, this.onBackPressed});
+  final isUpdateMode;
+  const NewApplication({super.key, this.initialCountry, this.onBackPressed, this.isUpdateMode=false});
 
   @override
   ConsumerState<NewApplication> createState() => _NewApplicationState();
@@ -86,7 +86,6 @@ class _NewApplicationState extends ConsumerState<NewApplication>
     'selectedPurposeDropdown': null,
     'hasSymptoms': null,
     'carryingRestricted': null,
-    // 🎯 NRC Dropdown state များကို သိမ်းရန် ထပ်ထည့်ထားသည်
     'nrcStateCode': null,
     'nrcTownshipCode': null,
     'nrcTypeCode': null,
@@ -228,11 +227,11 @@ class _NewApplicationState extends ConsumerState<NewApplication>
 
       _step2Controllers['vehicleNumber']?.text = fetchedData.vehicleNumber;
       _step2Controllers['vehicleName']?.text = fetchedData.vehicleName;
-      _step2Controllers['accommodation']?.text = fetchedData.accommodation;
+      _step2Controllers['accommodation']?.text = fetchedData.accommodation!;
       _step2Controllers['addressInMyanmar']?.text =
           fetchedData.addressInMyanmar;
-      _step2Controllers['mobileNumberMM']?.text = fetchedData.mobileNumberMM;
-      _step2Controllers['previousCity']?.text = fetchedData.previousCity!;
+      _step2Controllers['mobileNumberMM']?.text = fetchedData.mobileNumberMM!;
+      _step2Controllers['previousCity']?.text = fetchedData.previousCity;
 
       // ၂။ Form Values (Dropdown & Dates) များကို သိမ်းဆည်းခြင်း
       _formValues['gender'] = fetchedData.gender == 'M' ? 'Male' : 'Female';
