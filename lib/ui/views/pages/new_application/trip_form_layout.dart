@@ -26,7 +26,6 @@ class TripFormLayout extends ConsumerStatefulWidget {
     required this.actionButtons,
     required this.onValueChanged,
     required this.onReady,
-  
   });
 
   @override
@@ -58,7 +57,7 @@ class _TripFormLayoutState extends ConsumerState<TripFormLayout>
         widget.values['purposeOfVisit'].toString().isNotEmpty) {
       _otherPurposeController.text = widget.values['purposeOfVisit'];
     }
-    //accommodation restore
+    // accommodation restore
     if (widget.values['accommodation'] != null &&
         ![
           "Hotel",
@@ -271,6 +270,7 @@ class _TripFormLayoutState extends ConsumerState<TripFormLayout>
         validator: (v) => FormValidators.required(v, 'Purpose detail'),
         onChanged: (v) {
           widget.onValueChanged('purposeOfVisit', v);
+          _getSafeController('purposeOfVisit').text = v;
         },
         suffixIcon: IconButton(
           icon: const Icon(
@@ -280,6 +280,7 @@ class _TripFormLayoutState extends ConsumerState<TripFormLayout>
           tooltip: "Back to dropdown",
           onPressed: () {
             _otherPurposeController.clear();
+            _getSafeController('purposeOfVisit').clear();
             widget.onValueChanged('selectedPurposeDropdown', null);
             widget.onValueChanged('purposeOfVisit', null);
             setState(() {});
@@ -309,8 +310,10 @@ class _TripFormLayoutState extends ConsumerState<TripFormLayout>
           if (v != "Others") {
             _otherPurposeController.clear();
             widget.onValueChanged('purposeOfVisit', v);
+            _getSafeController('purposeOfVisit').text = v;
           } else {
             widget.onValueChanged('purposeOfVisit', '');
+            _getSafeController('purposeOfVisit').text = '';
           }
           setState(() {});
         }
@@ -319,6 +322,7 @@ class _TripFormLayoutState extends ConsumerState<TripFormLayout>
     );
   }
 
+  // 🎯 Review Layout တွင် Data အပြည့်အစုံ ပြသနိုင်ရန် ပြင်ဆင်ပြီးသော Accommodation Field
   Widget _buildAccommodationField() {
     if (_isOtherAccommodation) {
       return CustomTextField(
@@ -328,6 +332,8 @@ class _TripFormLayoutState extends ConsumerState<TripFormLayout>
         validator: (v) => FormValidators.required(v, 'Accommodation detail'),
         onChanged: (v) {
           widget.onValueChanged('accommodation', v);
+          // 🎯 Controller ထဲသို့ တန်ဖိုး တိုက်ရိုက်ထည့်ပေးခြင်းဖြင့် Review တွင် ဒေတာပေါ်လာမည်
+          _getSafeController('accommodation').text = v;
         },
         suffixIcon: IconButton(
           icon: const Icon(
@@ -337,6 +343,7 @@ class _TripFormLayoutState extends ConsumerState<TripFormLayout>
           tooltip: "Back to dropdown",
           onPressed: () {
             _otherAccommodationController.clear();
+            _getSafeController('accommodation').clear();
             widget.onValueChanged('selectedAccommodationDropdown', null);
             widget.onValueChanged('accommodation', null);
             setState(() {});
@@ -348,16 +355,9 @@ class _TripFormLayoutState extends ConsumerState<TripFormLayout>
       label: "Accommodation",
       dialogWidth: 300,
       dialogHeight: 250,
+      //  Dynamic ဖြစ်စေရန် JSON ကလာသော List ကို တိုက်ရိုက်သုံး၍ စစ်ဆေးခြင်း
       value: widget.values['selectedAccommodationDropdown'] ??
-          ([
-            "Hotel",
-            "Motel / Inn",
-            "Company Staff Quarter",
-            "Relative's House / Friend's House",
-            "Apartment / Condo",
-            "Monastery / Religious Center",
-            "Embassy Housing",
-          ].contains(widget.values['accommodation'])
+          (_accommodationList.contains(widget.values['accommodation'])
               ? widget.values['accommodation']
               : null),
       hint: "Select Accommodation",
@@ -369,8 +369,11 @@ class _TripFormLayoutState extends ConsumerState<TripFormLayout>
           if (v != "Others") {
             _otherAccommodationController.clear();
             widget.onValueChanged('accommodation', v);
+            // 🎯 ရွေးချယ်လိုက်သော Dropdown တန်ဖိုးကို Controller ထဲ တိုက်ရိုက်သိမ်းဆည်းခြင်း
+            _getSafeController('accommodation').text = v;
           } else {
             widget.onValueChanged('accommodation', '');
+            _getSafeController('accommodation').text = '';
           }
           setState(() {});
         }
@@ -406,8 +409,8 @@ class _TripFormLayoutState extends ConsumerState<TripFormLayout>
         final bool isDesktop = constraints.maxWidth > 500;
         Widget pair(Widget a, Widget b) =>
             isDesktop ? _row(a, b) : _column(a, b);
-final bool isMyanmar = widget.values['country'] == 'Myanmar' || 
-                           widget.values['country'] == 'MMR';
+        final bool isMyanmar = widget.values['country'] == 'Myanmar' || 
+                               widget.values['country'] == 'MMR';
         return Form(
           key: _formKey,
           child: Column(
@@ -667,7 +670,7 @@ final bool isMyanmar = widget.values['country'] == 'Myanmar' ||
               ),
               const SizedBox(height: 16),
 
-              // 6️⃣ Row 6: Previous City | Mobile Number (MM)
+              // 6️⃣ Row 6: Previous City | Mobile Number (MM) သို့မဟုတ် Foreigner ဖြစ်ပါက Accommodation 
               pair(
                 CustomTextField(
                   label: "Previous City",
@@ -690,13 +693,6 @@ final bool isMyanmar = widget.values['country'] == 'Myanmar' ||
                       )
                     : _buildAccommodationField()
               ),
-              //const SizedBox(height: 16),
-
-              // 7️⃣ Row 7: Accommodation | Layout Spacer
-              // pair(
-              //   _buildAccommodationField(),
-              //   const SizedBox(), 
-              // ),
               const SizedBox(height: 30),
 
               // Action Buttons

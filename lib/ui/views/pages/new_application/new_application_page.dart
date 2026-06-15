@@ -227,11 +227,11 @@ class _NewApplicationState extends ConsumerState<NewApplication>
 
       _step2Controllers['vehicleNumber']?.text = fetchedData.vehicleNumber;
       _step2Controllers['vehicleName']?.text = fetchedData.vehicleName;
-      _step2Controllers['accommodation']?.text = fetchedData.accommodation;
+      _step2Controllers['accommodation']?.text = fetchedData.accommodation!;
       _step2Controllers['addressInMyanmar']?.text =
           fetchedData.addressInMyanmar;
-      _step2Controllers['mobileNumberMM']?.text = fetchedData.mobileNumberMM;
-      _step2Controllers['previousCity']?.text = fetchedData.previousCity!;
+      _step2Controllers['mobileNumberMM']?.text = fetchedData.mobileNumberMM!;
+      _step2Controllers['previousCity']?.text = fetchedData.previousCity;
 
       // ၂။ Form Values (Dropdown & Dates) များကို သိမ်းဆည်းခြင်း
       _formValues['gender'] = fetchedData.gender == 'M' ? 'Male' : 'Female';

@@ -17,7 +17,7 @@ class SubmitRequestModel {
   final String portOfArrivalId;
   final String vehicleNumber;
   final String vehicleName;
-  final String accommodation;
+  final String? accommodation;
   final String? visaNo;
   final String? nrc;            
   final String? fatherName;     
@@ -25,11 +25,11 @@ class SubmitRequestModel {
   final String stateRegionId;
   final String districtId;
   final String townshipId;
-  final String mobileNumberMM;
+  final String? mobileNumberMM;
   final String purposeOfVisit;
-  final String? previousCity;
-  final String? healthDeclaration;
-  final String? digitalDeclarations;
+  final String previousCity;
+  final String healthDeclaration;
+  final String digitalDeclarations;
   SubmitRequestModel({
     required this.fullName,
     required this.gender,
@@ -50,12 +50,12 @@ class SubmitRequestModel {
     required this.portOfArrivalId,
     required this.vehicleNumber,
     required this.vehicleName,
-    required this.accommodation,
+    this.accommodation,
     required this.addressInMyanmar,
     required this.stateRegionId,
     required this.districtId,
     required this.townshipId,
-    required this.mobileNumberMM,
+    this.mobileNumberMM,
     required this.purposeOfVisit,
     required this.previousCity,
     required this.healthDeclaration,
