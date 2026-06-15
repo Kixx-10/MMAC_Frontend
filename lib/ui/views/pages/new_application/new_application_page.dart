@@ -8,6 +8,7 @@ import 'package:mmac/ui/views/pages/new_application/identification_form_layout.d
 import 'package:mmac/ui/views/pages/new_application/qr_generate_screen.dart';
 import 'package:mmac/ui/views/pages/new_application/review_layout.dart';
 import 'package:mmac/ui/views/pages/new_application/trip_form_layout.dart';
+import 'package:mmac/ui/views/pages/update_application.dart';
 import 'package:mmac/ui/views/widgets/footer.dart';
 import 'package:mmac/utils/form_session_service.dart';
 import '../../widgets/form_progress_bar.dart';
@@ -95,6 +96,9 @@ class _NewApplicationState extends ConsumerState<NewApplication>
   @override
   void initState() {
     super.initState();
+    if (widget.isUpdateMode) {
+      currentStep = 0;
+    }
     _loadSavedSession();
   }
 
@@ -206,6 +210,57 @@ class _NewApplicationState extends ConsumerState<NewApplication>
 
   void _updateFormValue(String key, dynamic value) {
     setState(() => _formValues[key] = value);
+    _saveCurrentSession();
+  }
+
+  // 🎯 API မှ ကျလာသော ဒေတာဟောင်းများကို Form တစ်ခုလုံးသို့ ဖြည့်သွင်းပေးသည့် စနစ်
+  void _injectFetchedData(SubmitRequestModel fetchedData) {
+    setState(() {
+      // ၁။ စာရိုက်တံ (Controllers) များထဲသို့ Data လိုက်ထည့်ခြင်း
+      _step1Controllers['fullName']?.text = fetchedData.fullName;
+      _step1Controllers['email']?.text = fetchedData.email;
+      _step1Controllers['mobile']?.text = fetchedData.mobileNumber;
+      _step1Controllers['visaNumber']?.text = fetchedData.visaNo!;
+      _step1Controllers['passportNumber']?.text = fetchedData.passportNo;
+      _step1Controllers['address']?.text = fetchedData.address;
+      _step1Controllers['nrc']?.text = fetchedData.nrc!;
+      _step1Controllers['fatherName']?.text = fetchedData.fatherName!;
+
+      _step2Controllers['vehicleNumber']?.text = fetchedData.vehicleNumber;
+      _step2Controllers['vehicleName']?.text = fetchedData.vehicleName;
+      _step2Controllers['accommodation']?.text = fetchedData.accommodation;
+      _step2Controllers['addressInMyanmar']?.text =
+          fetchedData.addressInMyanmar;
+      _step2Controllers['mobileNumberMM']?.text = fetchedData.mobileNumberMM;
+      _step2Controllers['previousCity']?.text = fetchedData.previousCity!;
+
+      // ၂။ Form Values (Dropdown & Dates) များကို သိမ်းဆည်းခြင်း
+      _formValues['gender'] = fetchedData.gender == 'M' ? 'Male' : 'Female';
+      if (fetchedData.dob.isNotEmpty)
+        _formValues['dateOfBirth'] = DateTime.parse(fetchedData.dob);
+      if (fetchedData.issuedDate.isNotEmpty)
+        _formValues['issuedDate'] = DateTime.parse(fetchedData.issuedDate);
+      if (fetchedData.expiryDate.isNotEmpty)
+        _formValues['expiryDate'] = DateTime.parse(fetchedData.expiryDate);
+      if (fetchedData.arrivalDate.isNotEmpty)
+        _formValues['arrivalDate'] = DateTime.parse(fetchedData.arrivalDate);
+
+      _formValues['countryCode'] = fetchedData.countryOfBirthCode;
+      _formValues['issuedCountryCode'] = fetchedData.issuedCountryCode;
+      _formValues['modeOfTravelId'] = fetchedData.modeOfTravelId;
+      _formValues['portOfArrivalId'] = fetchedData.portOfArrivalId;
+      _formValues['stateRegionId'] = fetchedData.stateRegionId;
+      _formValues['districtId'] = fetchedData.districtId;
+      _formValues['townshipId'] = fetchedData.townshipId;
+      _formValues['purposeOfVisit'] = fetchedData.purposeOfVisit;
+      _formValues['hasSymptoms'] = fetchedData.healthDeclaration;
+      _formValues['carryingRestricted'] = fetchedData.digitalDeclarations;
+
+      // ၃။ ဒေတာအားလုံး အဆင်သင့်ဖြစ်ပါက စာမျက်နှာ ၁ (Identification Form) သို့ တိုက်ရိုက် ခေါ်ဆောင်သွားမည်
+      currentStep = 1;
+    });
+
+    // Local Draft ထဲသို့ပါ တစ်ခါတည်း သိမ်းဆည်းလိုက်မည်
     _saveCurrentSession();
   }
 
@@ -504,6 +559,13 @@ class _NewApplicationState extends ConsumerState<NewApplication>
 
   Widget _buildCurrentStepForm() {
     switch (currentStep) {
+      case 0:
+        return UpdateApplication(
+          initialCountry: widget.initialCountry, // 🎯 ဒါလေး ထပ်ထည့်ပေးပါ
+          onApplicationFetched: (SubmitRequestModel fetchedData) {
+            _injectFetchedData(fetchedData);
+          },
+        );
       case 1:
         return IdentificationFormLayout(
           controllers: _step1Controllers,
@@ -586,7 +648,11 @@ class _NewApplicationState extends ConsumerState<NewApplication>
                   ),
                 ),
                 const SizedBox(height: 30),
-                FormProgressBar(currentStep: currentStep),
+                //we will show form progress bar if current step is >1
+                if (currentStep > 0) ...[
+                  FormProgressBar(currentStep: currentStep),
+                  const SizedBox(height: 15),
+                ],
                 const SizedBox(height: 15),
                 Container(
                   width: 950,
