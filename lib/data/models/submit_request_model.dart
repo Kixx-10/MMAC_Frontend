@@ -19,8 +19,8 @@ class SubmitRequestModel {
   final String vehicleName;
   final String? accommodation;
   final String? visaNo;
-  final String? nrc;            
-  final String? fatherName;     
+  final String? nrc;
+  final String? fatherName;
   final String addressInMyanmar;
   final String stateRegionId;
   final String districtId;
@@ -90,12 +90,14 @@ class SubmitRequestModel {
       'previousCity': previousCity,
       'healthDeclaration': healthDeclaration,
       'digitalDeclarations': digitalDeclarations,
-       'visaNo':             (visaNo == null || visaNo!.trim().isEmpty) ? null : visaNo,
-      'nrc':                (nrc == null || nrc!.trim().isEmpty) ? null : nrc,
-      'fatherName':         (fatherName == null || fatherName!.trim().isEmpty) ? null : fatherName,
-     
+      'visaNo': (visaNo == null || visaNo!.trim().isEmpty) ? null : visaNo,
+      'nrc': (nrc == null || nrc!.trim().isEmpty) ? null : nrc,
+      'fatherName': (fatherName == null || fatherName!.trim().isEmpty)
+          ? null
+          : fatherName,
     };
   }
+
   //this Method is used in search application by id aka update
   factory SubmitRequestModel.fromJson(Map<String, dynamic> json) {
     return SubmitRequestModel(

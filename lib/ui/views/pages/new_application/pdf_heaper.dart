@@ -21,6 +21,7 @@ class PdfHelper {
       final painter = QrPainter.withQr(
         qr: qrCode,
         color: const Color(0xFF000000),
+        // ignore: deprecated_member_use
         emptyColor: const Color(0xFFFFFFFF),
         gapless: true,
       );
@@ -44,8 +45,22 @@ class PdfHelper {
           child: pw.Row(
             mainAxisAlignment: pw.MainAxisAlignment.spaceBetween,
             children: [
-              pw.Text("OFFICIAL APPLICATION RECEIPT", style: pw.TextStyle(fontSize: 12, color: PdfColors.grey700, fontWeight: pw.FontWeight.bold)),
-              pw.Text("System Hub", style: pw.TextStyle(fontSize: 14, color: PdfColors.blue700, fontWeight: pw.FontWeight.bold)),
+              pw.Text(
+                "OFFICIAL APPLICATION RECEIPT",
+                style: pw.TextStyle(
+                  fontSize: 12,
+                  color: PdfColors.grey700,
+                  fontWeight: pw.FontWeight.bold,
+                ),
+              ),
+              pw.Text(
+                "System Hub",
+                style: pw.TextStyle(
+                  fontSize: 14,
+                  color: PdfColors.blue700,
+                  fontWeight: pw.FontWeight.bold,
+                ),
+              ),
             ],
           ),
         ),
@@ -53,13 +68,19 @@ class PdfHelper {
         footer: (pw.Context context) => pw.Container(
           alignment: pw.Alignment.center,
           //margin: const pw.EdgeInsets.top(24),
-         // border: const pw.Border(top: pw.BorderSide(color: PdfColors.grey300, width: 1)),
-        //  padding: const pw.EdgeInsets.top(8),
+          // border: const pw.Border(top: pw.BorderSide(color: PdfColors.grey300, width: 1)),
+          //  padding: const pw.EdgeInsets.top(8),
           child: pw.Row(
             mainAxisAlignment: pw.MainAxisAlignment.spaceBetween,
             children: [
-              pw.Text("Generated secure payload via App Core Engine.", style: pw.TextStyle(fontSize: 8, color: PdfColors.grey500)),
-              pw.Text("Page ${context.pageNumber} of ${context.pagesCount}", style: pw.TextStyle(fontSize: 8, color: PdfColors.grey500)),
+              pw.Text(
+                "Generated secure payload via App Core Engine.",
+                style: pw.TextStyle(fontSize: 8, color: PdfColors.grey500),
+              ),
+              pw.Text(
+                "Page ${context.pageNumber} of ${context.pagesCount}",
+                style: pw.TextStyle(fontSize: 8, color: PdfColors.grey500),
+              ),
             ],
           ),
         ),
@@ -67,9 +88,12 @@ class PdfHelper {
         build: (pw.Context context) => [
           pw.Header(level: 0, text: "Submission Confirmation"),
           pw.SizedBox(height: 10),
-          pw.Paragraph(text: "Thank you for submitting your digital filing. Your information profile has been indexed securely under the reference record specified below."),
+          pw.Paragraph(
+            text:
+                "Thank you for submitting your digital filing. Your information profile has been indexed securely under the reference record specified below.",
+          ),
           pw.SizedBox(height: 20),
-          
+
           // Metadata Box Template
           pw.Container(
             padding: const pw.EdgeInsets.all(12),
@@ -80,8 +104,17 @@ class PdfHelper {
             child: pw.Row(
               mainAxisAlignment: pw.MainAxisAlignment.spaceBetween,
               children: [
-                pw.Text("Application Reference Key:", style: pw.TextStyle(fontWeight: pw.FontWeight.bold)),
-                pw.Text(applicationNo, style: pw.TextStyle(color: PdfColors.blue700, fontWeight: pw.FontWeight.bold)),
+                pw.Text(
+                  "Application Reference Key:",
+                  style: pw.TextStyle(fontWeight: pw.FontWeight.bold),
+                ),
+                pw.Text(
+                  applicationNo,
+                  style: pw.TextStyle(
+                    color: PdfColors.blue700,
+                    fontWeight: pw.FontWeight.bold,
+                  ),
+                ),
               ],
             ),
           ),
@@ -99,7 +132,10 @@ class PdfHelper {
                   child: pw.Image(qrImage),
                 ),
                 pw.SizedBox(height: 8),
-                pw.Text("Scan QR code to verify application status.", style: pw.TextStyle(fontSize: 10, color: PdfColors.grey600)),
+                pw.Text(
+                  "Scan QR code to verify application status.",
+                  style: pw.TextStyle(fontSize: 10, color: PdfColors.grey600),
+                ),
               ],
             ),
           ),
@@ -107,9 +143,9 @@ class PdfHelper {
       ),
     );
 
-  final bytes = await pdf.save(); 
-    final directory = await getApplicationDocumentsDirectory(); 
-    final file = File('${directory.path}/Application_$applicationNo.pdf'); 
+    final bytes = await pdf.save();
+    final directory = await getApplicationDocumentsDirectory();
+    final file = File('${directory.path}/Application_$applicationNo.pdf');
     return await file.writeAsBytes(bytes);
   }
 
@@ -120,14 +156,19 @@ class PdfHelper {
 
   static Future<void> sharePdfViaEmail(String applicationNo) async {
     final file = await buildPdfDocument(applicationNo);
-    
+
     await Share.shareXFiles(
       [XFile(file.path)],
       subject: 'Application Receipt: $applicationNo',
-      text: 'Hello,\n\nPlease find attached the receipt and verification QR code for Application No: $applicationNo.',
+      text:
+          'Hello,\n\nPlease find attached the receipt and verification QR code for Application No: $applicationNo.',
     );
   }
- static Future<Uint8List> generateArrivalFormPdf(String applicationNo,SubmitRequestModel data) async {
+
+  static Future<Uint8List> generateArrivalFormPdf(
+    String applicationNo,
+    SubmitRequestModel data,
+  ) async {
     final pdf = pw.Document();
 
     pdf.addPage(
@@ -138,7 +179,8 @@ class PdfHelper {
             crossAxisAlignment: pw.CrossAxisAlignment.start,
             children: [
               pw.Center(
-                child: pw.Text( " Arrival Form",
+                child: pw.Text(
+                  " Arrival Form",
                   style: pw.TextStyle(
                     fontSize: 24,
                     fontWeight: pw.FontWeight.bold,
@@ -151,7 +193,7 @@ class PdfHelper {
               pw.Center(
                 child: pw.BarcodeWidget(
                   barcode: pw.Barcode.qrCode(),
-                  data: applicationNo, 
+                  data: applicationNo,
                   width: 150,
                   height: 150,
                 ),
@@ -159,31 +201,38 @@ class PdfHelper {
               pw.SizedBox(height: 30),
 
               _buildInfoRow("Application ID No.", applicationNo),
-              _buildInfoRow("Name", data.fullName ?? "-"), 
-              _buildInfoRow("Gender", data.gender == 'M' ? "Male" : (data.gender == 'F' ? "Female" : "-")), 
+              _buildInfoRow("Name", data.fullName ?? "-"),
+              _buildInfoRow(
+                "Gender",
+                data.gender == 'M'
+                    ? "Male"
+                    : (data.gender == 'F' ? "Female" : "-"),
+              ),
               _buildInfoRow("Nationality", data.countryOfBirthCode ?? "-"),
-              _buildInfoRow("Passport / Visa No.", "${data.passportNo ?? '-'} / ${data.visaNo ?? '-'}"),
-              
+              _buildInfoRow(
+                "Passport / Visa No.",
+                "${data.passportNo ?? '-'} / ${data.visaNo ?? '-'}",
+              ),
+
               if (data.fatherName != null && data.fatherName!.isNotEmpty)
                 _buildInfoRow("Father's Name", data.fatherName!),
 
-              pw.Divider(color: PdfColors.grey300), 
+              pw.Divider(color: PdfColors.grey300),
               pw.SizedBox(height: 10),
 
               _buildInfoRow("Arrival Date", data.arrivalDate ?? "-"),
               _buildInfoRow("Purpose of Visit", data.purposeOfVisit ?? "-"),
               _buildInfoRow("Contact (MM)", data.mobileNumberMM ?? "-"),
               _buildInfoRow("Address in Myanmar", data.addressInMyanmar ?? "-"),
-              
+
               pw.SizedBox(height: 20),
-              
             ],
           );
         },
       ),
     );
 
-    return await pdf.save(); 
+    return await pdf.save();
   }
 
   static pw.Widget _buildInfoRow(String label, String value) {
@@ -194,12 +243,15 @@ class PdfHelper {
         children: [
           pw.Expanded(
             flex: 2,
-            child: pw.Text(label, style: pw.TextStyle(fontWeight: pw.FontWeight.bold, color: PdfColors.blue900)),
+            child: pw.Text(
+              label,
+              style: pw.TextStyle(
+                fontWeight: pw.FontWeight.bold,
+                color: PdfColors.blue900,
+              ),
+            ),
           ),
-          pw.Expanded(
-            flex: 3,
-            child: pw.Text(value),
-          ),
+          pw.Expanded(flex: 3, child: pw.Text(value)),
         ],
       ),
     );

@@ -1,4 +1,3 @@
-// lib/ui/views/pages/new_application/new_application_page.dart
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:mmac/data/controllers/submit_provider.dart';
@@ -17,7 +16,12 @@ class NewApplication extends ConsumerStatefulWidget {
   final String? initialCountry;
   final VoidCallback? onBackPressed;
   final isUpdateMode;
-  const NewApplication({super.key, this.initialCountry, this.onBackPressed, this.isUpdateMode=false});
+  const NewApplication({
+    super.key,
+    this.initialCountry,
+    this.onBackPressed,
+    this.isUpdateMode = false,
+  });
 
   @override
   ConsumerState<NewApplication> createState() => _NewApplicationState();
@@ -232,6 +236,7 @@ class _NewApplicationState extends ConsumerState<NewApplication>
           fetchedData.addressInMyanmar;
       _step2Controllers['mobileNumberMM']?.text = fetchedData.mobileNumberMM!;
       _step2Controllers['previousCity']?.text = fetchedData.previousCity;
+      _step2Controllers['previousCity']?.text = fetchedData.previousCity;
 
       // ၂။ Form Values (Dropdown & Dates) များကို သိမ်းဆည်းခြင်း
       _formValues['gender'] = fetchedData.gender == 'M' ? 'Male' : 'Female';
@@ -429,7 +434,9 @@ class _NewApplicationState extends ConsumerState<NewApplication>
       builder: (_) => const Center(child: CircularProgressIndicator()),
     );
     try {
-      final response = await ref.read(submitControllerProvider.notifier).submitApplicationAction(requestModel);
+      final response = await ref
+          .read(submitControllerProvider.notifier)
+          .submitApplicationAction(requestModel);
       if (!mounted) return;
       Navigator.of(context).pop();
       if (response != null) {
@@ -438,7 +445,6 @@ class _NewApplicationState extends ConsumerState<NewApplication>
           _submittedData = requestModel;
           _generatedApplicationNo = response.applicationNo;
           currentStep = 5;
-
         });
       } else {
         _showErrorDialog(
@@ -604,7 +610,6 @@ class _NewApplicationState extends ConsumerState<NewApplication>
           applicationNo: _generatedApplicationNo,
           requestData: _submittedData!,
           onFinish: _resetForm,
-          
         );
       default:
         return const SizedBox.shrink();
