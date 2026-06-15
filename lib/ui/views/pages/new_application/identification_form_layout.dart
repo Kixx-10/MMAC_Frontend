@@ -5,13 +5,13 @@ import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:mmac/data/controllers/country_provider.dart';
 import 'package:mmac/data/controllers/nrc_provider.dart';
+import 'package:mmac/ui/views/pages/new_application/widget/nrc_selector_widget.dart';
 import '../../../../utils/form_validators.dart';
 import '../../../../utils/country_codes.dart';
 import '../../widgets/custom_text_field.dart';
 import '../../widgets/custom_date_field.dart';
 import '../../widgets/custom_dropdown_field.dart';
 import '../../widgets/mobile_code_search_dialog.dart';
-import '../../widgets/nrc_selector_field.dart';
 
 abstract class IdentificationFormLayoutInterface {
   bool validate();
@@ -44,6 +44,7 @@ class _IdentificationFormLayoutState
     extends ConsumerState<IdentificationFormLayout>
     implements IdentificationFormLayoutInterface {
   bool _showDateErrors = false;
+  bool _showNrcError = false; 
   bool _isLoading = true;
 
   final List<dynamic> _rawCountryObjects = [];
@@ -70,7 +71,6 @@ class _IdentificationFormLayoutState
     super.initState();
     widget.onReady(this);
 
-    // 🎯 Restore Values for Dropdowns & TextFields
     _selectedNrcStateCode = widget.values['nrcStateCode'];
     _selectedTownshipCode = widget.values['nrcTownshipCode'];
     _selectedNrcType = widget.values['nrcTypeCode'];
@@ -88,9 +88,7 @@ class _IdentificationFormLayoutState
       );
     }
 
-    // 🎯 The Pro Fix: Asynchronous Domino Effect
     Future.microtask(() async {
-      // 1. Load Countries Data
       try {
         final countryState = await ref.read(countryProvider.future);
         if (mounted) {
@@ -109,15 +107,12 @@ class _IdentificationFormLayoutState
         if (mounted) setState(() => _isLoading = false);
       }
 
-      // 2. Restore NRC Cascade Dropdowns
       if (_selectedNrcStateCode != null && mounted) {
         try {
           final nrcData = await ref.read(nrcProvider.future);
           final matchedState = nrcData.nrcStateList.firstWhere(
             (s) => s.idCode == _selectedNrcStateCode,
           );
-          // 🎯 မှော်ဆန်တဲ့အချက် - Draft ထဲက State ID ကို Provider ဆီ ပို့ပေးလိုက်ခြင်းဖြင့်
-          // Provider က သက်ဆိုင်ရာ မြို့နယ် (Townships) တွေကို အလိုအလျောက် ပြန်ထုတ်ပေးသွားပါမယ်။
           ref.read(nrcProvider.notifier).selectNrcState(matchedState.id);
         } catch (e) {
           debugPrint("❌ Failed to restore NRC provider state: $e");
@@ -151,7 +146,12 @@ class _IdentificationFormLayoutState
     if (_selectedNrcStateCode != null &&
         _selectedTownshipCode != null &&
         _selectedNrcType != null &&
-        _nrcNumberController.text.isNotEmpty) {
+        _nrcNumberController.text.trim().length == 6) {
+      
+      if (_showNrcError) {
+        setState(() => _showNrcError = false);
+      }
+
       final nrcStateData = ref.read(nrcProvider).valueOrNull;
       final stateList = nrcStateData?.nrcStateList ?? [];
       final townshipList = nrcStateData?.availableNrcTownships ?? [];
@@ -174,7 +174,7 @@ class _IdentificationFormLayoutState
       } catch (e) {}
 
       final fullNrcMyanmar =
-          "$stateMM/$townshipMM($_selectedNrcType)${_nrcNumberController.text}";
+          "$stateMM/$townshipMM($_selectedNrcType)${_nrcNumberController.text.trim()}";
 
       widget.controllers['nrc']?.text = fullNrcMyanmar;
       widget.onValueChanged('nrc', fullNrcMyanmar);
@@ -184,11 +184,49 @@ class _IdentificationFormLayoutState
     }
   }
 
+  // 🎯 ၆ လသက်တမ်းစစ်ဆေးချက် အောင်မြင်မှသာ True ပေးမည့် တိကျသော Validation Logic
   @override
   bool validate() {
     if (!mounted) return false;
-    setState(() => _showDateErrors = true);
-    return widget.formKey.currentState!.validate();
+    
+    final bool isMyanmar =
+        widget.values['country'] == 'Myanmar' ||
+        widget.values['country'] == 'MMR';
+
+    setState(() {
+      _showDateErrors = true;
+      
+      if (isMyanmar) {
+        if (_selectedNrcStateCode == null ||
+            _selectedTownshipCode == null ||
+            _selectedNrcType == null ||
+            _nrcNumberController.text.trim().length != 6) {
+          _showNrcError = true;
+        } else {
+          _showNrcError = false;
+        }
+      } else {
+        _showNrcError = false;
+      }
+    });
+
+    // 🎯 form_validators.dart ထဲက ပတ်စပို့ ၆ လသက်တမ်းစစ်တဲ့ logic ကို ခေါ်ယူလိုက်ခြင်း
+    final String? passportExpiryError = FormValidators.passportExpiry(
+      expiryDate: widget.values['expiryDate'],
+      issuedDate: widget.values['issuedDate'],
+      isMyanmar: isMyanmar,
+    );
+    
+    // Error စာသား မရှိမှသာ (null ဖြစ်မှသာ) သက်တမ်း မှန်ကန်သည်ဟု သတ်မှတ်မည်
+    bool isExpiryValid = passportExpiryError == null;
+
+    final bool basicFormValid = widget.formKey.currentState!.validate();
+
+    if (isMyanmar) {
+      return basicFormValid && !_showNrcError && isExpiryValid && widget.values['dateOfBirth'] != null && widget.values['issuedDate'] != null;
+    }
+    
+    return basicFormValid && isExpiryValid && widget.values['dateOfBirth'] != null && widget.values['issuedDate'] != null;
   }
 
   @override
@@ -213,26 +251,6 @@ class _IdentificationFormLayoutState
     final nrcAsync = ref.watch(nrcProvider);
     final nrcState = nrcAsync.valueOrNull;
 
-    Widget buildCustomDropdownContainer({
-      required Widget child,
-      bool isFocused = false,
-    }) {
-      return Container(
-        padding: const EdgeInsets.symmetric(horizontal: 8),
-        alignment: Alignment.center,
-        height: 45,
-        decoration: BoxDecoration(
-          color: Colors.white,
-          borderRadius: BorderRadius.circular(8),
-          border: Border.all(
-            color: isFocused ? Colors.blue : Colors.grey.shade300,
-            width: isFocused ? 1.5 : 1,
-          ),
-        ),
-        child: DropdownButtonHideUnderline(child: child),
-      );
-    }
-
     Widget pair(Widget a, Widget b) {
       if (isDesktop) {
         return Row(
@@ -245,6 +263,17 @@ class _IdentificationFormLayoutState
         );
       }
       return Column(children: [a, const SizedBox(height: 16), b]);
+    }
+
+    // 🎯 UI အတွင်း ၆ လသက်တမ်းမပြည့်ပါက အနီရောင်စာသားပြသပေးရန် ပြင်ဆင်ထားသော စစ်ဆေးချက်
+    String? getExpiryErrorText() {
+      if (!_showDateErrors) return null;
+      
+      return FormValidators.passportExpiry(
+        expiryDate: widget.values['expiryDate'],
+        issuedDate: widget.values['issuedDate'],
+        isMyanmar: isMyanmar,
+      );
     }
 
     return Form(
@@ -330,6 +359,7 @@ class _IdentificationFormLayoutState
                       _selectedTownshipCode = null;
                       _selectedNrcType = null;
                       _nrcNumberController.clear();
+                      _showNrcError = false;
                     });
                   }
                 },
@@ -350,8 +380,6 @@ class _IdentificationFormLayoutState
                 widget.onValueChanged('email', value);
               },
             ),
-
-            // ─── Mobile Number Field ───
             Row(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
@@ -545,6 +573,7 @@ class _IdentificationFormLayoutState
           ),
           const SizedBox(height: 20),
 
+          // ─── NRC Section with Custom Unified Validation ───
           if (isMyanmar) ...[
             LayoutBuilder(
               builder: (context, constraints) {
@@ -554,140 +583,16 @@ class _IdentificationFormLayoutState
                   final List<dynamic> stateList = nrcState?.nrcStateList ?? [];
                   final List<dynamic> townshipList =
                       nrcState?.availableNrcTownships ?? [];
-
                   final int? currentProviderStateId =
                       nrcState?.selectedNrcStateId;
 
-                  // 🎯 Dropdown Button အတွက် တန်ဖိုးများကို အကာအကွယ်ပေးထားခြင်း
                   final int? activeStateId =
                       stateList.any((st) => st.id == currentProviderStateId)
-                      ? currentProviderStateId
-                      : null;
+                          ? currentProviderStateId
+                          : null;
 
-                  final String? activeTownshipCode =
-                      townshipList.any(
-                        (ts) => ts.idCode == _selectedTownshipCode,
-                      )
-                      ? _selectedTownshipCode
-                      : null;
-
-                  final String? activeNrcType =
-                      _nrcTypes.any((t) => t['code'] == _selectedNrcType)
-                      ? _selectedNrcType
-                      : null;
-
-                  final stateDropdown = buildCustomDropdownContainer(
-                    child: DropdownButton<int>(
-                      value: activeStateId,
-                      isExpanded: true,
-                      isDense: true,
-                      icon: const Icon(
-                        Icons.arrow_drop_down,
-                        size: 18,
-                        color: Colors.black54,
-                      ),
-                      style: const TextStyle(
-                        fontSize: 13,
-                        color: Colors.black87,
-                        fontWeight: FontWeight.w500,
-                      ),
-                      menuMaxHeight: 350,
-                      items: stateList.map<DropdownMenuItem<int>>((st) {
-                        return DropdownMenuItem<int>(
-                          value: st.id,
-                          child: Text(st.codeMM),
-                        );
-                      }).toList(),
-                      onChanged: (id) {
-                        if (id != null) {
-                          ref.read(nrcProvider.notifier).selectNrcState(id);
-                          final match = stateList.firstWhere((s) => s.id == id);
-                          if (!mounted) return;
-                          setState(() {
-                            _selectedNrcStateCode = match.idCode;
-                            _selectedTownshipCode = null;
-                          });
-                          widget.onValueChanged('nrcStateCode', match.idCode);
-                          widget.onValueChanged('nrcTownshipCode', null);
-                          _updateNrcControllerValue();
-                        }
-                      },
-                    ),
-                  );
-
-                  final townshipDropdown = buildCustomDropdownContainer(
-                    child: DropdownButton<String>(
-                      value: activeTownshipCode,
-                      isExpanded: true,
-                      isDense: true,
-                      icon: const Icon(
-                        Icons.arrow_drop_down,
-                        size: 18,
-                        color: Colors.black54,
-                      ),
-                      style: const TextStyle(
-                        fontSize: 12,
-                        color: Colors.black87,
-                        fontWeight: FontWeight.w500,
-                      ),
-                      menuMaxHeight: 350,
-                      items: townshipList.map<DropdownMenuItem<String>>((ts) {
-                        return DropdownMenuItem<String>(
-                          value: ts.idCode,
-                          child: Text(
-                            ts.codeMM,
-                            overflow: TextOverflow.ellipsis,
-                          ),
-                        );
-                      }).toList(),
-                      onChanged: (v) {
-                        if (!mounted) return;
-                        setState(() => _selectedTownshipCode = v);
-                        widget.onValueChanged('nrcTownshipCode', v);
-                        _updateNrcControllerValue();
-                      },
-                    ),
-                  );
-
-                  final typeDropdown = buildCustomDropdownContainer(
-                    child: DropdownButton<String>(
-                      value: activeNrcType,
-                      isExpanded: true,
-                      isDense: true,
-                      icon: const Icon(
-                        Icons.arrow_drop_down,
-                        size: 18,
-                        color: Colors.black54,
-                      ),
-                      style: const TextStyle(
-                        fontSize: 12,
-                        color: Colors.black87,
-                        fontWeight: FontWeight.w500,
-                      ),
-                      items: _nrcTypes.map<DropdownMenuItem<String>>((t) {
-                        return DropdownMenuItem<String>(
-                          value: t['code'],
-                          child: Text(t['label']!),
-                        );
-                      }).toList(),
-                      onChanged: (v) {
-                        if (!mounted) return;
-                        setState(() => _selectedNrcType = v);
-                        widget.onValueChanged('nrcTypeCode', v);
-                        _updateNrcControllerValue();
-                      },
-                    ),
-                  );
-
-                  final numberField = Container(
-                    height: 44,
+                  final numberField = Padding(
                     padding: const EdgeInsets.symmetric(horizontal: 10),
-                    alignment: Alignment.center,
-                    decoration: BoxDecoration(
-                      color: Colors.white,
-                      borderRadius: BorderRadius.circular(8),
-                      border: Border.all(color: Colors.grey.shade300, width: 1),
-                    ),
                     child: TextFormField(
                       controller: _nrcNumberController,
                       keyboardType: TextInputType.number,
@@ -720,12 +625,53 @@ class _IdentificationFormLayoutState
                     ),
                   );
 
-                  return NrcSelectorField(
-                    isDesktop: isNrcRowDesktop,
-                    stateDropdown: stateDropdown,
-                    townshipDropdown: townshipDropdown,
-                    typeDropdown: typeDropdown,
-                    numberField: numberField,
+                  return Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      NrcSelectorWidget(
+                        isDesktop: isNrcRowDesktop,
+                        selectedNrcStateCode: _selectedNrcStateCode,
+                        selectedTownshipCode: _selectedTownshipCode,
+                        selectedNrcType: _selectedNrcType,
+                        numberField: numberField,
+                        hasError: _showNrcError, 
+                        stateList: stateList,
+                        townshipList: townshipList,
+                        nrcTypes: _nrcTypes,
+                        activeStateId: activeStateId,
+                        onStateChanged: (id, idCode) {
+                          ref.read(nrcProvider.notifier).selectNrcState(id);
+                          if (!mounted) return;
+                          setState(() {
+                            _selectedNrcStateCode = idCode;
+                            _selectedTownshipCode = null;
+                          });
+                          widget.onValueChanged('nrcStateCode', idCode);
+                          widget.onValueChanged('nrcTownshipCode', null);
+                          _updateNrcControllerValue();
+                        },
+                        onTownshipChanged: (v) {
+                          if (!mounted) return;
+                          setState(() => _selectedTownshipCode = v);
+                          widget.onValueChanged('nrcTownshipCode', v);
+                          _updateNrcControllerValue();
+                        },
+                        onTypeChanged: (v) {
+                          if (!mounted) return;
+                          setState(() => _selectedNrcType = v);
+                          widget.onValueChanged('nrcTypeCode', v);
+                          _updateNrcControllerValue();
+                        },
+                      ),
+                      if (_showNrcError)
+                        const Padding(
+                          padding: EdgeInsets.only(top: 6, left: 4),
+                          child: Text(
+                            'Please complete all Myanmar NRC fields properly (6 digits)',
+                            style: TextStyle(color: Colors.red, fontSize: 11),
+                          ),
+                        ),
+                    ],
                   );
                 }
 
@@ -842,11 +788,9 @@ class _IdentificationFormLayoutState
               label: "Expiry Date",
               value: widget.values['expiryDate'],
               labelWidth: lw,
-              firstDate: DateTime.now(),
+              firstDate: DateTime(1900),
               lastDate: DateTime(2100),
-              errorText: _showDateErrors && widget.values['expiryDate'] == null
-                  ? 'Expiry Date is required'
-                  : null,
+              errorText: getExpiryErrorText(), // 🎯 ၆ လမပြည့်ပါက UI တွင် error အနီရောင်ချက်ချင်းပြမည်
               onPicked: (d) {
                 widget.onValueChanged('expiryDate', d);
                 if (!mounted) return;

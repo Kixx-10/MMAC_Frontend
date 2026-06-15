@@ -2,12 +2,9 @@
 import 'package:flutter/material.dart';
 
 class FormProgressBar extends StatelessWidget {
-  final int currentStep; 
+  final int currentStep;
 
-  const FormProgressBar({
-    super.key,
-    required this.currentStep,
-  });
+  const FormProgressBar({super.key, required this.currentStep});
 
   @override
   Widget build(BuildContext context) {
@@ -45,8 +42,8 @@ class FormProgressBar extends StatelessWidget {
                         color: isCompleted
                             ? Colors.blue
                             : isActive
-                                ? Colors.blue
-                                : Colors.grey.shade200,
+                            ? Colors.blue
+                            : Colors.grey.shade200,
                         border: Border.all(
                           color: isActive || isCompleted
                               ? Colors.blue
@@ -56,7 +53,11 @@ class FormProgressBar extends StatelessWidget {
                       ),
                       child: Center(
                         child: isCompleted
-                            ? const Icon(Icons.check, color: Colors.white, size: 16)
+                            ? const Icon(
+                                Icons.check,
+                                color: Colors.white,
+                                size: 16,
+                              )
                             : Text(
                                 "$stepNumber",
                                 style: TextStyle(
@@ -73,7 +74,9 @@ class FormProgressBar extends StatelessWidget {
                       textAlign: TextAlign.center,
                       style: TextStyle(
                         fontSize: 11,
-                        fontWeight: isActive ? FontWeight.bold : FontWeight.normal,
+                        fontWeight: isActive
+                            ? FontWeight.bold
+                            : FontWeight.normal,
                         color: isActive ? Colors.blue : Colors.grey,
                       ),
                     ),
@@ -86,7 +89,7 @@ class FormProgressBar extends StatelessWidget {
                 Container(
                   width: 60,
                   height: 1.5,
-                  margin: const EdgeInsets.only(top: 10), 
+                  margin: const EdgeInsets.only(top: 10),
                   color: isCompleted ? Colors.blue : Colors.grey.shade300,
                 ),
             ],
