@@ -1,14 +1,11 @@
 // lib/ui/views/pages/new_application/new_application_page.dart
-
-// ignore_for_file: curly_braces_in_flow_control_structures
-
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:mmac/data/controllers/submit_provider.dart';
 import 'package:mmac/data/models/submit_request_model.dart';
 import 'package:mmac/ui/views/pages/new_application/declaration_layout.dart';
 import 'package:mmac/ui/views/pages/new_application/identification_form_layout.dart';
-import 'package:mmac/ui/views/pages/new_application/qr_generation_layout.dart';
+import 'package:mmac/ui/views/pages/new_application/qr_generate_screen.dart';
 import 'package:mmac/ui/views/pages/new_application/review_layout.dart';
 import 'package:mmac/ui/views/pages/new_application/trip_form_layout.dart';
 import 'package:mmac/ui/views/pages/update_application.dart';
@@ -19,14 +16,8 @@ import '../../widgets/form_progress_bar.dart';
 class NewApplication extends ConsumerStatefulWidget {
   final String? initialCountry;
   final VoidCallback? onBackPressed;
-  final bool isUpdateMode;
 
-  const NewApplication({
-    super.key,
-    this.initialCountry,
-    this.onBackPressed,
-    this.isUpdateMode = false,
-  });
+  const NewApplication({super.key, this.initialCountry, this.onBackPressed});
 
   @override
   ConsumerState<NewApplication> createState() => _NewApplicationState();
@@ -40,8 +31,9 @@ class _NewApplicationState extends ConsumerState<NewApplication>
   int currentStep = 1;
   final int totalSteps = 4;
   String _generatedApplicationNo = '';
-
   bool _isSessionLoading = true;
+
+  SubmitRequestModel? _submittedData;
 
   final GlobalKey<FormState> _step1FormKey = GlobalKey<FormState>();
   IdentificationFormLayoutInterface? _step1Interface;
@@ -438,16 +430,16 @@ class _NewApplicationState extends ConsumerState<NewApplication>
       builder: (_) => const Center(child: CircularProgressIndicator()),
     );
     try {
-      final response = await ref
-          .read(submitControllerProvider.notifier)
-          .submitApplicationAction(requestModel);
+      final response = await ref.read(submitControllerProvider.notifier).submitApplicationAction(requestModel);
       if (!mounted) return;
       Navigator.of(context).pop();
       if (response != null) {
         FormSessionService.clearDraft();
         setState(() {
+          _submittedData = requestModel;
           _generatedApplicationNo = response.applicationNo;
           currentStep = 5;
+
         });
       } else {
         _showErrorDialog(
@@ -609,9 +601,11 @@ class _NewApplicationState extends ConsumerState<NewApplication>
           },
         );
       case 5:
-        return QrGenereate(
+        return QrGenerateScreen(
           applicationNo: _generatedApplicationNo,
+          requestData: _submittedData!,
           onFinish: _resetForm,
+          
         );
       default:
         return const SizedBox.shrink();

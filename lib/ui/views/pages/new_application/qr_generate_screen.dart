@@ -1,25 +1,27 @@
 import 'dart:typed_data';
 import 'package:flutter/material.dart';
+import 'package:mmac/data/models/submit_request_model.dart';
 import 'package:printing/printing.dart'; 
-// သင့်ရဲ့ PdfHelper လမ်းကြောင်းကို မှန်ကန်အောင် ပြင်ပါ
 import 'package:mmac/ui/views/pages/new_application/pdf_heaper.dart';
 
-class QrGenerate extends StatefulWidget {
+class QrGenerateScreen extends StatefulWidget {
   final String applicationNo;
+  final SubmitRequestModel requestData;
   final VoidCallback onFinish;
 
-  const QrGenerate({
+  const QrGenerateScreen({
     super.key, 
     required this.applicationNo,
+    required this.requestData,
     required this.onFinish,
   });
 
   @override
-  State<QrGenerate> createState() => _QrGenerateState();
+  State<QrGenerateScreen> createState() => _QrGenerateScreenState();
 }
 
-class _QrGenerateState extends State<QrGenerate> {
-  Uint8List? _pdfBytes; // လမ်းကြောင်းအစား Data ကို သိမ်းပါမည်
+class _QrGenerateScreenState extends State<QrGenerateScreen> {
+  Uint8List? _pdfBytes; 
   bool _isProcessing = false;
 
   @override
@@ -28,11 +30,10 @@ class _QrGenerateState extends State<QrGenerate> {
     _generatePdfInBackground();
   }
 
-  // နောက်ကွယ်တွင် PDF ဖန်တီးခြင်း
   Future<void> _generatePdfInBackground() async {
     if (widget.applicationNo.isEmpty) return;
     try {
-      Uint8List bytes = await PdfHelper.generateArrivalFormPdf(widget.applicationNo);
+      Uint8List bytes = await PdfHelper.generateArrivalFormPdf(widget.applicationNo,widget.requestData);
       if (mounted) {
         setState(() {
           _pdfBytes = bytes;
@@ -43,7 +44,6 @@ class _QrGenerateState extends State<QrGenerate> {
     }
   }
 
-  // Dialog ဖြင့် PDF Preview ပြခြင်း (Web အတွက် PdfPreview အသုံးပြုထားသည်)
   void _showPdfPreview(BuildContext context) {
     showDialog(
       context: context,
@@ -67,7 +67,7 @@ class _QrGenerateState extends State<QrGenerate> {
           // printing package မှ Preview Widget
           child: PdfPreview(
             build: (format) => _pdfBytes!,
-            allowPrinting: false, // Toolbar များကို ဖျောက်ထားရန်
+            allowPrinting: false, 
             allowSharing: false,
             canChangeOrientation: false,
             canChangePageFormat: false,
@@ -78,14 +78,12 @@ class _QrGenerateState extends State<QrGenerate> {
     );
   }
 
-  // ဖိုင်ဒေါင်းလုဒ် / Share လုပ်ခြင်း (Web တွင် Download အဖြစ်အလုပ်လုပ်ပါသည်)
   Future<void> _saveOrSharePdf() async {
     if (_pdfBytes == null) return;
     
     setState(() => _isProcessing = true);
     try {
       final validAppNo = widget.applicationNo.isNotEmpty ? widget.applicationNo : 'N/A';
-      // Web ပေါ်တွင် ၎င်းသည် browser ၏ download box ကို ပေါ်စေပါသည်
       await Printing.sharePdf(
         bytes: _pdfBytes!,
         filename: 'ArrivalForm_$validAppNo.pdf',
