@@ -20,6 +20,7 @@ class _MainLayoutState extends State<MainLayout>
     with SingleTickerProviderStateMixin {
   late TabController _tabController;
   String? _selectedResidency;
+  Key _formKey = const ValueKey('form_start');
 
   bool _isSessionLoading = true;
   @override
@@ -49,6 +50,89 @@ class _MainLayoutState extends State<MainLayout>
           _isSessionLoading = false;
         });
       }
+    }
+  }
+
+  // Change the residency if user mistakenly choose it
+  Future<void> _handleResidencySelection(String newResidency) async {
+    // အရင်က ရွေးထားတာရှိပြီး၊ အခုရွေးတာနဲ့ မတူဘူးဆိုရင် (ဥပမာ - Native ကနေ Foreigner ပြောင်းတာ)
+    if (_selectedResidency != null && _selectedResidency != newResidency) {
+      // Warning Dialog ပြမယ်
+      final bool? confirmReset = await showDialog<bool>(
+        context: context,
+        builder: (BuildContext context) {
+          return AlertDialog(
+            title: const Text('Change Residency Type?'),
+            content: const Text(
+              'Changing your residency type will clear all the data you have filled so far. Are you sure you want to proceed?',
+            ),
+            actions: [
+              TextButton(
+                onPressed: () => Navigator.of(
+                  context,
+                ).pop(false), // Cancel နှိပ်ရင် false ပြန်မယ်
+                child: const Text('Cancel'),
+              ),
+              ElevatedButton(
+                onPressed: () => Navigator.of(
+                  context,
+                ).pop(true), // Confirm နှိပ်ရင် true ပြန်မယ်
+                style: ElevatedButton.styleFrom(backgroundColor: Colors.red),
+                child: const Text('Yes, Clear Data'),
+              ),
+            ],
+          );
+        },
+      );
+
+      // User က "Yes, Clear Data" ကို မနှိပ်ဘူးဆိုရင် ဘာမှမလုပ်ဘဲ ရပ်လိုက်မယ်
+      if (confirmReset != true) return;
+
+      // User က Confirm လုပ်တယ်ဆိုရင် Data အဟောင်းတွေကို ရှင်းထုတ်မယ်
+      await FormSessionService.clearDraft();
+    }
+
+    // ဘာမှမရွေးရသေးတာပဲဖြစ်ဖြစ်၊ Data ရှင်းပြီးသွားတာပဲဖြစ်ဖြစ် State ကို အသစ်ချိန်းပေးမယ်
+    setState(() {
+      _selectedResidency = newResidency;
+      _formKey = UniqueKey();
+    });
+  }
+
+  // User က Form ဖြည့်နေရင်း နောက်ကို ပြန်ဆုတ်ချင်တဲ့အခါ
+  Future<void> _goBackToResidency() async {
+    final bool? confirmReset = await showDialog<bool>(
+      context: context,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          title: const Text('Go Back & Clear Data?'),
+          content: const Text(
+            'Going back to change your residency will clear all the data you have filled so far. Are you sure?',
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.of(context).pop(false),
+              child: const Text('Cancel'),
+            ),
+            ElevatedButton(
+              onPressed: () => Navigator.of(context).pop(true),
+              style: ElevatedButton.styleFrom(backgroundColor: Colors.red),
+              child: const Text('Yes, Go Back'),
+            ),
+          ],
+        );
+      },
+    );
+
+    if (confirmReset == true) {
+      // Data တွေ ဖျက်မယ်
+      await FormSessionService.clearDraft();
+
+      // null ပြောင်းလိုက်ရင် ResidencyLayout ကြီး ပြန်ပေါ်လာလိမ့်မယ်
+      setState(() {
+        _selectedResidency = null;
+        _formKey = UniqueKey();
+      });
     }
   }
 
@@ -202,13 +286,14 @@ class _MainLayoutState extends State<MainLayout>
                 // ၂။ NEW APPLICATION OR RESIDENCY
                 _selectedResidency == null
                     ? ResidencyLayout(
-                        onResidencySelected: (residencyType) {
-                          setState(() {
-                            _selectedResidency = residencyType;
-                          });
-                        },
+                        onResidencySelected: _handleResidencySelection,
                       )
-                    : NewApplication(initialCountry: _selectedResidency),
+                    : NewApplication(
+                        key: _formKey,
+                        initialCountry: _selectedResidency,
+                        //Back လုပ်မယ့် Function ကို NewApplication ဆီ ထည့်မယ်
+                        onBackPressed: _goBackToResidency,
+                      ),
 
                 // ၃။ UPDATE APPLICATION PAGE
                 const UpdateApplication(),

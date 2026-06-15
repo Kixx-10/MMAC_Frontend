@@ -14,7 +14,9 @@ import '../../widgets/form_progress_bar.dart';
 
 class NewApplication extends ConsumerStatefulWidget {
   final String? initialCountry;
-  const NewApplication({super.key, this.initialCountry});
+  final VoidCallback? onBackPressed;
+
+  const NewApplication({super.key, this.initialCountry, this.onBackPressed});
 
   @override
   ConsumerState<NewApplication> createState() => _NewApplicationState();
@@ -111,7 +113,7 @@ class _NewApplicationState extends ConsumerState<NewApplication>
               sessionData['values'],
             );
 
-            // 🎯 DATE CRASH FIX: Json မှလာသော String ကို DateTime သို့ ပြန်ပြောင်းပေးခြင်း
+            // DATE CRASH FIX: Json မှလာသော String ကို DateTime သို့ ပြန်ပြောင်းပေးခြင်း
             final dateFields = [
               'dateOfBirth',
               'issuedDate',
@@ -562,6 +564,18 @@ class _NewApplicationState extends ConsumerState<NewApplication>
           child: Center(
             child: Column(
               children: [
+                //back button
+                if (widget.onBackPressed != null)
+                  Align(
+                    alignment: Alignment.centerLeft,
+                    child: TextButton.icon(
+                      onPressed: widget.onBackPressed,
+                      icon: const Icon(Icons.arrow_back),
+                      label: const Text("Change Residency"),
+                      style: TextButton.styleFrom(foregroundColor: Colors.red),
+                    ),
+                  ),
+
                 const SizedBox(height: 20),
                 const Padding(
                   padding: EdgeInsets.symmetric(horizontal: 24),
