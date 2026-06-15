@@ -50,19 +50,44 @@ class SubmitRepository {
 
   Future<SubmitRequestModel?> fetchApplicationForUpdate({
     required String qrReference,
+    required String residencyType,
+    String? nrc,
+    String? passportNumber,
+    String? nationalityCode,
+    String? dob,
+    String? passportExpiry,
   }) async {
     try {
-      final endpoint = ApiEndpoints.fetchApplicationForUpdate(qrReference);
+      // 🎯 သတ်မှတ်ထားသည့် Secure Verification POST Endpoint
+      const endpoint = "/api/applications/verify-update";
+
+      // Backend သမား တောင်းထားသည့် JSON Specification အတိုင်း Payload တည်ဆောက်ခြင်း
+      final Map<String, dynamic> payload = {
+        "referenceNo": qrReference,
+        "residencyType": residencyType,
+        if (nrc != null && nrc.isNotEmpty) "nrc": nrc,
+        if (passportNumber != null && passportNumber.isNotEmpty)
+          "passportNo": passportNumber,
+        if (nationalityCode != null && nationalityCode.isNotEmpty)
+          "nationalityCode": nationalityCode,
+        if (dob != null && dob.isNotEmpty) "dob": dob,
+        if (passportExpiry != null && passportExpiry.isNotEmpty)
+          "passportExpiry": passportExpiry,
+      };
 
       dev.log(
-        "FETCHING APPLICATION FROM ENDPOINT: $endpoint",
+        "VERIFYING UPDATE WITH PAYLOAD: $payload",
         name: "SubmitRepository",
       );
 
-      final response = await _apiClient.get(endpoint);
+      // 🎯 GET အစား POST Request ဖြင့် ဒေတာများ တွဲပို့လိုက်ခြင်း
+      final response = await _apiClient.post(endpoint, data: payload);
 
       if (response.statusCode == 200 && response.data != null) {
-        dev.log("APPLICATION RECORD FOUND!", name: "SubmitRepository");
+        dev.log(
+          "APPLICATION RECORD FOUND AND VERIFIED!",
+          name: "SubmitRepository",
+        );
         return SubmitRequestModel.fromJson(response.data);
       }
       return null;

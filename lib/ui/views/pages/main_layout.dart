@@ -1,10 +1,9 @@
 // lib/ui/views/layouts/main_layout.dart
 
 import 'package:flutter/material.dart';
-import 'package:mmac/ui/views/pages/new_application/new_application_page.dart';
 import 'package:mmac/ui/views/pages/home.dart';
+import 'package:mmac/ui/views/pages/new_application/new_application_page.dart';
 import 'package:mmac/ui/views/pages/new_application/residency_layout.dart';
-import 'package:mmac/ui/views/pages/update_application.dart';
 import 'package:mmac/ui/views/pages/faqs.dart';
 import 'package:mmac/ui/views/widgets/national_header.dart';
 import 'package:mmac/utils/form_session_service.dart';
@@ -296,7 +295,16 @@ class _MainLayoutState extends State<MainLayout>
                       ),
 
                 // ၃။ UPDATE APPLICATION PAGE
-                const UpdateApplication(),
+                _selectedResidency == null
+                    ? ResidencyLayout(
+                        onResidencySelected: _handleResidencySelection,
+                      )
+                    : NewApplication(
+                        key: _formKey,
+                        initialCountry: _selectedResidency,
+                        onBackPressed: _goBackToResidency,
+                        isUpdateMode: true,
+                      ),
 
                 // ၄။ FAQS PAGE
                 FAQS(
