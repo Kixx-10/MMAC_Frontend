@@ -1,6 +1,32 @@
 
-
 class FormValidators {
+  static String? passportExpiry({
+    required DateTime? expiryDate,
+    required DateTime? issuedDate,
+    required bool isMyanmar,
+  }) {
+   
+    if (expiryDate == null) {
+      return 'Passport Expiry Date is required.';
+    }
+
+    
+    if (!isMyanmar) {
+     
+      if (issuedDate != null && !expiryDate.isAfter(issuedDate)) {
+        return 'Expiry date must be after the Passport Issue Date.';
+      }
+      final DateTime today = DateTime.now();
+    
+      final DateTime sixMonthsFromToday = DateTime(today.year, today.month + 6, today.day);
+
+      if (expiryDate.isBefore(sixMonthsFromToday)) {
+        return 'This passport cannot be used because it has expired or has less than 6 months of validity remaining from today.';
+      }
+    }
+
+    return null; 
+  }
 
   // General 
 

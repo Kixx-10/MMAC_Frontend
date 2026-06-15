@@ -33,6 +33,7 @@ dev_dependencies:
 flutter:
   assets:
     - assets/data/purposes.json
+    - assets/data/accommodations.json
     - assets/images/
     - assets/images/department_logo.jpg
     - assets/images/national_flag.jpg
