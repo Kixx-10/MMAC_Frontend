@@ -1,6 +1,7 @@
 import 'dart:io';
 import 'dart:typed_data';
 import 'dart:ui';
+import 'package:mmac/data/models/submit_request_model.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:open_filex/open_filex.dart';
 import 'package:share_plus/share_plus.dart';
@@ -9,7 +10,6 @@ import 'package:pdf/widgets.dart' as pw;
 import 'package:qr_flutter/qr_flutter.dart';
 
 class PdfHelper {
-  // Generates a QR Code image block from the raw string data
   static Future<Uint8List> _generateQrImage(String data) async {
     final qrValidationResult = QrValidator.validate(
       data: data,
@@ -30,7 +30,6 @@ class PdfHelper {
     throw Exception('Failed to compile QR Code image matrix.');
   }
 
-  // Base Document Constructor Pipe
   static Future<File> buildPdfDocument(String applicationNo) async {
     final pdf = pw.Document();
     final qrBytes = await _generateQrImage(applicationNo);
@@ -40,12 +39,8 @@ class PdfHelper {
       pw.MultiPage(
         pageFormat: PdfPageFormat.a4,
         margin: const pw.EdgeInsets.all(32),
-        // 1. REUSABLE HEADER STRUCTURE
         header: (pw.Context context) => pw.Container(
           alignment: pw.Alignment.centerRight,
-         // border: const pw.Border(bottom: pw.BorderSide(color: PdfColors.blue700, width: 2)),
-          //padding: const pw.EdgeInsets.bottom(8),
-         // margin: const pw.EdgeInsets.bottom(24),
           child: pw.Row(
             mainAxisAlignment: pw.MainAxisAlignment.spaceBetween,
             children: [
@@ -112,31 +107,27 @@ class PdfHelper {
       ),
     );
 
-    // Save out document execution stream to storage targets[cite: 1]
-  final bytes = await pdf.save(); // နောက်က ; ကို ဖျက်ပါ
-    final directory = await getApplicationDocumentsDirectory(); // ဖျက်ပါ
-    final file = File('${directory.path}/Application_$applicationNo.pdf'); // ဖျက်ပါ
+  final bytes = await pdf.save(); 
+    final directory = await getApplicationDocumentsDirectory(); 
+    final file = File('${directory.path}/Application_$applicationNo.pdf'); 
     return await file.writeAsBytes(bytes);
   }
 
-  // Action Method A: Save locally and launch viewer
   static Future<void> downloadAndOpenPdf(String applicationNo) async {
     final file = await buildPdfDocument(applicationNo);
     await OpenFilex.open(file.path);
   }
 
-  // Action Method B: Send directly via external targets (Gmail, etc.)
   static Future<void> sharePdfViaEmail(String applicationNo) async {
     final file = await buildPdfDocument(applicationNo);
     
-    // Triggers native overlay share controller
     await Share.shareXFiles(
       [XFile(file.path)],
       subject: 'Application Receipt: $applicationNo',
       text: 'Hello,\n\nPlease find attached the receipt and verification QR code for Application No: $applicationNo.',
     );
   }
- static Future<Uint8List> generateArrivalFormPdf(String applicationNo) async {
+ static Future<Uint8List> generateArrivalFormPdf(String applicationNo,SubmitRequestModel data) async {
     final pdf = pw.Document();
 
     pdf.addPage(
@@ -157,7 +148,6 @@ class PdfHelper {
               ),
               pw.SizedBox(height: 30),
 
-              // QR Code
               pw.Center(
                 child: pw.BarcodeWidget(
                   barcode: pw.Barcode.qrCode(),
@@ -168,11 +158,22 @@ class PdfHelper {
               ),
               pw.SizedBox(height: 30),
 
-              // အချက်အလက်များ
-              _buildInfoRow("Application ID No.", "NPW_2025_$applicationNo"),
-              _buildInfoRow("Appointment Date", "31-01-2025\n12:00PM - 02:00PM"),
-              _buildInfoRow("Name", "Nway Nway"), 
-              _buildInfoRow("Father's Name", "U Aye"),
+              _buildInfoRow("Application ID No.", applicationNo),
+              _buildInfoRow("Name", data.fullName ?? "-"), 
+              _buildInfoRow("Gender", data.gender == 'M' ? "Male" : (data.gender == 'F' ? "Female" : "-")), 
+              _buildInfoRow("Nationality", data.countryOfBirthCode ?? "-"),
+              _buildInfoRow("Passport / Visa No.", "${data.passportNo ?? '-'} / ${data.visaNo ?? '-'}"),
+              
+              if (data.fatherName != null && data.fatherName!.isNotEmpty)
+                _buildInfoRow("Father's Name", data.fatherName!),
+
+              pw.Divider(color: PdfColors.grey300), 
+              pw.SizedBox(height: 10),
+
+              _buildInfoRow("Arrival Date", data.arrivalDate ?? "-"),
+              _buildInfoRow("Purpose of Visit", data.purposeOfVisit ?? "-"),
+              _buildInfoRow("Contact (MM)", data.mobileNumberMM ?? "-"),
+              _buildInfoRow("Address in Myanmar", data.addressInMyanmar ?? "-"),
               
               pw.SizedBox(height: 20),
               
@@ -182,11 +183,9 @@ class PdfHelper {
       ),
     );
 
-    // File အဖြစ်မသိမ်းတော့ဘဲ Bytes အနေနဲ့သာ ပြန်ပို့သည် (Web Safe)
     return await pdf.save(); 
   }
 
-  // Row UI Helper
   static pw.Widget _buildInfoRow(String label, String value) {
     return pw.Padding(
       padding: const pw.EdgeInsets.symmetric(vertical: 8.0),
