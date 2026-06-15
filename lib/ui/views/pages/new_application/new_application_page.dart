@@ -6,7 +6,8 @@ import 'package:mmac/data/controllers/submit_provider.dart';
 import 'package:mmac/data/models/submit_request_model.dart';
 import 'package:mmac/ui/views/pages/new_application/declaration_layout.dart';
 import 'package:mmac/ui/views/pages/new_application/identification_form_layout.dart';
-import 'package:mmac/ui/views/pages/new_application/qr_generation_layout.dart';
+// import 'package:mmac/ui/views/pages/new_application/qr_generation_layout.dart';
+import 'package:mmac/ui/views/pages/new_application/qr_generate_screen.dart';
 import 'package:mmac/ui/views/pages/new_application/review_layout.dart';
 import 'package:mmac/ui/views/pages/new_application/trip_form_layout.dart';
 import 'package:mmac/ui/views/widgets/footer.dart';
@@ -537,7 +538,7 @@ class _NewApplicationState extends ConsumerState<NewApplication>
           },
         );
       case 5:
-        return QrGenereate(
+        return QrGenerateScreen(
           applicationNo: _generatedApplicationNo,
           onFinish: _resetForm,
         );

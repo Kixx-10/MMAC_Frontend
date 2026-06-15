@@ -1,3 +1,4 @@
+import 'dart:convert';
 import 'dart:developer' as dev;
 import 'package:dio/dio.dart';
 import 'package:mmac/core/constants/api_endpoints.dart';
@@ -13,6 +14,7 @@ class SubmitRepository {
   ) async {
     try {
       final payload = submitRequestModel.toJson();
+      print(jsonEncode(payload));
       dev.log("SENDING JSON PAYLOAD: $payload", name: "SubmitRepository");
 
       final response = await _apiClient.post(
