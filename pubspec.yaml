@@ -22,6 +22,7 @@ dependencies:
    #flutter_pdfview: 
   #flutter_pdfview: 
   printing:
+  path_provider: ^2.1.5
   
   
 

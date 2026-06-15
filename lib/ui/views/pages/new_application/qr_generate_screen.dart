@@ -1,15 +1,18 @@
 import 'dart:typed_data';
 import 'package:flutter/material.dart';
+import 'package:mmac/data/models/submit_request_model.dart';
 import 'package:printing/printing.dart'; 
 import 'package:mmac/ui/views/pages/new_application/pdf_heaper.dart';
 
 class QrGenerateScreen extends StatefulWidget {
   final String applicationNo;
+  final SubmitRequestModel requestData;
   final VoidCallback onFinish;
 
   const QrGenerateScreen({
     super.key, 
     required this.applicationNo,
+    required this.requestData,
     required this.onFinish,
   });
 
@@ -30,7 +33,7 @@ class _QrGenerateScreenState extends State<QrGenerateScreen> {
   Future<void> _generatePdfInBackground() async {
     if (widget.applicationNo.isEmpty) return;
     try {
-      Uint8List bytes = await PdfHelper.generateArrivalFormPdf(widget.applicationNo);
+      Uint8List bytes = await PdfHelper.generateArrivalFormPdf(widget.applicationNo,widget.requestData);
       if (mounted) {
         setState(() {
           _pdfBytes = bytes;
