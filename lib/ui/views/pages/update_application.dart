@@ -1,8 +1,11 @@
 // lib/ui/views/pages/update_application/update_application_page.dart
 
+// ignore_for_file: deprecated_member_use, unused_field, empty_catches
+
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:mmac/data/models/search_request_model.dart';
 import 'package:mmac/data/models/submit_request_model.dart';
 import 'package:mmac/data/controllers/update_application_provider.dart';
 import 'package:mmac/data/controllers/country_provider.dart';
@@ -42,6 +45,7 @@ class _UpdateApplicationState extends ConsumerState<UpdateApplication> {
     'nationalityCode': TextEditingController(),
     'dob': TextEditingController(),
     'passportExpiry': TextEditingController(),
+    'arrivalDate': TextEditingController(),
   };
 
   final List<Map<String, String>> _nrcTypes = [
@@ -93,19 +97,26 @@ class _UpdateApplicationState extends ConsumerState<UpdateApplication> {
       }
 
       //  Backend Notifier ဆီသို့ သွားမည့်အပိုင်း
+      // 🎯 SearchRequestModel အသစ်တစ်ခု ဆောက်လိုက်ခြင်း
+      final searchModel = SearchRequestModel(
+        qrReference: _text('qrReference'),
+        residencyType: isMyanmar ? "Myanmar" : "Foreigner",
+        nrc: isMyanmar ? fullNrc : null,
+        passportNumber: isMyanmar ? null : _text('passportNumber'),
+        nationalityCode: isMyanmar ? null : _text('nationalityCode'),
+        dob: isMyanmar ? null : _text('dob'),
+        passportExpiry: isMyanmar ? null : _text('passportExpiry'),
+        arrivalDate: isMyanmar && _text('arrivalDate').isNotEmpty
+            ? DateTime.tryParse(_text('arrivalDate'))
+            : null,
+      );
+
+      // 🎯 Provider ဆီသို့ ခေါ်ယူပို့ဆောင်ခြင်း
       ref
           .read(updateApplicationProvider.notifier)
           .findApplication(
-            qrReference: _text('qrReference'),
-            residencyType: isMyanmar ? "Myanmar" : "Foreigner",
-
-            //  ဒီနေရာမှာ စာသားဟောင်းအစား Dropdown တွေပေါင်းထားတဲ့ fullNrc ကို လွှဲပေးလိုက်တာပါ!
-            nrc: isMyanmar ? fullNrc : null,
-
-            passportNumber: isMyanmar ? null : _text('passportNumber'),
-            nationalityCode: isMyanmar ? null : _text('nationalityCode'),
-            dob: isMyanmar ? null : _text('dob'),
-            passportExpiry: isMyanmar ? null : _text('passportExpiry'),
+            searchRequest:
+                searchModel, // 🎯 ကျွန်တော်တို့ ဆောက်လိုက်တဲ့ Model ကို ဒီမှာ လွှဲပေးလိုက်ပါပြီ
             onError: (errorMessage) {
               ScaffoldMessenger.of(context).showSnackBar(
                 SnackBar(
@@ -209,332 +220,359 @@ class _UpdateApplicationState extends ConsumerState<UpdateApplication> {
     final searchState = ref.watch(updateApplicationProvider);
     final isLoading = searchState.isLoading;
 
-    return Form(
-      key: _searchFormKey,
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          // 🎯 ဘရို တောင်းဆိုထားသော Info Banner အသစ်
-          Container(
-            padding: const EdgeInsets.all(16),
-            decoration: BoxDecoration(
-              color: Colors.amber.shade50,
-              borderRadius: BorderRadius.circular(8),
-              border: Border.all(color: Colors.amber.shade200),
-            ),
-            child: Row(
+    return SingleChildScrollView(
+      padding: const EdgeInsets.all(16),
+      child: Center(
+        child: Container(
+          constraints: const BoxConstraints(maxWidth: 800),
+          padding: const EdgeInsets.all(24),
+          decoration: BoxDecoration(
+            color: Colors.white,
+            borderRadius: BorderRadius.circular(12),
+            boxShadow: [
+              BoxShadow(
+                color: Colors.black.withOpacity(0.05), // ခပ်ဖျော့ဖျော့ အရိပ်လေး
+                blurRadius: 10,
+                offset: const Offset(0, 4),
+              ),
+            ],
+          ),
+          child: Form(
+            key: _searchFormKey,
+            child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Icon(
-                  Icons.info_outline,
-                  color: Colors.amber.shade800,
-                  size: 20,
+                // 🎯 ဘရို တောင်းဆိုထားသော Info Banner အသစ်
+                _buildNoticeBox(isMyanmar),
+                const SizedBox(height: 24),
+
+                const Text(
+                  "Verify Identity Details to Modify Record",
+                  style: TextStyle(
+                    fontSize: 16,
+                    fontWeight: FontWeight.bold,
+                    color: Colors.blueGrey,
+                  ),
                 ),
-                const SizedBox(width: 12),
-                Expanded(
-                  child: Text(
-                    "Note: Applicant Name, Passport Number, Passport Expiry Date, and Arrival Date cannot be modified. If you wish to change these specific details, please submit a New Application instead.",
-                    style: TextStyle(
-                      color: Colors.amber.shade900,
-                      fontSize: 13,
-                      height: 1.4,
+                const SizedBox(height: 24),
+
+                // (ကျန်သော Form Field များသည် မူလအတိုင်းဖြစ်သည် - QR, NRC, Passport စသည်)
+                _buildLabel("Digital Entry Number"),
+                TextFormField(
+                  controller: _searchControllers['qrReference'],
+                  decoration: _inputDecoration(
+                    "e.g., QR-2026-987654",
+                    Icons.qr_code_scanner_outlined,
+                  ),
+                  validator: (v) => (v == null || v.trim().isEmpty)
+                      ? 'QR Reference is mandatory'
+                      : null,
+                ),
+
+                if (isMyanmar) ...[
+                  const SizedBox(height: 20),
+                  _buildLabel("Date of Arrival *"),
+                  TextFormField(
+                    controller: _searchControllers['arrivalDate'],
+                    readOnly:
+                        true, // User ကို လက်နဲ့ရိုက်ခွင့်မပေးဘဲ Calendar Picker နဲ့ပဲ ရွေးခိုင်းမည်
+                    onTap: () => _selectDate(
+                      context,
+                      _searchControllers['arrivalDate']!,
                     ),
+                    decoration: _inputDecoration(
+                      "YYYY-MM-DD",
+                      Icons.calendar_today,
+                    ),
+                    validator: (v) => (v == null || v.trim().isEmpty)
+                        ? 'Arrival date required'
+                        : null,
                   ),
-                ),
-              ],
-            ),
-          ),
-          const SizedBox(height: 24),
+                ],
+                const SizedBox(height: 20),
 
-          const Text(
-            "Verify Identity Details to Modify Record",
-            style: TextStyle(
-              fontSize: 16,
-              fontWeight: FontWeight.bold,
-              color: Colors.blueGrey,
-            ),
-          ),
-          const SizedBox(height: 24),
+                if (isMyanmar) ...[
+                  const Text(
+                    "NRC Number *",
+                    style: TextStyle(fontSize: 13, fontWeight: FontWeight.w600),
+                  ),
+                  const SizedBox(height: 8),
 
-          // (ကျန်သော Form Field များသည် မူလအတိုင်းဖြစ်သည် - QR, NRC, Passport စသည်)
-          _buildLabel("QR Reference Number *"),
-          TextFormField(
-            controller: _searchControllers['qrReference'],
-            decoration: _inputDecoration(
-              "e.g., QR-2026-987654",
-              Icons.qr_code_scanner_outlined,
-            ),
-            validator: (v) => (v == null || v.trim().isEmpty)
-                ? 'QR Reference is mandatory'
-                : null,
-          ),
-          const SizedBox(height: 20),
+                  // Riverpod ကနေ NRC Master Data ကို စောင့်ကြည့်ခြင်း
+                  (() {
+                    final nrcAsync = ref.watch(nrcProvider);
+                    final nrcState = nrcAsync.valueOrNull;
+                    final List<dynamic> stateList =
+                        nrcState?.nrcStateList ?? [];
+                    final List<dynamic> townshipList =
+                        nrcState?.availableNrcTownships ?? [];
+                    final int? currentProviderStateId =
+                        nrcState?.selectedNrcStateId;
 
-          if (isMyanmar) ...[
-            const Text(
-              "NRC Number *",
-              style: TextStyle(fontSize: 13, fontWeight: FontWeight.w600),
-            ),
-            const SizedBox(height: 8),
-
-            // Riverpod ကနေ NRC Master Data ကို စောင့်ကြည့်ခြင်း
-            (() {
-              final nrcAsync = ref.watch(nrcProvider);
-              final nrcState = nrcAsync.valueOrNull;
-              final List<dynamic> stateList = nrcState?.nrcStateList ?? [];
-              final List<dynamic> townshipList =
-                  nrcState?.availableNrcTownships ?? [];
-              final int? currentProviderStateId = nrcState?.selectedNrcStateId;
-
-              final int? activeStateId =
-                  stateList.any((st) => st.id == currentProviderStateId)
-                  ? currentProviderStateId
-                  : null;
-              final String? activeTownshipCode =
-                  townshipList.any((ts) => ts.idCode == _selectedTownshipCode)
-                  ? _selectedTownshipCode
-                  : null;
-              final String? activeNrcType =
-                  _nrcTypes.any((t) => t['code'] == _selectedNrcType)
-                  ? _selectedNrcType
-                  : null;
-
-              return NrcSelectorField(
-                isDesktop: MediaQuery.of(context).size.width > 600,
-                stateDropdown: buildCustomDropdownContainer(
-                  child: DropdownButton<int>(
-                    value: activeStateId,
-                    isExpanded: true,
-                    hint: const Text("ပြည်နယ်/တိုင်း"),
-                    items: stateList
-                        .map<DropdownMenuItem<int>>(
-                          (st) => DropdownMenuItem<int>(
-                            value: st.id,
-                            child: Text(st.codeMM),
-                          ),
+                    final int? activeStateId =
+                        stateList.any((st) => st.id == currentProviderStateId)
+                        ? currentProviderStateId
+                        : null;
+                    final String? activeTownshipCode =
+                        townshipList.any(
+                          (ts) => ts.idCode == _selectedTownshipCode,
                         )
-                        .toList(),
-                    onChanged: (id) {
-                      if (id != null) {
-                        ref.read(nrcProvider.notifier).selectNrcState(id);
-                        final match = stateList.firstWhere((s) => s.id == id);
-                        setState(() {
-                          _selectedNrcStateCode = match.idCode;
-                          _selectedTownshipCode = null;
-                        });
-                      }
-                    },
+                        ? _selectedTownshipCode
+                        : null;
+                    final String? activeNrcType =
+                        _nrcTypes.any((t) => t['code'] == _selectedNrcType)
+                        ? _selectedNrcType
+                        : null;
+
+                    return NrcSelectorField(
+                      isDesktop: MediaQuery.of(context).size.width > 600,
+                      stateDropdown: buildCustomDropdownContainer(
+                        child: DropdownButton<int>(
+                          value: activeStateId,
+                          isExpanded: true,
+                          hint: const Text("ပြည်နယ်/တိုင်း"),
+                          items: stateList
+                              .map<DropdownMenuItem<int>>(
+                                (st) => DropdownMenuItem<int>(
+                                  value: st.id,
+                                  child: Text(st.codeMM),
+                                ),
+                              )
+                              .toList(),
+                          onChanged: (id) {
+                            if (id != null) {
+                              ref.read(nrcProvider.notifier).selectNrcState(id);
+                              final match = stateList.firstWhere(
+                                (s) => s.id == id,
+                              );
+                              setState(() {
+                                _selectedNrcStateCode = match.idCode;
+                                _selectedTownshipCode = null;
+                              });
+                            }
+                          },
+                        ),
+                      ),
+                      townshipDropdown: buildCustomDropdownContainer(
+                        child: DropdownButton<String>(
+                          value: activeTownshipCode,
+                          isExpanded: true,
+                          hint: const Text("မြို့နယ်"),
+                          items: townshipList
+                              .map<DropdownMenuItem<String>>(
+                                (ts) => DropdownMenuItem<String>(
+                                  value: ts.idCode,
+                                  child: Text(
+                                    ts.codeMM,
+                                    overflow: TextOverflow.ellipsis,
+                                  ),
+                                ),
+                              )
+                              .toList(),
+                          onChanged: (v) =>
+                              setState(() => _selectedTownshipCode = v),
+                        ),
+                      ),
+                      typeDropdown: buildCustomDropdownContainer(
+                        child: DropdownButton<String>(
+                          value: activeNrcType,
+                          isExpanded: true,
+                          items: _nrcTypes
+                              .map<DropdownMenuItem<String>>(
+                                (t) => DropdownMenuItem<String>(
+                                  value: t['code'],
+                                  child: Text(t['label']!),
+                                ),
+                              )
+                              .toList(),
+                          onChanged: (v) =>
+                              setState(() => _selectedNrcType = v),
+                        ),
+                      ),
+                      numberField: Container(
+                        height: 44,
+                        padding: const EdgeInsets.symmetric(horizontal: 10),
+                        decoration: BoxDecoration(
+                          color: Colors.white,
+                          borderRadius: BorderRadius.circular(8),
+                          border: Border.all(color: Colors.grey.shade300),
+                        ),
+                        child: TextFormField(
+                          controller: _nrcNumberController,
+                          keyboardType: TextInputType.number,
+                          inputFormatters: [
+                            FilteringTextInputFormatter.allow(
+                              RegExp(r'[\u1040-\u1049]'),
+                            ),
+                            LengthLimitingTextInputFormatter(6),
+                          ],
+                          decoration: const InputDecoration(
+                            hintText: "၁၂၃၄၅၆",
+                            border: InputBorder.none,
+                            isDense: true,
+                          ),
+                          onChanged: (v) => setState(() {}),
+                        ),
+                      ),
+                    );
+                  })(),
+                ],
+
+                if (!isMyanmar) ...[
+                  _buildLabel("Passport Number *"),
+                  TextFormField(
+                    controller: _searchControllers['passportNumber'],
+                    textCapitalization: TextCapitalization.characters,
+                    decoration: _inputDecoration(
+                      "e.g., MD123456",
+                      Icons.badge_outlined,
+                    ),
+                    validator: (v) => (v == null || v.trim().isEmpty)
+                        ? 'Passport Number required'
+                        : null,
                   ),
-                ),
-                townshipDropdown: buildCustomDropdownContainer(
-                  child: DropdownButton<String>(
-                    value: activeTownshipCode,
-                    isExpanded: true,
-                    hint: const Text("မြို့နယ်"),
-                    items: townshipList
-                        .map<DropdownMenuItem<String>>(
-                          (ts) => DropdownMenuItem<String>(
-                            value: ts.idCode,
-                            child: Text(
-                              ts.codeMM,
-                              overflow: TextOverflow.ellipsis,
+                  const SizedBox(height: 20),
+                  if (!isMyanmar) ...[
+                    const Text(
+                      "Nationality / Issued Country *",
+                      style: TextStyle(
+                        fontSize: 13,
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                    const SizedBox(height: 8),
+
+                    _isLoadingCountries
+                        ? const LinearProgressIndicator()
+                        : buildCustomDropdownContainer(
+                            child: DropdownButton<String>(
+                              //  ပြင်ဆင်ရန် - Controller ထဲမှာ ရှိနေမယ့် Country Code (e.g., 'USA') ကို တိုက်ရိုက် စစ်ဆေးခိုင်းမည်
+                              value:
+                                  _searchControllers['nationalityCode']
+                                          ?.text
+                                          .isEmpty ??
+                                      true
+                                  ? null
+                                  : _searchControllers['nationalityCode']?.text,
+                              isExpanded: true,
+                              hint: const Text("Select Nationality"),
+
+                              //  ပြင်ဆင်ရန် - _countryNameList အစား _rawCountryObjects ကို သုံးပြီး Value ကို Code ပေးပါမည်
+                              items: _rawCountryObjects.map<DropdownMenuItem<String>>((
+                                dynamic country,
+                              ) {
+                                return DropdownMenuItem<String>(
+                                  value: country
+                                      .countryCode, // 🎯 Dropdown ရဲ့ နောက်ကွယ်က တန်ဖိုးကို Code (e.g., 'USA') ထားမည်
+                                  child: Text(
+                                    country.countryName,
+                                  ), //  အပြင်ပန်း UI မှာတော့ နာမည် (e.g., 'United States') ပြမည်
+                                );
+                              }).toList(),
+
+                              onChanged: (newValue) {
+                                if (newValue != null) {
+                                  setState(() {
+                                    //  အခုဆိုရင် ရွေးချယ်လိုက်တဲ့ Code ကို Controller ထဲ တိုက်ရိုက် ထည့်ပေးရုံပါပဲ!
+                                    _searchControllers['nationalityCode']
+                                            ?.text =
+                                        newValue;
+                                  });
+                                }
+                              },
                             ),
                           ),
-                        )
-                        .toList(),
-                    onChanged: (v) => setState(() => _selectedTownshipCode = v),
+                  ],
+                  const SizedBox(height: 20),
+                  Row(
+                    children: [
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            _buildLabel("Date of Birth *"),
+                            TextFormField(
+                              controller: _searchControllers['dob'],
+                              readOnly: true,
+                              onTap: () => _selectDate(
+                                context,
+                                _searchControllers['dob']!,
+                              ),
+                              decoration: _inputDecoration(
+                                "YYYY-MM-DD",
+                                Icons.calendar_today,
+                              ),
+                              validator: (v) => (v == null || v.trim().isEmpty)
+                                  ? 'DOB required'
+                                  : null,
+                            ),
+                          ],
+                        ),
+                      ),
+                      const SizedBox(width: 16),
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            _buildLabel("Passport Expiry Date *"),
+                            TextFormField(
+                              controller: _searchControllers['passportExpiry'],
+                              readOnly: true,
+                              onTap: () => _selectDate(
+                                context,
+                                _searchControllers['passportExpiry']!,
+                              ),
+                              decoration: _inputDecoration(
+                                "YYYY-MM-DD",
+                                Icons.calendar_today,
+                              ),
+                              validator: (v) => (v == null || v.trim().isEmpty)
+                                  ? 'Expiry date required'
+                                  : null,
+                            ),
+                          ],
+                        ),
+                      ),
+                    ],
                   ),
-                ),
-                typeDropdown: buildCustomDropdownContainer(
-                  child: DropdownButton<String>(
-                    value: activeNrcType,
-                    isExpanded: true,
-                    items: _nrcTypes
-                        .map<DropdownMenuItem<String>>(
-                          (t) => DropdownMenuItem<String>(
-                            value: t['code'],
-                            child: Text(t['label']!),
+                ],
+                const SizedBox(height: 32),
+                Align(
+                  alignment: Alignment.centerRight,
+                  child: ElevatedButton(
+                    onPressed: isLoading
+                        ? null
+                        : () => _handleFindApplication(isMyanmar),
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: Colors.lightBlue.shade700,
+                      foregroundColor: Colors.white,
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 36,
+                        vertical: 16,
+                      ),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(8),
+                      ),
+                    ),
+                    child: isLoading
+                        ? const SizedBox(
+                            width: 20,
+                            height: 20,
+                            child: CircularProgressIndicator(
+                              color: Colors.white,
+                              strokeWidth: 2,
+                            ),
+                          )
+                        : const Text(
+                            'Find & Edit Application',
+                            style: TextStyle(fontWeight: FontWeight.bold),
                           ),
-                        )
-                        .toList(),
-                    onChanged: (v) => setState(() => _selectedNrcType = v),
-                  ),
-                ),
-                numberField: Container(
-                  height: 44,
-                  padding: const EdgeInsets.symmetric(horizontal: 10),
-                  decoration: BoxDecoration(
-                    color: Colors.white,
-                    borderRadius: BorderRadius.circular(8),
-                    border: Border.all(color: Colors.grey.shade300),
-                  ),
-                  child: TextFormField(
-                    controller: _nrcNumberController,
-                    keyboardType: TextInputType.number,
-                    inputFormatters: [
-                      FilteringTextInputFormatter.allow(
-                        RegExp(r'[\u1040-\u1049]'),
-                      ),
-                      LengthLimitingTextInputFormatter(6),
-                    ],
-                    decoration: const InputDecoration(
-                      hintText: "၁၂၃၄၅၆",
-                      border: InputBorder.none,
-                      isDense: true,
-                    ),
-                    onChanged: (v) => setState(() {}),
-                  ),
-                ),
-              );
-            })(),
-          ],
-
-          if (!isMyanmar) ...[
-            _buildLabel("Passport Number *"),
-            TextFormField(
-              controller: _searchControllers['passportNumber'],
-              textCapitalization: TextCapitalization.characters,
-              decoration: _inputDecoration(
-                "e.g., MD123456",
-                Icons.badge_outlined,
-              ),
-              validator: (v) => (v == null || v.trim().isEmpty)
-                  ? 'Passport Number required'
-                  : null,
-            ),
-            const SizedBox(height: 20),
-            if (!isMyanmar) ...[
-              const Text(
-                "Nationality / Issued Country *",
-                style: TextStyle(fontSize: 13, fontWeight: FontWeight.w600),
-              ),
-              const SizedBox(height: 8),
-
-              _isLoadingCountries
-                  ? const LinearProgressIndicator()
-                  : buildCustomDropdownContainer(
-                      child: DropdownButton<String>(
-                        //  ပြင်ဆင်ရန် - Controller ထဲမှာ ရှိနေမယ့် Country Code (e.g., 'USA') ကို တိုက်ရိုက် စစ်ဆေးခိုင်းမည်
-                        value:
-                            _searchControllers['nationalityCode']
-                                    ?.text
-                                    .isEmpty ??
-                                true
-                            ? null
-                            : _searchControllers['nationalityCode']?.text,
-                        isExpanded: true,
-                        hint: const Text("Select Nationality"),
-
-                        //  ပြင်ဆင်ရန် - _countryNameList အစား _rawCountryObjects ကို သုံးပြီး Value ကို Code ပေးပါမည်
-                        items: _rawCountryObjects.map<DropdownMenuItem<String>>((
-                          dynamic country,
-                        ) {
-                          return DropdownMenuItem<String>(
-                            value: country
-                                .countryCode, // 🎯 Dropdown ရဲ့ နောက်ကွယ်က တန်ဖိုးကို Code (e.g., 'USA') ထားမည်
-                            child: Text(
-                              country.countryName,
-                            ), //  အပြင်ပန်း UI မှာတော့ နာမည် (e.g., 'United States') ပြမည်
-                          );
-                        }).toList(),
-
-                        onChanged: (newValue) {
-                          if (newValue != null) {
-                            setState(() {
-                              //  အခုဆိုရင် ရွေးချယ်လိုက်တဲ့ Code ကို Controller ထဲ တိုက်ရိုက် ထည့်ပေးရုံပါပဲ!
-                              _searchControllers['nationalityCode']?.text =
-                                  newValue;
-                            });
-                          }
-                        },
-                      ),
-                    ),
-            ],
-            const SizedBox(height: 20),
-            Row(
-              children: [
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      _buildLabel("Date of Birth *"),
-                      TextFormField(
-                        controller: _searchControllers['dob'],
-                        readOnly: true,
-                        onTap: () =>
-                            _selectDate(context, _searchControllers['dob']!),
-                        decoration: _inputDecoration(
-                          "YYYY-MM-DD",
-                          Icons.calendar_today,
-                        ),
-                        validator: (v) => (v == null || v.trim().isEmpty)
-                            ? 'DOB required'
-                            : null,
-                      ),
-                    ],
-                  ),
-                ),
-                const SizedBox(width: 16),
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      _buildLabel("Passport Expiry Date *"),
-                      TextFormField(
-                        controller: _searchControllers['passportExpiry'],
-                        readOnly: true,
-                        onTap: () => _selectDate(
-                          context,
-                          _searchControllers['passportExpiry']!,
-                        ),
-                        decoration: _inputDecoration(
-                          "YYYY-MM-DD",
-                          Icons.calendar_today,
-                        ),
-                        validator: (v) => (v == null || v.trim().isEmpty)
-                            ? 'Expiry date required'
-                            : null,
-                      ),
-                    ],
                   ),
                 ),
               ],
             ),
-          ],
-          const SizedBox(height: 32),
-          Align(
-            alignment: Alignment.centerRight,
-            child: ElevatedButton(
-              onPressed: isLoading
-                  ? null
-                  : () => _handleFindApplication(isMyanmar),
-              style: ElevatedButton.styleFrom(
-                backgroundColor: Colors.lightBlue.shade700,
-                foregroundColor: Colors.white,
-                padding: const EdgeInsets.symmetric(
-                  horizontal: 36,
-                  vertical: 16,
-                ),
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(8),
-                ),
-              ),
-              child: isLoading
-                  ? const SizedBox(
-                      width: 20,
-                      height: 20,
-                      child: CircularProgressIndicator(
-                        color: Colors.white,
-                        strokeWidth: 2,
-                      ),
-                    )
-                  : const Text(
-                      'Find & Edit Application',
-                      style: TextStyle(fontWeight: FontWeight.bold),
-                    ),
-            ),
           ),
-        ],
+        ),
       ),
     );
   }
@@ -555,6 +593,80 @@ class _UpdateApplicationState extends ConsumerState<UpdateApplication> {
       prefixIcon: Icon(icon, size: 20),
       border: OutlineInputBorder(borderRadius: BorderRadius.circular(8)),
       contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+    );
+  }
+
+  // 🎯 အသစ်ထည့်မည့် Singapore-Style Notice Box Widget
+  Widget _buildNoticeBox(bool isMyanmar) {
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: const Color(0xFFFAF2F2), // Soft pinkish background
+        border: Border.all(
+          color:
+              // const Color(0xFFF5C6C6)
+              Colors.white,
+        ), // Subtle red border
+        borderRadius: BorderRadius.circular(4),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          const Text(
+            'Please note that you will not be able to update the following information:',
+            style: TextStyle(fontSize: 15, color: Colors.black87),
+          ),
+          const SizedBox(height: 12),
+          _buildNoticeListItem('1. Date of Arrival'),
+          _buildNoticeListItem('2. Full Name'),
+
+          // 🎯 Native (Myanmar) ဆိုရင် NRC, Foreigner ဆိုရင် Passport Number ပြမည်
+          _buildNoticeListItem(
+            '3. ${isMyanmar ? "NRC Number" : "Passport Number"}',
+          ),
+
+          _buildNoticeListItem('4. Date of Passport Expiry'),
+          _buildNoticeListItem('5. Date of Birth'),
+          _buildNoticeListItem('6. Nationality / Citizenship'),
+          const SizedBox(height: 16),
+          RichText(
+            text: const TextSpan(
+              style: TextStyle(fontSize: 15, color: Colors.black87),
+              children: [
+                TextSpan(
+                  text:
+                      'If you wish to update any of the fields above, please make a ',
+                ),
+                TextSpan(
+                  text: 'new submission',
+                  style: TextStyle(
+                    color: Colors.black87,
+                    decoration: TextDecoration.none,
+                  ),
+                  // 💡 ဒီနေရာမှာ TapGestureRecognizer ထည့်ပြီး New Application ဘက်ကို ကူးသွားအောင် လုပ်လို့ရပါတယ်
+                ),
+                TextSpan(text: '.'),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  // 🎯 Notice Box ထဲက List Item လေးတွေအတွက် Helper
+  Widget _buildNoticeListItem(String text) {
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 6.0),
+      child: Text(
+        text,
+        style: const TextStyle(
+          fontSize: 15,
+          color: Colors.black87,
+          height: 1.4,
+        ),
+      ),
     );
   }
 }
