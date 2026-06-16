@@ -10,8 +10,10 @@ class CustomTextField extends StatelessWidget {
   final ValueChanged<String>? onChanged;
   final bool isRequired;
   final String? hintText;
-  final double spacing; 
+  final double spacing;
   final Widget? suffixIcon;
+  final TextInputType? keyboardtype;
+  final List<TextInputFormatter>? filter;
 
   const CustomTextField({
     super.key,
@@ -22,9 +24,11 @@ class CustomTextField extends StatelessWidget {
     this.maxLength,
     this.onChanged,
     this.isRequired = true,
-    this.hintText, 
-    this.spacing=8,
+    this.hintText,
+    this.spacing = 8,
     this.suffixIcon,
+    this.keyboardtype,
+    this.filter,
   });
 
   @override
@@ -59,19 +63,22 @@ class CustomTextField extends StatelessWidget {
             ),
           ),
         ),
-         SizedBox(width: spacing),
+        SizedBox(width: spacing),
         Expanded(
           child: TextFormField(
             controller: controller,
+            keyboardType: keyboardtype,
             validator: validator,
-            inputFormatters: [
-              if (maxLength != null)
-                LengthLimitingTextInputFormatter(maxLength),
-            ],
+            inputFormatters: filter,
+            maxLength: maxLength,
             onChanged: onChanged,
             autovalidateMode: AutovalidateMode.onUserInteraction,
-            style: const TextStyle(fontWeight: FontWeight.w500, color: Colors.black87,),
+            style: const TextStyle(
+              fontWeight: FontWeight.w500,
+              color: Colors.black87,
+            ),
             decoration: InputDecoration(
+              counterText: "",
               filled: true,
               fillColor: Colors.white,
               contentPadding: const EdgeInsets.symmetric(
@@ -85,7 +92,7 @@ class CustomTextField extends StatelessWidget {
               hintStyle: TextStyle(
                 fontSize: 14,
                 fontWeight: FontWeight.normal,
-                color: Colors.grey.shade400, 
+                color: Colors.grey.shade400,
               ),
 
               enabledBorder: OutlineInputBorder(

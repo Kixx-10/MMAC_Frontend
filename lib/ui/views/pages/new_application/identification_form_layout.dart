@@ -8,6 +8,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:mmac/data/controllers/country_provider.dart';
 import 'package:mmac/data/controllers/nrc_provider.dart';
 import 'package:mmac/ui/views/pages/new_application/widget/nrc_selector_widget.dart';
+import 'package:mmac/utils/upper_case_text_formatter.dart';
 import '../../../../utils/form_validators.dart';
 import '../../../../utils/country_codes.dart';
 import '../../widgets/custom_text_field.dart';
@@ -285,6 +286,7 @@ class _IdentificationFormLayoutState
     final fullNameField = CustomTextField(
       label: "Full Name",
       controller: widget.controllers['fullName']!,
+      filter: [UpperCaseTextFormatter()],
       maxLength: 50,
       labelWidth: lw,
       validator: (v) => FormValidators.required(v, 'Full Name'),
@@ -614,7 +616,7 @@ class _IdentificationFormLayoutState
     );
 
     final addressField = CustomTextField(
-      label: "Address",
+      label: "Place Of Residence",
       controller: widget.controllers['address']!,
       labelWidth: lw,
       maxLength: 100,
@@ -717,6 +719,7 @@ class _IdentificationFormLayoutState
 
         Widget fatherNameWidget = CustomTextField(
           label: "Father Name",
+          filter: [UpperCaseTextFormatter()],
           maxLength: 50,
           controller: widget.controllers['fatherName']!,
           labelWidth: lw,

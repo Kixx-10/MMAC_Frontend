@@ -1,6 +1,7 @@
 // lib/data/models/submit_request_model.dart
 
 class SubmitRequestModel {
+  final String? qrReference;
   final String fullName;
   final String gender;
   final String dob;
@@ -56,6 +57,7 @@ class SubmitRequestModel {
     required this.districtId,
     required this.townshipId,
     this.mobileNumberMM,
+    this.qrReference,
     required this.purposeOfVisit,
     required this.previousCity,
     required this.healthDeclaration,
@@ -64,6 +66,7 @@ class SubmitRequestModel {
 
   Map<String, dynamic> toJson() {
     return {
+      if (qrReference != null) 'qrReference': qrReference,
       'fullName': fullName,
       'gender': gender,
       'dob': dob,
@@ -101,6 +104,7 @@ class SubmitRequestModel {
   //this Method is used in search application by id aka update
   factory SubmitRequestModel.fromJson(Map<String, dynamic> json) {
     return SubmitRequestModel(
+      qrReference: json['qrReference'] as String?,
       fullName: json['fullName'] ?? '',
       gender: json['gender'] ?? '',
       dob: json['dob'] ?? '',

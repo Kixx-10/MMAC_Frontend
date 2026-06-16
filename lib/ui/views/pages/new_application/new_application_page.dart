@@ -1,3 +1,5 @@
+// ignore_for_file: strict_top_level_inference, prefer_typing_uninitialized_variables
+
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:mmac/data/controllers/submit_provider.dart';
@@ -16,11 +18,14 @@ class NewApplication extends ConsumerStatefulWidget {
   final String? initialCountry;
   final VoidCallback? onBackPressed;
   final isUpdateMode;
+  final SubmitRequestModel? initialData;
+
   const NewApplication({
     super.key,
     this.initialCountry,
     this.onBackPressed,
     this.isUpdateMode = false,
+    this.initialData,
   });
 
   @override
@@ -107,7 +112,9 @@ class _NewApplicationState extends ConsumerState<NewApplication>
 
   Future<void> _loadSavedSession() async {
     try {
-      final sessionData = await FormSessionService.loadDraft();
+      final sessionData = await FormSessionService.loadDraft(
+        isUpdateMode: widget.isUpdateMode,
+      );
 
       if (sessionData != null && mounted) {
         setState(() {
@@ -201,7 +208,11 @@ class _NewApplicationState extends ConsumerState<NewApplication>
     }
 
     // 4. Save the sanitized map
-    FormSessionService.saveDraft(dataToSave, currentStep);
+    FormSessionService.saveDraft(
+      dataToSave,
+      currentStep,
+      isUpdateMode: widget.isUpdateMode,
+    );
   }
 
   @override
@@ -419,7 +430,7 @@ class _NewApplicationState extends ConsumerState<NewApplication>
     _step1Controllers.forEach((_, controller) => controller.clear());
     _step2Controllers.forEach((_, controller) => controller.clear());
     _formValues.updateAll((key, _) => null);
-    FormSessionService.clearDraft();
+    FormSessionService.clearDraft(isUpdateMode: widget.isUpdateMode);
     setState(() {
       _generatedApplicationNo = '';
       currentStep = 1;
@@ -440,7 +451,7 @@ class _NewApplicationState extends ConsumerState<NewApplication>
       if (!mounted) return;
       Navigator.of(context).pop();
       if (response != null) {
-        FormSessionService.clearDraft();
+        FormSessionService.clearDraft(isUpdateMode: widget.isUpdateMode);
         setState(() {
           _submittedData = requestModel;
           _generatedApplicationNo = response.applicationNo;
@@ -643,17 +654,18 @@ class _NewApplicationState extends ConsumerState<NewApplication>
                   ),
 
                 const SizedBox(height: 20),
-                const Padding(
-                  padding: EdgeInsets.symmetric(horizontal: 24),
-                  child: Text(
-                    'Please enter your information exactly as shown on official identity records.',
-                    textAlign: TextAlign.center,
-                    style: TextStyle(fontSize: 15, color: Colors.grey),
-                  ),
-                ),
-                const SizedBox(height: 30),
+
                 //we will show form progress bar if current step is >1
                 if (currentStep > 0) ...[
+                  const Padding(
+                    padding: EdgeInsets.symmetric(horizontal: 24),
+                    child: Text(
+                      'Please enter your information exactly as shown on official identity records.',
+                      textAlign: TextAlign.center,
+                      style: TextStyle(fontSize: 15, color: Colors.grey),
+                    ),
+                  ),
+                  const SizedBox(height: 30),
                   FormProgressBar(currentStep: currentStep),
                   const SizedBox(height: 15),
                 ],
