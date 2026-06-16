@@ -40,7 +40,8 @@ class _TripFormLayoutState extends ConsumerState<TripFormLayout>
   List<String> _accommodationList = [];
   // "Others" text controller
   final TextEditingController _otherPurposeController = TextEditingController();
-  final TextEditingController _otherAccommodationController = TextEditingController();
+  final TextEditingController _otherAccommodationController =
+      TextEditingController();
 
   @override
   void initState() {
@@ -86,7 +87,7 @@ class _TripFormLayoutState extends ConsumerState<TripFormLayout>
             .read(portOfArrivalProvider.notifier)
             .loadPortOfArrrivalByModeId(modeId);
       } catch (_) {}
-      
+
       try {
         var locState = await ref.read(locationProvider.future);
         if (locState.allStates.isEmpty) {
@@ -146,13 +147,13 @@ class _TripFormLayoutState extends ConsumerState<TripFormLayout>
   Future<void> _loadAccommodationFromJson() async {
     try {
       final String response = await rootBundle.loadString(
-        'assets/data/accommodations.json', 
+        'assets/data/accommodations.json',
       );
       if (mounted) {
         setState(() {
           _accommodationList = List<String>.from(jsonDecode(response));
           _accommodationList.remove("Others");
-          _accommodationList.add("Others"); 
+          _accommodationList.add("Others");
         });
       }
     } catch (_) {
@@ -166,7 +167,7 @@ class _TripFormLayoutState extends ConsumerState<TripFormLayout>
             "Apartment / Condo",
             "Monastery / Religious Center",
             "Embassy Housing",
-            "Others"
+            "Others",
           ];
         });
       }
@@ -292,7 +293,8 @@ class _TripFormLayoutState extends ConsumerState<TripFormLayout>
       label: "Purpose of Visit",
       dialogWidth: 300,
       dialogHeight: 250,
-      value: widget.values['selectedPurposeDropdown'] ??
+      value:
+          widget.values['selectedPurposeDropdown'] ??
           ([
                 "Visit",
                 "Business",
@@ -356,7 +358,8 @@ class _TripFormLayoutState extends ConsumerState<TripFormLayout>
       dialogWidth: 300,
       dialogHeight: 250,
       //  Dynamic ဖြစ်စေရန် JSON ကလာသော List ကို တိုက်ရိုက်သုံး၍ စစ်ဆေးခြင်း
-      value: widget.values['selectedAccommodationDropdown'] ??
+      value:
+          widget.values['selectedAccommodationDropdown'] ??
           (_accommodationList.contains(widget.values['accommodation'])
               ? widget.values['accommodation']
               : null),
@@ -409,8 +412,9 @@ class _TripFormLayoutState extends ConsumerState<TripFormLayout>
         final bool isDesktop = constraints.maxWidth > 500;
         Widget pair(Widget a, Widget b) =>
             isDesktop ? _row(a, b) : _column(a, b);
-        final bool isMyanmar = widget.values['country'] == 'Myanmar' || 
-                               widget.values['country'] == 'MMR';
+        final bool isMyanmar =
+            widget.values['country'] == 'Myanmar' ||
+            widget.values['country'] == 'MMR';
         return Form(
           key: _formKey,
           child: Column(
@@ -422,7 +426,7 @@ class _TripFormLayoutState extends ConsumerState<TripFormLayout>
                   label: "Arrival Date",
                   value: widget.values['arrivalDate'],
                   firstDate: DateTime.now(),
-                  lastDate: DateTime(2100),
+                  lastDate: DateTime.now().add(const Duration(days: 3)),
                   errorText:
                       _showDateErrors && widget.values['arrivalDate'] == null
                       ? 'Arrival Date is required'
@@ -483,9 +487,12 @@ class _TripFormLayoutState extends ConsumerState<TripFormLayout>
                 pair(
                   CustomDropdownField(
                     label: "Port of Arrival",
-                    value: (portState!.portOfArrivalList.any(
-                      (p) => p.portOfArrivalName == widget.values['portOfArrival'],
-                    ))
+                    value:
+                        (portState!.portOfArrivalList.any(
+                          (p) =>
+                              p.portOfArrivalName ==
+                              widget.values['portOfArrival'],
+                        ))
                         ? widget.values['portOfArrival'] as String?
                         : null,
                     hint: "Select Port",
@@ -549,9 +556,10 @@ class _TripFormLayoutState extends ConsumerState<TripFormLayout>
                   label: "State/Region",
                   dialogWidth: 300,
                   dialogHeight: 250,
-                  value: (locationState!.allStates.any(
-                    (s) => s.name == widget.values['stateRegion'],
-                  ))
+                  value:
+                      (locationState!.allStates.any(
+                        (s) => s.name == widget.values['stateRegion'],
+                      ))
                       ? widget.values['stateRegion'] as String?
                       : null,
                   hint: "Select State/Region",
@@ -586,9 +594,10 @@ class _TripFormLayoutState extends ConsumerState<TripFormLayout>
                   label: "District",
                   dialogWidth: 300,
                   dialogHeight: 250,
-                  value: (locationState.availableDistricts.contains(
-                    widget.values['district'],
-                  ))
+                  value:
+                      (locationState.availableDistricts.contains(
+                        widget.values['district'],
+                      ))
                       ? widget.values['district'] as String?
                       : null,
                   hint: "Select District",
@@ -628,9 +637,10 @@ class _TripFormLayoutState extends ConsumerState<TripFormLayout>
                   label: "Township",
                   dialogWidth: 300,
                   dialogHeight: 250,
-                  value: (locationState.availableTownships.contains(
-                    widget.values['township'],
-                  ))
+                  value:
+                      (locationState.availableTownships.contains(
+                        widget.values['township'],
+                      ))
                       ? widget.values['township'] as String?
                       : null,
                   hint: "Select Township",
@@ -670,7 +680,7 @@ class _TripFormLayoutState extends ConsumerState<TripFormLayout>
               ),
               const SizedBox(height: 16),
 
-              // 6️⃣ Row 6: Previous City | Mobile Number (MM) သို့မဟုတ် Foreigner ဖြစ်ပါက Accommodation 
+              // 6️⃣ Row 6: Previous City | Mobile Number (MM) သို့မဟုတ် Foreigner ဖြစ်ပါက Accommodation
               pair(
                 CustomTextField(
                   label: "Previous City",
@@ -684,14 +694,16 @@ class _TripFormLayoutState extends ConsumerState<TripFormLayout>
                     ? CustomTextField(
                         label: "Mobile Number(MM)",
                         hintText: "09XXXXXXXXX",
+                        keyboardtype: TextInputType.number,
+                        filter: [FilteringTextInputFormatter.digitsOnly],
                         maxLength: 11,
                         controller: _getSafeController('mobileNumberMM'),
-                        validator: (v) => FormValidators.required(v, 'Mobile Number'),
+                        validator: (v) => FormValidators.mobileNumber(v),
                         onChanged: (v) {
                           widget.onValueChanged('mobileNumberMM', v);
                         },
                       )
-                    : _buildAccommodationField()
+                    : _buildAccommodationField(),
               ),
               const SizedBox(height: 30),
 
