@@ -23,6 +23,8 @@ class NewApplication extends ConsumerStatefulWidget {
     this.isUpdateMode = false,
   });
 
+  //const NewApplication({super.key, this.initialCountry, this.onBackPressed, required bool isUpdateMode});
+
   @override
   ConsumerState<NewApplication> createState() => _NewApplicationState();
 }
@@ -608,10 +610,53 @@ class _NewApplicationState extends ConsumerState<NewApplication>
           },
         );
       case 5:
-        return QrGenerateScreen(
-          applicationNo: _generatedApplicationNo,
-          requestData: _submittedData!,
-          onFinish: _resetForm,
+        // Controller ၏ State တစ်ခုလုံး (Loading, Error, Data) ကို စောင့်ကြည့်ခြင်း
+        final submitState = ref.watch(submitControllerProvider);
+
+        return submitState.when(
+          data: (submitResponse) {
+            if (submitResponse != null) {
+              return QrGenerateScreen(
+                responseData: submitResponse, // Backend မှလာသော ဒေတာအပြည့်အစုံ
+                onFinish: () {
+                  // Finish လုပ်ဆောင်ချက်- Form ကို reset လုပ်ခြင်း သို့မဟုတ် Home သို့ ပြန်သွားခြင်း
+                  setState(() {
+                    currentStep = 1;
+                    _formValues.clear();
+                    _step1Controllers.forEach((_, c) => c.clear());
+                    _step2Controllers.forEach((_, c) => c.clear());
+                  });
+                  //_clearSession(); // Session သိမ်းထားသည်များကို ဖျက်ပစ်ရန်
+                },
+              );
+            }
+            return const Center(child: Text("No response data found."));
+          },
+          loading: () => const Center(
+            child: Padding(
+              padding: EdgeInsets.symmetric(vertical: 40),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  CircularProgressIndicator(),
+                  SizedBox(height: 16),
+                  Text(
+                    "Submitting Application & Generating PDF...",
+                    style: TextStyle(color: Colors.grey, fontWeight: FontWeight.w500),
+                  ),
+                ],
+              ),
+            ),
+          ),
+          error: (error, stack) => Center(
+            child: Padding(
+              padding: const EdgeInsets.symmetric(vertical: 20),
+              child: Text(
+                "Submission Failed: ${error.toString()}",
+                style: const TextStyle(color: Colors.red, fontWeight: FontWeight.bold),
+              ),
+            ),
+          ),
         );
       default:
         return const SizedBox.shrink();

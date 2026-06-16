@@ -1,21 +1,24 @@
-// lib/data/models/submit_model.dart
+// lib/data/models/submit_response_model.dart
 
 class SubmitResponseModel {
   final String message;
   final String applicationNo;
-  final String qrCodeContent;
+  final String referenceNo; // ဖြည့်စွက်ချက်
+  final String pdfData;      // Base64 String အတွက် ဖြည့်စွက်ချက်
 
   SubmitResponseModel({
     required this.message,
     required this.applicationNo,
-    required this.qrCodeContent,
+    required this.referenceNo,
+    required this.pdfData,
   });
 
   factory SubmitResponseModel.fromJson(Map<String, dynamic> json) {
     return SubmitResponseModel(
       message: json['message'] ?? '',
       applicationNo: json['applicationNo'] ?? '',
-      qrCodeContent: json['qrCodeContent'] ?? '',
+      referenceNo: json['referenceNo'] ?? 'N/A',
+      pdfData: json['pdfData'] ?? '',
     );
   }
 
@@ -23,7 +26,8 @@ class SubmitResponseModel {
     return {
       'message': message,
       'applicationNo': applicationNo,
-      'qrCodeContent': qrCodeContent,
+      'referenceNo': referenceNo,
+      'pdfData': pdfData,
     };
   }
 }
