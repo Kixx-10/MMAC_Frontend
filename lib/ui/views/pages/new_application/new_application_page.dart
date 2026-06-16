@@ -215,8 +215,6 @@ class _NewApplicationState extends ConsumerState<NewApplication>
     setState(() => _formValues[key] = value);
     _saveCurrentSession();
   }
-
-  // 🎯 API မှ ကျလာသော ဒေတာဟောင်းများကို Form တစ်ခုလုံးသို့ ဖြည့်သွင်းပေးသည့် စနစ်
   void _injectFetchedData(SubmitRequestModel fetchedData) {
     setState(() {
       // ၁။ စာရိုက်တံ (Controllers) များထဲသို့ Data လိုက်ထည့်ခြင်း
@@ -240,14 +238,18 @@ class _NewApplicationState extends ConsumerState<NewApplication>
 
       // ၂။ Form Values (Dropdown & Dates) များကို သိမ်းဆည်းခြင်း
       _formValues['gender'] = fetchedData.gender == 'M' ? 'Male' : 'Female';
-      if (fetchedData.dob.isNotEmpty)
+      if (fetchedData.dob.isNotEmpty) {
         _formValues['dateOfBirth'] = DateTime.parse(fetchedData.dob);
-      if (fetchedData.issuedDate.isNotEmpty)
+      }
+      if (fetchedData.issuedDate.isNotEmpty) {
         _formValues['issuedDate'] = DateTime.parse(fetchedData.issuedDate);
-      if (fetchedData.expiryDate.isNotEmpty)
+      }
+      if (fetchedData.expiryDate.isNotEmpty) {
         _formValues['expiryDate'] = DateTime.parse(fetchedData.expiryDate);
-      if (fetchedData.arrivalDate.isNotEmpty)
+      }
+      if (fetchedData.arrivalDate.isNotEmpty) {
         _formValues['arrivalDate'] = DateTime.parse(fetchedData.arrivalDate);
+      }
 
       _formValues['countryCode'] = fetchedData.countryOfBirthCode;
       _formValues['issuedCountryCode'] = fetchedData.issuedCountryCode;
