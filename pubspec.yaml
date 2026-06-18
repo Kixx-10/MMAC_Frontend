@@ -14,9 +14,13 @@ dependencies:
   dio: ^5.9.2
   flutter_riverpod: ^2.5.1
   pdfx: ^2.9.2 
-  path_provider: ^2.1.5
   universal_html: ^2.3.0
   shared_preferences: ^2.5.5
+  open_filex: 
+  share_plus: 
+  pdf: 
+  qr_flutter: 
+  path_provider: ^2.1.6
   
   
 

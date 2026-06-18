@@ -342,6 +342,7 @@ class _MainLayoutState extends State<MainLayout>
                     : (_fetchedUpdateData == null
                           // အခြေအနေ (က) - ဒေတာမရှိသေးရင် Verification (ရှာဖွေရေးဖောင်) ကို ပြထားမည်
                           ? UpdateApplication(
+                              onBackPressed: _goBackToResidency,
                               initialCountry: _selectedResidency,
                               onApplicationFetched: (SubmitRequestModel data) {
                                 // ဒေတာရှာတွေ့တာနဲ့ ၎င်းဒေတာကို သိမ်းပြီး UI ကို Update ဖြစ်စေမည်

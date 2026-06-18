@@ -1,38 +1,58 @@
-class SearchRequestModel {
-  final String qrReference;
-  final String residencyType;
-  final String? nrc;
-  final String? passportNumber;
-  final String? nationalityCode;
-  final String? dob;
-  final String? passportExpiry;
-  final DateTime? arrivalDate; // 🎯 ကျွန်တော်တို့ အသစ်ထည့်ထားတဲ့ Field
+// lib/data/models/search_request_model.dart
 
-  SearchRequestModel({
+// 🇲🇲 ၁။ မြန်မာနိုင်ငံသားများအတွက် သီးသန့် ရှာဖွေရေး Model
+class NativeSearchRequestModel {
+  final String qrReference;
+  final String
+  residencyType; // Backend က မတောင်းပေမယ့် Internal သုံးဖို့ ထားထားပါမည်
+  final String nrc;
+  final DateTime arrivalDate;
+
+  NativeSearchRequestModel({
     required this.qrReference,
     required this.residencyType,
-    this.nrc,
-    this.passportNumber,
-    this.nationalityCode,
-    this.dob,
-    this.passportExpiry,
-    this.arrivalDate,
+    required this.nrc,
+    required this.arrivalDate,
   });
 
-  // API ဆီသို့ Json ပုံစံဖြင့် ပို့ရန်
   Map<String, dynamic> toJson() {
     return {
-      'qrReference': qrReference,
-      'residencyType': residencyType,
-      if (nrc != null) 'nrc': nrc,
-      if (passportNumber != null) 'passportNumber': passportNumber,
-      if (nationalityCode != null) 'nationalityCode': nationalityCode,
-      if (dob != null) 'dob': dob,
-      if (passportExpiry != null) 'passportExpiry': passportExpiry,
-      if (arrivalDate != null)
-        'arrivalDate': arrivalDate!.toIso8601String().split(
-          'T',
-        )[0], // YYYY-MM-DD format
+      // 🎯 ပြင်ဆင်ချက်: Backend က လိုချင်သော နာမည်များအတိုင်း Key များကို ပြောင်းပေးလိုက်ပါသည်
+      'referenceNo': qrReference,
+      'nrc': nrc,
+      // Backend က "2026-06-17T..." ပုံစံတောင်းထားသဖြင့် toIso8601String() အပြည့်ပို့ပါမည်
+      'arrivalDate': arrivalDate.toIso8601String(),
+    };
+  }
+}
+
+// ✈️ ၂။ နိုင်ငံခြားသားများအတွက် သီးသန့် ရှာဖွေရေး Model
+class ForeignerSearchRequestModel {
+  final String qrReference;
+  final String residencyType;
+  final String passportNumber;
+  final String nationalityCode;
+  final String dob;
+  final String passportExpiry;
+
+  ForeignerSearchRequestModel({
+    required this.qrReference,
+    required this.residencyType,
+    required this.passportNumber,
+    required this.nationalityCode,
+    required this.dob,
+    required this.passportExpiry,
+  });
+
+  Map<String, dynamic> toJson() {
+    return {
+      // 🎯 ပြင်ဆင်ချက်: Backend က လိုချင်သော နာမည်များအတိုင်း Key များကို ပြောင်းပေးလိုက်ပါသည်
+      'referenceNo': qrReference,
+      'passportNo': passportNumber,
+      'countryOfBirthCode': nationalityCode,
+      'expiryDate':
+          passportExpiry, // Front-End တွင် string ("YYYY-MM-DD") အနေဖြင့် ရှိနေသည်၊ ASP.NET က အလိုအလျောက် Date ပြောင်းပေးပါလိမ့်မည်
+      'dob': dob,
     };
   }
 }

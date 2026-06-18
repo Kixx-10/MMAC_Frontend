@@ -5,6 +5,7 @@ class ApiEndpoints {
   static const String getCountry = "Country";
   static const String getNRC = "Utility/GetNRCFormat";
   static const String submitApplication = "SubmitApplication";
-  static String fetchApplicationForUpdate(String appNo) =>
-      "SubmitApplication/$appNo";
+  static const String findNative = "searchDetails/myanmarDetails";
+  static const String findForeigner = "searchDetails/foreignerDetails";
+  static const String updateApplication = "";
 }

@@ -81,7 +81,22 @@ class _IdentificationFormLayoutState
 
     _countryCodes = CountryCodeData.codes;
     final String existingMobile = widget.controllers['mobile']?.text ?? '';
-    final String? currentCode = widget.values['mobileCode'];
+    String? currentCode = widget.values['mobileCode'];
+
+    // 1. Auto-extract Country dial code if missing but phone is populated
+    if (currentCode == null && existingMobile.isNotEmpty) {
+      for (var codeObj in _countryCodes) {
+        final code = codeObj['code'];
+        if (code != null && existingMobile.startsWith(code)) {
+          currentCode = code;
+          // 🎯 DELAYED CALL to prevent clashing with the parent's build phase
+          Future.microtask(() {
+            if (mounted) widget.onValueChanged('mobileCode', code);
+          });
+          break;
+        }
+      }
+    }
 
     if (existingMobile.isNotEmpty &&
         currentCode != null &&
@@ -102,6 +117,30 @@ class _IdentificationFormLayoutState
             _countryNameList.addAll(
               countryState.countryList.map((c) => c.countryName).toList(),
             );
+
+            // 2. Resolve human-readable country text from incoming API codes
+            final existingCountryCode = widget.values['countryCode'];
+            if (existingCountryCode != null &&
+                widget.values['country'] == null) {
+              try {
+                final matched = _rawCountryObjects.firstWhere(
+                  (c) => c.countryCode == existingCountryCode,
+                );
+                widget.onValueChanged('country', matched.countryName);
+              } catch (_) {}
+            }
+
+            final existingIssuedCode = widget.values['issuedCountryCode'];
+            if (existingIssuedCode != null &&
+                widget.values['issuedCountry'] == null) {
+              try {
+                final matched = _rawCountryObjects.firstWhere(
+                  (c) => c.countryCode == existingIssuedCode,
+                );
+                widget.onValueChanged('issuedCountry', matched.countryName);
+              } catch (_) {}
+            }
+
             _isLoading = false;
           });
         }
