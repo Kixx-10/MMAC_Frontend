@@ -66,7 +66,7 @@ class SubmitRequestModel {
 
   Map<String, dynamic> toJson() {
     return {
-      if (qrReference != null) 'qrReference': qrReference,
+      if (qrReference != null) 'referenceNo': qrReference,
       'fullName': fullName,
       'gender': gender,
       'dob': dob,
@@ -104,7 +104,7 @@ class SubmitRequestModel {
   //this Method is used in search application by id aka update
   factory SubmitRequestModel.fromJson(Map<String, dynamic> json) {
     return SubmitRequestModel(
-      qrReference: json['qrReference'] as String?,
+      qrReference: (json['referenceNo'] ?? json['qrReference']) as String?,
       fullName: json['fullName'] ?? '',
       gender: json['gender'] ?? '',
       dob: json['dob'] ?? '',

@@ -1,6 +1,6 @@
 // lib/ui/views/pages/update_application/update_application_page.dart
 
-// ignore_for_file: deprecated_member_use, unused_field, empty_catches
+// ignore_for_file: prefer_function_declarations_over_variables, deprecated_member_use, unused_field, empty_catches
 
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -15,10 +15,12 @@ import 'package:mmac/ui/views/widgets/nrc_selector_field.dart';
 class UpdateApplication extends ConsumerStatefulWidget {
   final String? initialCountry;
   final Function(SubmitRequestModel) onApplicationFetched;
+  final VoidCallback onBackPressed;
 
   const UpdateApplication({
     super.key,
     this.initialCountry,
+    required this.onBackPressed,
     required this.onApplicationFetched,
   });
 
@@ -84,54 +86,73 @@ class _UpdateApplicationState extends ConsumerState<UpdateApplication> {
 
   void _handleFindApplication(bool isMyanmar) {
     if (_searchFormKey.currentState?.validate() ?? false) {
-      //  NRC Dropdown ၄ ကွက်စလုံး သေချာရွေးချယ်ထားခြင်း ရှိမရှိ စစ်ဆေးခြင်း
-      String fullNrc = _generateFullNrcString();
-      if (isMyanmar && fullNrc.isEmpty) {
+      // Error Message နှင့် Success လုပ်ဆောင်ချက်များကို ဤနေရာတွင် ကြိုတင်ရေးထားမည်
+      final Function(String) onErrorCallback = (errorMessage) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text("Please select all NRC fields carefully."),
-            backgroundColor: Colors.amber,
+          SnackBar(
+            content: Text(errorMessage),
+            backgroundColor: Colors.red.shade700,
           ),
         );
-        return; // အချက်အလက်မစုံလင်ပါက API ပို့ခြင်းကို ရပ်တန့်မည်
-      }
+      };
 
-      //  Backend Notifier ဆီသို့ သွားမည့်အပိုင်း
-      // 🎯 SearchRequestModel အသစ်တစ်ခု ဆောက်လိုက်ခြင်း
-      final searchModel = SearchRequestModel(
-        qrReference: _text('qrReference'),
-        residencyType: isMyanmar ? "Myanmar" : "Foreigner",
-        nrc: isMyanmar ? fullNrc : null,
-        passportNumber: isMyanmar ? null : _text('passportNumber'),
-        nationalityCode: isMyanmar ? null : _text('nationalityCode'),
-        dob: isMyanmar ? null : _text('dob'),
-        passportExpiry: isMyanmar ? null : _text('passportExpiry'),
-        arrivalDate: isMyanmar && _text('arrivalDate').isNotEmpty
-            ? DateTime.tryParse(_text('arrivalDate'))
-            : null,
-      );
+      final VoidCallback onSuccessCallback = () {
+        //  FIX: Wait a micro-tick for Riverpod's state to fully populate
+        // before we attempt to read the value. This kills the double-tap bug!
+        Future.microtask(() {
+          final fetchedData = ref.read(updateApplicationProvider).value;
+          if (fetchedData != null) {
+            widget.onApplicationFetched(fetchedData);
+          }
+        });
+      };
 
-      // 🎯 Provider ဆီသို့ ခေါ်ယူပို့ဆောင်ခြင်း
-      ref
-          .read(updateApplicationProvider.notifier)
-          .findApplication(
-            searchRequest:
-                searchModel, // 🎯 ကျွန်တော်တို့ ဆောက်လိုက်တဲ့ Model ကို ဒီမှာ လွှဲပေးလိုက်ပါပြီ
-            onError: (errorMessage) {
-              ScaffoldMessenger.of(context).showSnackBar(
-                SnackBar(
-                  content: Text(errorMessage),
-                  backgroundColor: Colors.red.shade700,
-                ),
-              );
-            },
-            onSuccess: () {
-              final fetchedData = ref.read(updateApplicationProvider).value;
-              if (fetchedData != null) {
-                widget.onApplicationFetched(fetchedData);
-              }
-            },
+      if (isMyanmar) {
+        // 🇲🇲 မြန်မာနိုင်ငံသားဖြစ်လျှင်
+        String fullNrc = _generateFullNrcString();
+        if (fullNrc.isEmpty) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+              content: Text("Please select all NRC fields carefully."),
+              backgroundColor: Colors.amber,
+            ),
           );
+          return;
+        }
+
+        final nativeModel = NativeSearchRequestModel(
+          qrReference: _text('qrReference'),
+          residencyType: "Myanmar",
+          nrc: fullNrc,
+          arrivalDate: DateTime.parse(_text('arrivalDate')),
+        );
+
+        ref
+            .read(updateApplicationProvider.notifier)
+            .findNativeApplication(
+              searchRequest: nativeModel,
+              onError: onErrorCallback,
+              onSuccess: onSuccessCallback,
+            );
+      } else {
+        // ✈️ နိုင်ငံခြားသားဖြစ်လျှင်
+        final foreignerModel = ForeignerSearchRequestModel(
+          qrReference: _text('qrReference'),
+          residencyType: "Foreigner",
+          passportNumber: _text('passportNumber'),
+          nationalityCode: _text('nationalityCode'),
+          dob: _text('dob'),
+          passportExpiry: _text('passportExpiry'),
+        );
+
+        ref
+            .read(updateApplicationProvider.notifier)
+            .findForeignerApplication(
+              searchRequest: foreignerModel,
+              onError: onErrorCallback,
+              onSuccess: onSuccessCallback,
+            );
+      }
     }
   }
 
@@ -242,6 +263,36 @@ class _UpdateApplicationState extends ConsumerState<UpdateApplication> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
+                InkWell(
+                  onTap: widget.onBackPressed, // Dialog ကို ခေါ်မည့် Function
+                  borderRadius: BorderRadius.circular(4),
+                  child: Padding(
+                    padding: const EdgeInsets.symmetric(
+                      vertical: 8.0,
+                      horizontal: 4.0,
+                    ),
+                    child: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Icon(
+                          Icons.arrow_back_ios_new,
+                          size: 16,
+                          color: Colors.blueGrey.shade700,
+                        ),
+                        const SizedBox(width: 6),
+                        Text(
+                          "Back",
+                          style: TextStyle(
+                            fontSize: 15,
+                            fontWeight: FontWeight.bold,
+                            color: Colors.blueGrey.shade700,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+                const SizedBox(height: 16),
                 // 🎯 ဘရို တောင်းဆိုထားသော Info Banner အသစ်
                 _buildNoticeBox(isMyanmar),
                 const SizedBox(height: 24),
@@ -330,7 +381,10 @@ class _UpdateApplicationState extends ConsumerState<UpdateApplication> {
                         child: DropdownButton<int>(
                           value: activeStateId,
                           isExpanded: true,
-                          hint: const Text("ပြည်နယ်/တိုင်း"),
+                          hint: const Text(
+                            "ပြည်နယ်/တိုင်း",
+                            style: TextStyle(fontSize: 12),
+                          ),
                           items: stateList
                               .map<DropdownMenuItem<int>>(
                                 (st) => DropdownMenuItem<int>(
@@ -357,7 +411,10 @@ class _UpdateApplicationState extends ConsumerState<UpdateApplication> {
                         child: DropdownButton<String>(
                           value: activeTownshipCode,
                           isExpanded: true,
-                          hint: const Text("မြို့နယ်"),
+                          hint: const Text(
+                            "မြို့နယ်",
+                            style: TextStyle(fontSize: 12),
+                          ),
                           items: townshipList
                               .map<DropdownMenuItem<String>>(
                                 (ts) => DropdownMenuItem<String>(

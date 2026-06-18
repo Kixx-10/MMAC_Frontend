@@ -5,6 +5,7 @@ import 'package:mmac/data/reposistories/submit_repository.dart';
 
 class SubmitControllerProvider extends AsyncNotifier<SubmitResponseModel?> {
   final SubmitRepository _repository = SubmitRepository();
+
   @override
   Future<SubmitResponseModel?> build() async {
     return null; // initial state is null, meaning no submission has been made yet
@@ -14,9 +15,19 @@ class SubmitControllerProvider extends AsyncNotifier<SubmitResponseModel?> {
     SubmitRequestModel requestData,
   ) async {
     state = const AsyncLoading(); // set state to loading when submission starts
-    final result = await AsyncValue.guard(
-      () => _repository.submitApplication(requestData),
-    );
+
+    final result = await AsyncValue.guard(() async {
+      // 🎯 THE MAGIC ROUTER: Check if this is an Update or a New Application
+      if (requestData.qrReference != null &&
+          requestData.qrReference!.isNotEmpty) {
+        // UPDATE MODE: Route to the update endpoint
+        return await _repository.updateApplication(requestData);
+      } else {
+        // NEW MODE: Route to the standard submit endpoint
+        return await _repository.submitApplication(requestData);
+      }
+    });
+
     state = result; // update state with the result (either data or error)
     return result
         .value; // return the response model if successful, or null if there was an error
