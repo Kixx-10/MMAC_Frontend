@@ -13,16 +13,14 @@ dependencies:
   cupertino_icons: ^1.0.8
   dio: ^5.9.2
   flutter_riverpod: ^2.5.1
-  shared_preferences: 
-  pdf:
-  #path_provider: 
+  pdfx: ^2.9.2 
+  universal_html: ^2.3.0
+  shared_preferences: ^2.5.5
   open_filex: 
-  qr_flutter: 
   share_plus: 
-   #flutter_pdfview: 
-  #flutter_pdfview: 
-  printing:
-  path_provider: ^2.1.5
+  pdf: 
+  qr_flutter: 
+  path_provider: ^2.1.6
   
   
 
