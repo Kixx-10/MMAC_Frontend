@@ -1,8 +1,7 @@
-// ignore_for_file: unnecessary_non_null_assertion, unnecessary_null_comparison, dead_code, dead_null_aware_expression, strict_top_level_inference, prefer_typing_uninitialized_variables
+// ignore_for_file: unused_element, unused_field, unnecessary_non_null_assertion, unnecessary_null_comparison, dead_code, dead_null_aware_expression, strict_top_level_inference, prefer_typing_uninitialized_variables
 
 import 'dart:convert';
 import 'dart:developer';
-
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:mmac/data/controllers/submit_provider.dart';
@@ -325,6 +324,14 @@ class _NewApplicationState extends ConsumerState<NewApplication>
 
       _formValues['countryCode'] = fetchedData.countryOfBirthCode;
       _formValues['issuedCountryCode'] = fetchedData.issuedCountryCode;
+      // 🎯 INJECTING THE NAMES RECEIVED FROM THE BACKEND
+      _formValues['modeOfTravel'] = fetchedData.modeOfTravelName;
+      _formValues['portOfArrival'] = fetchedData.portOfArrivalName;
+      _formValues['stateRegion'] = fetchedData.stateRegionName;
+      _formValues['district'] = fetchedData.districtName;
+      _formValues['township'] = fetchedData.townshipName;
+
+      // We also inject the raw IDs just in case they aren't 0 (safeguard)
       _formValues['modeOfTravelId'] = fetchedData.modeOfTravelId;
       _formValues['portOfArrivalId'] = fetchedData.portOfArrivalId;
       _formValues['stateRegionId'] = fetchedData.stateRegionId;
@@ -720,7 +727,10 @@ class _NewApplicationState extends ConsumerState<NewApplication>
                   SizedBox(height: 16),
                   Text(
                     "Submitting Application & Generating PDF...",
-                    style: TextStyle(color: Colors.grey, fontWeight: FontWeight.w500),
+                    style: TextStyle(
+                      color: Colors.grey,
+                      fontWeight: FontWeight.w500,
+                    ),
                   ),
                 ],
               ),
@@ -731,7 +741,10 @@ class _NewApplicationState extends ConsumerState<NewApplication>
               padding: const EdgeInsets.symmetric(vertical: 20),
               child: Text(
                 "Submission Failed: ${error.toString()}",
-                style: const TextStyle(color: Colors.red, fontWeight: FontWeight.bold),
+                style: const TextStyle(
+                  color: Colors.red,
+                  fontWeight: FontWeight.bold,
+                ),
               ),
             ),
           ),

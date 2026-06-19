@@ -231,21 +231,11 @@ class _MainLayoutState extends State<MainLayout>
                     bottom: 10,
                   ),
                   child: Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    mainAxisAlignment: MainAxisAlignment.center,
                     children: [
-                      const Text(
-                        "MMAC",
-                        style: TextStyle(
-                          fontSize: 16,
-                          fontWeight: FontWeight.bold,
-                          color: Colors.black,
-                          fontFamily: 'sans-serif',
-                        ),
-                      ),
-                      const SizedBox(width: 12),
                       Expanded(
                         child: Align(
-                          alignment: Alignment.centerRight,
+                          alignment: Alignment.center,
                           child: SizedBox(
                             width: isMobile ? null : 700,
                             child: TabBar(

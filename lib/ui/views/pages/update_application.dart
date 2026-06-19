@@ -312,7 +312,7 @@ class _UpdateApplicationState extends ConsumerState<UpdateApplication> {
                 TextFormField(
                   controller: _searchControllers['qrReference'],
                   decoration: _inputDecoration(
-                    "e.g., QR-2026-987654",
+                    "",
                     Icons.qr_code_scanner_outlined,
                   ),
                   validator: (v) => (v == null || v.trim().isEmpty)
@@ -480,10 +480,7 @@ class _UpdateApplicationState extends ConsumerState<UpdateApplication> {
                   TextFormField(
                     controller: _searchControllers['passportNumber'],
                     textCapitalization: TextCapitalization.characters,
-                    decoration: _inputDecoration(
-                      "e.g., MD123456",
-                      Icons.badge_outlined,
-                    ),
+                    decoration: _inputDecoration("", Icons.badge_outlined),
                     validator: (v) => (v == null || v.trim().isEmpty)
                         ? 'Passport Number required'
                         : null,

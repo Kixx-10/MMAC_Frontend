@@ -1,4 +1,4 @@
-// ignore_for_file: dead_null_aware_expression, dead_code
+// ignore_for_file: prefer_const_constructors, dead_null_aware_expression, dead_code
 
 import 'dart:io';
 import 'dart:typed_data';
