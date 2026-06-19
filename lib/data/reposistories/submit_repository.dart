@@ -53,7 +53,6 @@ class SubmitRepository {
     }
   }
 
-  // 🚀 ၁။ Update ပြန်တင်မည့် Function (အသစ်တိုးသည်)
   Future<SubmitResponseModel?> updateApplication(
     SubmitRequestModel updateRequestModel,
   ) async {
@@ -62,7 +61,7 @@ class SubmitRepository {
       dev.log("SENDING UPDATE PAYLOAD: $payload", name: "SubmitRepository");
 
       final response = await _apiClient.post(
-        ApiEndpoints.updateApplication,
+        ApiEndpoints.submitApplication,
         data: payload,
       );
 
