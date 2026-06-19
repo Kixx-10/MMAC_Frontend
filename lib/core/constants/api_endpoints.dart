@@ -4,7 +4,8 @@ class ApiEndpoints {
       "PortOfArrival/$modeOfTravelId";
   static const String getCountry = "Country";
   static const String getNRC = "Utility/GetNRCFormat";
-  static const String submitApplication = "SubmitApplication";
-  static String fetchApplicationForUpdate(String appNo) =>
-      "SubmitApplication/$appNo";
+  static const String submitApplication = "Application/Submit&UpdateApplication";
+  static const String findNative = "searchDetails/myanmarDetails";
+  static const String findForeigner = "searchDetails/foreignerDetails";
+  
 }

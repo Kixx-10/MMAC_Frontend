@@ -1,4 +1,7 @@
-// ignore_for_file: strict_top_level_inference, prefer_typing_uninitialized_variables
+// ignore_for_file: unnecessary_non_null_assertion, unnecessary_null_comparison, dead_code, dead_null_aware_expression, strict_top_level_inference, prefer_typing_uninitialized_variables
+
+import 'dart:convert';
+import 'dart:developer';
 
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -109,11 +112,20 @@ class _NewApplicationState extends ConsumerState<NewApplication>
     if (widget.isUpdateMode) {
       currentStep = 0;
     }
+    if (widget.initialData != null) {
+      currentStep = 1;
+    }
     _loadSavedSession();
   }
 
   Future<void> _loadSavedSession() async {
     try {
+      if (widget.initialData != null) {
+        setState(() {
+          _injectFetchedData(widget.initialData!);
+        });
+        return;
+      }
       final sessionData = await FormSessionService.loadDraft(
         isUpdateMode: widget.isUpdateMode,
       );
@@ -225,43 +237,90 @@ class _NewApplicationState extends ConsumerState<NewApplication>
   }
 
   void _updateFormValue(String key, dynamic value) {
-    setState(() => _formValues[key] = value);
-    _saveCurrentSession();
+    //  CRITICAL FIX: Wraps the update in a microtask.
+    // This tells Flutter: "Wait until the screen finishes drawing, THEN update the state."
+    // This permanently stops the Red Screen Flash error!
+    Future.microtask(() {
+      if (mounted) {
+        setState(() => _formValues[key] = value);
+        _saveCurrentSession();
+      }
+    });
   }
+
   void _injectFetchedData(SubmitRequestModel fetchedData) {
+    try {
+      final prettyJson = const JsonEncoder.withIndent(
+        '  ',
+      ).convert(fetchedData.toJson());
+      log("INJECTING FETCHED DATA:\n$prettyJson", name: "NewApplicationPage");
+    } catch (e) {
+      log("Failed to log fetched data", name: "NewApplicationPage");
+    }
+
     setState(() {
-      // ၁။ စာရိုက်တံ (Controllers) များထဲသို့ Data လိုက်ထည့်ခြင်း
-      _step1Controllers['fullName']?.text = fetchedData.fullName;
-      _step1Controllers['email']?.text = fetchedData.email;
-      _step1Controllers['mobile']?.text = fetchedData.mobileNumber;
-      _step1Controllers['visaNumber']?.text = fetchedData.visaNo!;
-      _step1Controllers['passportNumber']?.text = fetchedData.passportNo;
-      _step1Controllers['address']?.text = fetchedData.address;
-      _step1Controllers['nrc']?.text = fetchedData.nrc!;
-      _step1Controllers['fatherName']?.text = fetchedData.fatherName!;
+      _formValues['qrReference'] = fetchedData.qrReference;
+      _step1Controllers['fullName']?.text = fetchedData.fullName ?? '';
+      _step1Controllers['email']?.text = fetchedData.email ?? '';
+      _step1Controllers['mobile']?.text = fetchedData.mobileNumber ?? '';
+      _step1Controllers['visaNumber']?.text = fetchedData.visaNo ?? '';
+      _step1Controllers['passportNumber']?.text = fetchedData.passportNo ?? '';
+      _step1Controllers['address']?.text = fetchedData.address ?? '';
+      _step1Controllers['fatherName']?.text = fetchedData.fatherName ?? '';
 
-      _step2Controllers['vehicleNumber']?.text = fetchedData.vehicleNumber;
-      _step2Controllers['vehicleName']?.text = fetchedData.vehicleName;
-      _step2Controllers['accommodation']?.text = fetchedData.accommodation!;
+      _step2Controllers['vehicleNumber']?.text =
+          fetchedData.vehicleNumber ?? '';
+      _step2Controllers['vehicleName']?.text = fetchedData.vehicleName ?? '';
+      _step2Controllers['accommodation']?.text =
+          fetchedData.accommodation ?? '';
       _step2Controllers['addressInMyanmar']?.text =
-          fetchedData.addressInMyanmar;
-      _step2Controllers['mobileNumberMM']?.text = fetchedData.mobileNumberMM!;
-      _step2Controllers['previousCity']?.text = fetchedData.previousCity;
-      _step2Controllers['previousCity']?.text = fetchedData.previousCity;
+          fetchedData.addressInMyanmar ?? '';
+      _step2Controllers['mobileNumberMM']?.text =
+          fetchedData.mobileNumberMM ?? '';
+      _step2Controllers['previousCity']?.text = fetchedData.previousCity ?? '';
+      _step2Controllers['purposeOfVisitDetail']?.text =
+          fetchedData.purposeOfVisit ?? '';
 
-      // ၂။ Form Values (Dropdown & Dates) များကို သိမ်းဆည်းခြင်း
       _formValues['gender'] = fetchedData.gender == 'M' ? 'Male' : 'Female';
-      if (fetchedData.dob.isNotEmpty) {
-        _formValues['dateOfBirth'] = DateTime.parse(fetchedData.dob);
+
+      // 1. Parse and populate NRC fragments safely
+      if (fetchedData.nrc != null && fetchedData.nrc!.isNotEmpty) {
+        _step1Controllers['nrc']?.text = fetchedData.nrc!;
+        try {
+          final firstSplit = fetchedData.nrc!.split('/');
+          if (firstSplit.length == 2) {
+            _formValues['nrcStateCode'] = firstSplit[0]; // e.g. "12"
+
+            final secondSplit = firstSplit[1].split('(');
+            if (secondSplit.length == 2) {
+              _formValues['nrcTownshipCode'] = secondSplit[0]; // e.g. "LATHANA"
+
+              final thirdSplit = secondSplit[1].split(')');
+              if (thirdSplit.length == 2) {
+                _formValues['nrcTypeCode'] = thirdSplit[0]; // e.g. "နိုင်"
+                _formValues['nrcRawNumber'] = thirdSplit[1]; // e.g. "123456"
+              }
+            }
+          }
+        } catch (e) {
+          debugPrint("⚠️ Failed to parse NRC segments: $e");
+        }
       }
-      if (fetchedData.issuedDate.isNotEmpty) {
-        _formValues['issuedDate'] = DateTime.parse(fetchedData.issuedDate);
+
+      if (fetchedData.dob != null && fetchedData.dob!.isNotEmpty) {
+        _formValues['dateOfBirth'] = DateTime.parse(fetchedData.dob!);
       }
-      if (fetchedData.expiryDate.isNotEmpty) {
-        _formValues['expiryDate'] = DateTime.parse(fetchedData.expiryDate);
+      if (fetchedData.issuedDate != null &&
+          fetchedData.issuedDate!.isNotEmpty) {
+        _formValues['issuedDate'] = DateTime.parse(fetchedData.issuedDate!);
       }
-      if (fetchedData.arrivalDate.isNotEmpty) {
-        _formValues['arrivalDate'] = DateTime.parse(fetchedData.arrivalDate);
+      if (fetchedData.expiryDate != null &&
+          fetchedData.expiryDate!.isNotEmpty) {
+        _formValues['expiryDate'] = DateTime.parse(fetchedData.expiryDate!);
+      }
+      if (fetchedData.arrivalDate != null &&
+          fetchedData.arrivalDate!.isNotEmpty) {
+        _formValues['arrivalDate'] = DateTime.parse(fetchedData.arrivalDate!);
       }
 
       _formValues['countryCode'] = fetchedData.countryOfBirthCode;
@@ -275,11 +334,9 @@ class _NewApplicationState extends ConsumerState<NewApplication>
       _formValues['hasSymptoms'] = fetchedData.healthDeclaration;
       _formValues['carryingRestricted'] = fetchedData.digitalDeclarations;
 
-      // ၃။ ဒေတာအားလုံး အဆင်သင့်ဖြစ်ပါက စာမျက်နှာ ၁ (Identification Form) သို့ တိုက်ရိုက် ခေါ်ဆောင်သွားမည်
       currentStep = 1;
     });
 
-    // Local Draft ထဲသို့ပါ တစ်ခါတည်း သိမ်းဆည်းလိုက်မည်
     _saveCurrentSession();
   }
 
@@ -342,7 +399,16 @@ class _NewApplicationState extends ConsumerState<NewApplication>
     final String finalNrc = _isMyanmar ? _text('nrc') : '';
     final String finalFatherName = _isMyanmar ? _text('fatherName') : '';
 
+    // 🎯 CRITICAL FIX: Ironclad Reference Number Injection
+    // If we are updating, we forcefully extract the Reference Number straight from
+    // the verified API data so it NEVER gets lost by local drafts!
+    final String? secureQrReference =
+        (widget.isUpdateMode && widget.initialData != null)
+        ? widget.initialData!.qrReference
+        : _formValues['qrReference'];
+
     return SubmitRequestModel(
+      qrReference: secureQrReference,
       fullName: _text('fullName'),
       gender: _genderCode(_formValues['gender']),
       dob: _formatDate(_formValues['dateOfBirth']),
@@ -581,6 +647,7 @@ class _NewApplicationState extends ConsumerState<NewApplication>
     switch (currentStep) {
       case 0:
         return UpdateApplication(
+          onBackPressed: widget.onBackPressed ?? () {},
           initialCountry: widget.initialCountry, // 🎯 ဒါလေး ထပ်ထည့်ပေးပါ
           onApplicationFetched: (SubmitRequestModel fetchedData) {
             _injectFetchedData(fetchedData);
@@ -719,29 +786,35 @@ class _NewApplicationState extends ConsumerState<NewApplication>
                 const SizedBox(height: 15),
                 Container(
                   width: 950,
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 24,
-                    vertical: 24,
-                  ),
                   margin: const EdgeInsets.symmetric(horizontal: 24),
-                  decoration: BoxDecoration(
+                  child: Material(
                     color: Colors.white,
-                    borderRadius: BorderRadius.circular(16),
-                    border: Border.all(color: Colors.grey.shade200),
-                  ),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        _sectionTitle,
-                        style: const TextStyle(
-                          fontSize: 18,
-                          fontWeight: FontWeight.bold,
-                        ),
+                    clipBehavior: Clip
+                        .antiAlias, // Ensures ink splashes don't bleed past rounded corners
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(16),
+                      side: BorderSide(color: Colors.grey.shade200),
+                    ),
+                    child: Padding(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 24,
+                        vertical: 24,
                       ),
-                      const SizedBox(height: 20),
-                      _buildCurrentStepForm(),
-                    ],
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            _sectionTitle,
+                            style: const TextStyle(
+                              fontSize: 18,
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
+                          const SizedBox(height: 20),
+                          _buildCurrentStepForm(),
+                        ],
+                      ),
+                    ),
                   ),
                 ),
                 const SizedBox(height: 20),
