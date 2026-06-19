@@ -17,15 +17,8 @@ class SubmitControllerProvider extends AsyncNotifier<SubmitResponseModel?> {
     state = const AsyncLoading(); // set state to loading when submission starts
 
     final result = await AsyncValue.guard(() async {
-      // 🎯 THE MAGIC ROUTER: Check if this is an Update or a New Application
-      if (requestData.qrReference != null &&
-          requestData.qrReference!.isNotEmpty) {
-        // UPDATE MODE: Route to the update endpoint
-        return await _repository.updateApplication(requestData);
-      } else {
-        // NEW MODE: Route to the standard submit endpoint
-        return await _repository.submitApplication(requestData);
-      }
+      
+      return await _repository.submitApplication(requestData);
     });
 
     state = result; // update state with the result (either data or error)

@@ -637,10 +637,7 @@ class _UpdateApplicationState extends ConsumerState<UpdateApplication> {
   Widget _buildLabel(String label) {
     return Padding(
       padding: const EdgeInsets.only(bottom: 8),
-      child: Text(
-        label,
-        style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w600),
-      ),
+      child: Text(label,style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w600), ),
     );
   }
 
@@ -670,10 +667,7 @@ class _UpdateApplicationState extends ConsumerState<UpdateApplication> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          const Text(
-            'Please note that you will not be able to update the following information:',
-            style: TextStyle(fontSize: 15, color: Colors.black87),
-          ),
+          const Text('Please note that you will not be able to update the following information:', style: TextStyle(fontSize: 15, color: Colors.black87),          ),
           const SizedBox(height: 12),
           _buildNoticeListItem('1. Date of Arrival'),
           _buildNoticeListItem('2. Full Name'),

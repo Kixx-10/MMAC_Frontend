@@ -257,7 +257,9 @@ class ReviewLayout extends StatelessWidget {
             _reviewTile('Country', values['country'] ?? ''),
             _reviewTile('Email', controllers['email']?.text ?? ''),
             _reviewTile('Mobile Number', controllers['mobile']?.text ?? ''),
-            _reviewTile('Visa Number', controllers['visaNumber']?.text ?? ''),
+           if (values['country'] != 'Myanmar') ...[
+          _reviewTile('Visa Number', controllers['visaNumber']?.text ?? ''),
+              ],
             if (values['country'] == 'Myanmar') ...[
                _reviewTile('NRC', controllers['nrc']?.text ?? ''),
                 _reviewTile('Father Name', controllers['fatherName']?.text ?? ''),
