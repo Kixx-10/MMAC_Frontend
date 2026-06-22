@@ -590,9 +590,9 @@ class _NewApplicationState extends ConsumerState<NewApplication>
   String get _sectionTitle {
     switch (currentStep) {
       case 1:
-        return "Identification & Personal Informations";
+        return "Personal Informations";
       case 2:
-        return "Trip & Accommodation Details";
+        return "Itinerary";
       case 3:
         return "Declarations";
       case 4:
@@ -720,6 +720,9 @@ class _NewApplicationState extends ConsumerState<NewApplication>
                     _step2Controllers.forEach((_, c) => c.clear());
                   });
                   //_clearSession(); // Session သိမ်းထားသည်များကို ဖျက်ပစ်ရန်
+                  FormSessionService.clearDraft(
+                    isUpdateMode: widget.isUpdateMode,
+                  );
                 },
               );
             }
