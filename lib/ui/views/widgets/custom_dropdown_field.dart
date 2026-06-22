@@ -125,15 +125,21 @@ class _CustomDropdownFieldState extends State<CustomDropdownField> {
                         vertical: 12,
                       ),
                       decoration: BoxDecoration(
-                        color: Colors.white,
+                        // 🎯 1. BACKGROUND: Turn light grey if readonly is true
+                        color: widget.readonly
+                            ? Colors.grey.shade200
+                            : Colors.white,
                         borderRadius: BorderRadius.circular(8),
                         border: Border.all(
-                          color: hasError
-                              ? Colors.red
-                              : (state.value != null
-                                    ? Colors.grey.shade400
-                                    : Colors.grey.shade300),
-                          width: hasError ? 1.5 : 1,
+                          // 🎯 2. BORDER: Keep flat grey if readonly, otherwise follow normal/error logic
+                          color: widget.readonly
+                              ? Colors.grey.shade300
+                              : (hasError
+                                    ? Colors.red
+                                    : (state.value != null
+                                          ? Colors.grey.shade400
+                                          : Colors.grey.shade300)),
+                          width: hasError && !widget.readonly ? 1.5 : 1,
                         ),
                       ),
                       child: Row(
@@ -144,9 +150,12 @@ class _CustomDropdownFieldState extends State<CustomDropdownField> {
                               state.value ?? widget.hint,
                               style: TextStyle(
                                 fontSize: 14,
-                                color: state.value != null
-                                    ? Colors.black87
-                                    : Colors.grey.shade400,
+                                // 🎯 3. TEXT: Fade the text color if disabled
+                                color: widget.readonly
+                                    ? Colors.grey.shade500
+                                    : (state.value != null
+                                          ? Colors.black87
+                                          : Colors.grey.shade400),
                               ),
                               overflow: TextOverflow.ellipsis,
                               maxLines: 1,
@@ -154,7 +163,12 @@ class _CustomDropdownFieldState extends State<CustomDropdownField> {
                           ),
                           Icon(
                             Icons.arrow_drop_down,
-                            color: hasError ? Colors.red : Colors.grey.shade600,
+                            // 🎯 4. ICON: Wash out the dropdown arrow when readonly
+                            color: widget.readonly
+                                ? Colors.grey.shade400
+                                : (hasError
+                                      ? Colors.red
+                                      : Colors.grey.shade600),
                             size: 24,
                           ),
                         ],

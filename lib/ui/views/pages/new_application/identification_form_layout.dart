@@ -394,7 +394,7 @@ class _IdentificationFormLayoutState
         label: "Country",
         value: widget.values['country'],
         hint: "Select Country",
-        readonly: isMyanmar || (widget.isUpdateMode && isMyanmar),
+        readonly: (widget.isUpdateMode && !isMyanmar),
         labelWidth: lw,
         dialogWidth: 250,
         dialogHeight: 250,
@@ -617,7 +617,7 @@ class _IdentificationFormLayoutState
       controller: widget.controllers['passportNumber']!,
       maxLength: 20,
       labelWidth: lw,
-      readonly: widget.isUpdateMode && !isMyanmar,
+      readonly: (widget.isUpdateMode && !isMyanmar),
       validator: (v) => FormValidators.required(v, 'Passport Number'),
       onChanged: (value) {
         widget.onValueChanged('passportNumber', value);
@@ -654,7 +654,7 @@ class _IdentificationFormLayoutState
       firstDate:
           minExpiryDate, // 🔒 Restricts expiry date to be on or after the issue date
       lastDate: DateTime(2100),
-      readOnly: widget.isUpdateMode && !isMyanmar,
+      readOnly: (widget.isUpdateMode && !isMyanmar),
       errorText: getExpiryErrorText(),
       onPicked: (d) {
         widget.onValueChanged('expiryDate', d);
@@ -723,12 +723,16 @@ class _IdentificationFormLayoutState
             child: TextFormField(
               controller: _nrcNumberController,
               keyboardType: TextInputType.number,
+              readOnly: widget.isUpdateMode && isMyanmar,
+
               inputFormatters: [
                 FilteringTextInputFormatter.allow(RegExp(r'[\u1040-\u1049]')),
                 LengthLimitingTextInputFormatter(6),
               ],
               style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w500),
               decoration: InputDecoration(
+                fillColor: Colors.grey,
+                filled: widget.isUpdateMode && isMyanmar,
                 hintText: "၁၂၃၄၅၆",
                 hintStyle: TextStyle(color: Colors.grey.shade400, fontSize: 13),
                 isDense: true,
@@ -749,6 +753,7 @@ class _IdentificationFormLayoutState
             children: [
               NrcSelectorWidget(
                 isDesktop: isNrcRowDesktop,
+                readOnly: (widget.isUpdateMode && isMyanmar),
 
                 // 🎯 THE FIX: Safe Contain Checks!
                 // This prevents the dropdown crash while it waits for the waterfall to load.
@@ -926,7 +931,6 @@ class _IdentificationFormLayoutState
                 ],
               )
             : addressField, // Keeps standard layout for mobile screens
-        // 🟢 အောက်ပါ Code အသစ်ဖြင့် နေရာ (၂) ခုလုံးကို အစားထိုးလဲလှယ်လိုက်ပါ
         const SizedBox(height: 28),
         Stack(
           alignment: Alignment.centerLeft,
