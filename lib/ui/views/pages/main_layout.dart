@@ -87,19 +87,68 @@ class _MainLayoutState extends State<MainLayout>
         context: context,
         builder: (BuildContext context) {
           return AlertDialog(
-            title: const Text('Change Residency Type?'),
-            content: const Text(
-              'Changing your residency type will clear all the data you have filled so far. Are you sure you want to proceed?',
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(12),
             ),
-            actions: [
-              TextButton(
-                onPressed: () => Navigator.of(context).pop(false),
-                child: const Text('Cancel'),
+            contentPadding: const EdgeInsets.only(
+              top: 24,
+              left: 24,
+              right: 24,
+              bottom: 16,
+            ),
+            title: const Text(
+              'Change Residency Type?',
+              style: TextStyle(fontWeight: FontWeight.bold, fontSize: 18),
+            ),
+            content: const SizedBox(
+              width:
+                  320, // 🎯 Box ကို ရှည်မထွက်သွားစေရန် အကျယ်ထိန်းပေးခြင်း (Square-ish Shape)
+              child: Text(
+                'Changing your residency type will clear all the data you have filled so far. Are you sure you want to proceed?',
+                style: TextStyle(fontSize: 15, height: 1.5),
               ),
+            ),
+            actionsPadding: const EdgeInsets.only(right: 20, bottom: 20),
+            actions: [
+              // Form ထဲက Back ခလုတ်ပုံစံအတိုင်း
+              ElevatedButton(
+                onPressed: () => Navigator.of(context).pop(false),
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: Colors.grey.shade200,
+                  foregroundColor: Colors.black87,
+                  elevation: 0,
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 24,
+                    vertical: 12,
+                  ),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                ),
+                child: const Text(
+                  'Cancel',
+                  style: TextStyle(fontWeight: FontWeight.bold),
+                ),
+              ),
+              // Form ထဲက Next ခလုတ်ပုံစံအတိုင်း (ဒေတာဖျက်မှာမို့ အရောင်ကို အနီရောင်သာ သုံးထားပါသည်)
               ElevatedButton(
                 onPressed: () => Navigator.of(context).pop(true),
-                style: ElevatedButton.styleFrom(backgroundColor: Colors.red),
-                child: const Text('Yes, Clear Data'),
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: Colors.lightBlue.shade700,
+                  foregroundColor: Colors.white,
+                  elevation: 0,
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 24,
+                    vertical: 12,
+                  ),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                ),
+                child: const Text(
+                  'Yes, Clear Data',
+                  style: TextStyle(fontWeight: FontWeight.bold),
+                ),
               ),
             ],
           );
@@ -126,19 +175,67 @@ class _MainLayoutState extends State<MainLayout>
       context: context,
       builder: (BuildContext context) {
         return AlertDialog(
-          title: const Text('Go Back & Clear Data?'),
-          content: const Text(
-            'Going back to change your residency will clear all the data you have filled so far. Are you sure?',
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(12),
           ),
-          actions: [
-            TextButton(
-              onPressed: () => Navigator.of(context).pop(false),
-              child: const Text('Cancel'),
+          contentPadding: const EdgeInsets.only(
+            top: 24,
+            left: 24,
+            right: 24,
+            bottom: 16,
+          ),
+          title: const Text(
+            'Go Back & Clear Data?',
+            style: TextStyle(fontWeight: FontWeight.bold, fontSize: 18),
+          ),
+          content: const SizedBox(
+            width: 320, // 🎯 Box ကို ရှည်မထွက်သွားစေရန် အကျယ်ထိန်းပေးခြင်း
+            child: Text(
+              'Going back to change your residency will clear all the data you have filled so far. Are you sure?',
+              style: TextStyle(fontSize: 15, height: 1.5),
             ),
+          ),
+          actionsPadding: const EdgeInsets.only(right: 20, bottom: 20),
+          actions: [
+            // Form ထဲက Back ခလုတ်ပုံစံအတိုင်း
+            ElevatedButton(
+              onPressed: () => Navigator.of(context).pop(false),
+              style: ElevatedButton.styleFrom(
+                backgroundColor: Colors.grey.shade200,
+                foregroundColor: Colors.black87,
+                elevation: 0,
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 24,
+                  vertical: 12,
+                ),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(8),
+                ),
+              ),
+              child: const Text(
+                'Cancel',
+                style: TextStyle(fontWeight: FontWeight.bold),
+              ),
+            ),
+            // Form ထဲက Next ခလုတ်ပုံစံအတိုင်း (ဒေတာဖျက်မှာမို့ အရောင်ကို အနီရောင်သာ သုံးထားပါသည်)
             ElevatedButton(
               onPressed: () => Navigator.of(context).pop(true),
-              style: ElevatedButton.styleFrom(backgroundColor: Colors.red),
-              child: const Text('Yes, Go Back'),
+              style: ElevatedButton.styleFrom(
+                backgroundColor: Colors.lightBlue.shade700,
+                foregroundColor: Colors.white,
+                elevation: 0,
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 24,
+                  vertical: 12,
+                ),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(8),
+                ),
+              ),
+              child: const Text(
+                'Yes, Go Back',
+                style: TextStyle(fontWeight: FontWeight.bold),
+              ),
             ),
           ],
         );
@@ -231,21 +328,11 @@ class _MainLayoutState extends State<MainLayout>
                     bottom: 10,
                   ),
                   child: Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    mainAxisAlignment: MainAxisAlignment.center,
                     children: [
-                      const Text(
-                        "MMAC",
-                        style: TextStyle(
-                          fontSize: 16,
-                          fontWeight: FontWeight.bold,
-                          color: Colors.black,
-                          fontFamily: 'sans-serif',
-                        ),
-                      ),
-                      const SizedBox(width: 12),
                       Expanded(
                         child: Align(
-                          alignment: Alignment.centerRight,
+                          alignment: Alignment.center,
                           child: SizedBox(
                             width: isMobile ? null : 700,
                             child: TabBar(

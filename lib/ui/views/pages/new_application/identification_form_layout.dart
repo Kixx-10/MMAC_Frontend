@@ -27,6 +27,8 @@ class IdentificationFormLayout extends ConsumerStatefulWidget {
   final Function(String, dynamic) onValueChanged;
   final GlobalKey<FormState> formKey;
   final void Function(IdentificationFormLayoutInterface) onReady;
+  final VoidCallback onBackPressed;
+  final bool isUpdateMode;
 
   const IdentificationFormLayout({
     super.key,
@@ -36,6 +38,8 @@ class IdentificationFormLayout extends ConsumerStatefulWidget {
     required this.onValueChanged,
     required this.formKey,
     required this.onReady,
+    required this.onBackPressed,
+    required this.isUpdateMode,
   });
 
   @override
@@ -320,6 +324,20 @@ class _IdentificationFormLayoutState
       );
     }
 
+    // ⏳ Passport Date Relationship Boundaries
+    final DateTime today = DateTime.now();
+    final DateTime? issued = widget.values['issuedDate'];
+    final DateTime? expiry = widget.values['expiryDate'];
+
+    // Issued Date cannot be in the future, and cannot be after the Expiry Date
+    DateTime maxIssuedDate = today;
+    if (expiry != null && expiry.isBefore(today)) {
+      maxIssuedDate = expiry;
+    }
+
+    // Expiry Date cannot be before the Issued Date
+    DateTime minExpiryDate = issued ?? DateTime(1900);
+
     // ─── COMPONENT EXTRACTION BLOCK ───
 
     final fullNameField = CustomTextField(
@@ -328,6 +346,7 @@ class _IdentificationFormLayoutState
       filter: [UpperCaseTextFormatter()],
       maxLength: 50,
       labelWidth: lw,
+      readonly: widget.isUpdateMode,
       validator: (v) => FormValidators.required(v, 'Full Name'),
       onChanged: (value) {
         widget.onValueChanged('fullName', value);
@@ -354,6 +373,7 @@ class _IdentificationFormLayoutState
       label: "Date of Birth",
       value: widget.values['dateOfBirth'],
       labelWidth: lw,
+      readOnly: widget.isUpdateMode,
       firstDate: DateTime(1900),
       lastDate: DateTime.now(),
       errorText: _showDateErrors && widget.values['dateOfBirth'] == null
@@ -374,6 +394,7 @@ class _IdentificationFormLayoutState
         label: "Country",
         value: widget.values['country'],
         hint: "Select Country",
+        readonly: isMyanmar || (widget.isUpdateMode && isMyanmar),
         labelWidth: lw,
         dialogWidth: 250,
         dialogHeight: 250,
@@ -411,6 +432,7 @@ class _IdentificationFormLayoutState
       controller: widget.controllers['email']!,
       labelWidth: lw,
       maxLength: 30,
+      readonly: widget.isUpdateMode && isMyanmar,
       validator: FormValidators.email,
       onChanged: (value) {
         widget.onValueChanged('email', value);
@@ -595,6 +617,7 @@ class _IdentificationFormLayoutState
       controller: widget.controllers['passportNumber']!,
       maxLength: 20,
       labelWidth: lw,
+      readonly: widget.isUpdateMode && !isMyanmar,
       validator: (v) => FormValidators.required(v, 'Passport Number'),
       onChanged: (value) {
         widget.onValueChanged('passportNumber', value);
@@ -606,12 +629,19 @@ class _IdentificationFormLayoutState
       value: widget.values['issuedDate'],
       labelWidth: lw,
       firstDate: DateTime(1900),
-      lastDate: DateTime.now(),
+      lastDate:
+          maxIssuedDate, // 🔒 Restricts issue date based on today & expiry date
       errorText: _showDateErrors && widget.values['issuedDate'] == null
           ? 'Issued Date is required'
           : null,
       onPicked: (d) {
         widget.onValueChanged('issuedDate', d);
+
+        // 🎯 Safety clear: If they pick an Issued Date that is after the current Expiry Date, clear the expiry date
+        if (expiry != null && d != null && expiry.isBefore(d)) {
+          widget.onValueChanged('expiryDate', null);
+        }
+
         if (!mounted) return;
         setState(() => _showDateErrors = false);
       },
@@ -621,11 +651,19 @@ class _IdentificationFormLayoutState
       label: "Expiry Date",
       value: widget.values['expiryDate'],
       labelWidth: lw,
-      firstDate: DateTime(1900),
+      firstDate:
+          minExpiryDate, // 🔒 Restricts expiry date to be on or after the issue date
       lastDate: DateTime(2100),
+      readOnly: widget.isUpdateMode && !isMyanmar,
       errorText: getExpiryErrorText(),
       onPicked: (d) {
         widget.onValueChanged('expiryDate', d);
+
+        // 🎯 Safety clear: If they pick an Expiry Date that is before the current Issued Date, clear the issue date
+        if (issued != null && d != null && d.isBefore(issued)) {
+          widget.onValueChanged('issuedDate', null);
+        }
+
         if (!mounted) return;
         setState(() => _showDateErrors = false);
       },
@@ -711,8 +749,18 @@ class _IdentificationFormLayoutState
             children: [
               NrcSelectorWidget(
                 isDesktop: isNrcRowDesktop,
-                selectedNrcStateCode: _selectedNrcStateCode,
-                selectedTownshipCode: _selectedTownshipCode,
+
+                // 🎯 THE FIX: Safe Contain Checks!
+                // This prevents the dropdown crash while it waits for the waterfall to load.
+                selectedNrcStateCode:
+                    stateList.any((s) => s.idCode == _selectedNrcStateCode)
+                    ? _selectedNrcStateCode
+                    : null,
+                selectedTownshipCode:
+                    townshipList.any((t) => t.idCode == _selectedTownshipCode)
+                    ? _selectedTownshipCode
+                    : null,
+
                 selectedNrcType: _selectedNrcType,
                 numberField: numberField,
                 hasError: _showNrcError,
@@ -878,9 +926,35 @@ class _IdentificationFormLayoutState
                 ],
               )
             : addressField, // Keeps standard layout for mobile screens
-
+        // 🟢 အောက်ပါ Code အသစ်ဖြင့် နေရာ (၂) ခုလုံးကို အစားထိုးလဲလှယ်လိုက်ပါ
         const SizedBox(height: 28),
-        widget.actionButtons,
+        Stack(
+          alignment: Alignment.centerLeft,
+          children: [
+            // မူလ Next Button ပါဝင်သော Row
+            widget.actionButtons,
+
+            // 🎯 Identification Form အတွက် သီးသန့်ဆောက်ထားသော Back Button အသစ်
+            ElevatedButton(
+              onPressed: widget.onBackPressed,
+              style: ElevatedButton.styleFrom(
+                backgroundColor: Colors.lightBlue.shade700,
+                foregroundColor: Colors.white,
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 32,
+                  vertical: 12,
+                ),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(8),
+                ),
+              ),
+              child: const Text(
+                'Back',
+                style: TextStyle(fontWeight: FontWeight.bold),
+              ),
+            ),
+          ],
+        ),
       ];
     } else {
       // 1:1 Match with "For Foreigner" Layout Checklist
@@ -896,8 +970,35 @@ class _IdentificationFormLayoutState
         pair(issuedDateField, expiryDateField),
         const SizedBox(height: 20),
         pair(addressField, visaNumberField), // Paired bottom row layout
+        // 🟢 အောက်ပါ Code အသစ်ဖြင့် နေရာ (၂) ခုလုံးကို အစားထိုးလဲလှယ်လိုက်ပါ
         const SizedBox(height: 28),
-        widget.actionButtons,
+        Stack(
+          alignment: Alignment.centerLeft,
+          children: [
+            // မူလ Next Button ပါဝင်သော Row
+            widget.actionButtons,
+
+            // 🎯 Identification Form အတွက် သီးသန့်ဆောက်ထားသော Back Button အသစ်
+            ElevatedButton(
+              onPressed: widget.onBackPressed,
+              style: ElevatedButton.styleFrom(
+                backgroundColor: Colors.lightBlue.shade700,
+                foregroundColor: Colors.white,
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 32,
+                  vertical: 12,
+                ),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(8),
+                ),
+              ),
+              child: const Text(
+                'Back',
+                style: TextStyle(fontWeight: FontWeight.bold),
+              ),
+            ),
+          ],
+        ),
       ];
     }
 

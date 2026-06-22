@@ -14,6 +14,7 @@ class CustomTextField extends StatelessWidget {
   final Widget? suffixIcon;
   final TextInputType? keyboardtype;
   final List<TextInputFormatter>? filter;
+  final bool readonly;
 
   const CustomTextField({
     super.key,
@@ -22,6 +23,7 @@ class CustomTextField extends StatelessWidget {
     this.labelWidth = 140,
     this.validator,
     this.maxLength,
+    this.readonly = false,
     this.onChanged,
     this.isRequired = true,
     this.hintText,
@@ -66,6 +68,7 @@ class CustomTextField extends StatelessWidget {
         SizedBox(width: spacing),
         Expanded(
           child: TextFormField(
+            readOnly: readonly,
             controller: controller,
             keyboardType: keyboardtype,
             validator: validator,
@@ -80,7 +83,7 @@ class CustomTextField extends StatelessWidget {
             decoration: InputDecoration(
               counterText: "",
               filled: true,
-              fillColor: Colors.white,
+              fillColor: readonly ? Colors.grey.shade200 : Colors.white,
               contentPadding: const EdgeInsets.symmetric(
                 horizontal: 16,
                 vertical: 12,

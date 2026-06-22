@@ -130,21 +130,6 @@ class LandingPage extends StatelessWidget {
           ),
           child: Column(
             children: [
-              Container(
-                padding: const EdgeInsets.symmetric(
-                  horizontal: 14,
-                  vertical: 6,
-                ),
-                decoration: BoxDecoration(
-                  color: Colors.white.withOpacity(0.15),
-                  borderRadius: BorderRadius.circular(20),
-                ),
-                child: const Text(
-                  '✓  Secure Verification Environment',
-                  style: TextStyle(color: Colors.white, fontSize: 12),
-                ),
-              ),
-              const SizedBox(height: 24),
               Text(
                 'Myanmar eArrival Information System',
                 style: TextStyle(

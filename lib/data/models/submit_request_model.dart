@@ -31,6 +31,12 @@ class SubmitRequestModel {
   final String previousCity;
   final String healthDeclaration;
   final String digitalDeclarations;
+  final String? modeOfTravelName;
+  final String? portOfArrivalName;
+  final String? stateRegionName;
+  final String? districtName;
+  final String? townshipName;
+
   SubmitRequestModel({
     required this.fullName,
     required this.gender,
@@ -42,6 +48,11 @@ class SubmitRequestModel {
     this.visaNo,
     this.nrc,
     this.fatherName,
+    this.modeOfTravelName,
+    this.portOfArrivalName,
+    this.stateRegionName,
+    this.districtName,
+    this.townshipName,
     required this.passportNo,
     required this.issuedCountryCode,
     required this.issuedDate,
@@ -134,6 +145,11 @@ class SubmitRequestModel {
       previousCity: json['previousCity'],
       healthDeclaration: json['healthDeclaration'],
       digitalDeclarations: json['digitalDeclarations'],
+      modeOfTravelName: json['modeOfTravelName'],
+      portOfArrivalName: json['portOfArrivalName'],
+      stateRegionName: json['stateRegionName'],
+      districtName: json['districtName'],
+      townshipName: json['townshipName'],
     );
   }
 }
