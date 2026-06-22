@@ -9,9 +9,10 @@ class CustomDropdownField extends StatefulWidget {
   final ValueChanged<String?> onChanged;
   final double labelWidth;
   final String? Function(String?)? validator;
-  final bool showSearch; 
-  final double? dialogHeight; 
-  final double? dialogWidth;  
+  final bool showSearch;
+  final double? dialogHeight;
+  final double? dialogWidth;
+  final bool readonly;
 
   const CustomDropdownField({
     super.key,
@@ -22,9 +23,11 @@ class CustomDropdownField extends StatefulWidget {
     required this.onChanged,
     this.labelWidth = 130,
     this.validator,
-    this.showSearch = true, 
-    this.dialogHeight, 
-    this.dialogWidth, this.spacing=8,  
+    this.showSearch = true,
+    this.dialogHeight,
+    this.dialogWidth,
+    this.readonly = false,
+    this.spacing = 8,
   });
 
   @override
@@ -32,7 +35,8 @@ class CustomDropdownField extends StatefulWidget {
 }
 
 class _CustomDropdownFieldState extends State<CustomDropdownField> {
-  final GlobalKey<FormFieldState<String>> _fieldKey = GlobalKey<FormFieldState<String>>();
+  final GlobalKey<FormFieldState<String>> _fieldKey =
+      GlobalKey<FormFieldState<String>>();
 
   @override
   void didUpdateWidget(covariant CustomDropdownField oldWidget) {
@@ -54,12 +58,12 @@ class _CustomDropdownFieldState extends State<CustomDropdownField> {
           title: widget.hint,
           items: widget.items,
           selectedValue: state.value,
-          showSearch: widget.showSearch, 
-          dialogHeight: widget.dialogHeight, 
-          dialogWidth: widget.dialogWidth,   
+          showSearch: widget.showSearch,
+          dialogHeight: widget.dialogHeight,
+          dialogWidth: widget.dialogWidth,
           onSelected: (newValue) {
-            state.didChange(newValue); 
-            widget.onChanged(newValue); 
+            state.didChange(newValue);
+            widget.onChanged(newValue);
           },
         );
       },
@@ -86,15 +90,18 @@ class _CustomDropdownFieldState extends State<CustomDropdownField> {
                 children: const [
                   TextSpan(
                     text: ' *',
-                    style: TextStyle(color: Colors.red, fontWeight: FontWeight.bold),
+                    style: TextStyle(
+                      color: Colors.red,
+                      fontWeight: FontWeight.bold,
+                    ),
                   ),
                 ],
               ),
             ),
           ),
         ),
-         SizedBox(width: widget.spacing),
-        
+        SizedBox(width: widget.spacing),
+
         Expanded(
           child: FormField<String>(
             key: _fieldKey,
@@ -108,17 +115,24 @@ class _CustomDropdownFieldState extends State<CustomDropdownField> {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   InkWell(
-                    onTap: () => _showSearchDialog(context, state),
+                    onTap: widget.readonly
+                        ? null
+                        : () => _showSearchDialog(context, state),
                     borderRadius: BorderRadius.circular(8),
                     child: Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 16,
+                        vertical: 12,
+                      ),
                       decoration: BoxDecoration(
                         color: Colors.white,
                         borderRadius: BorderRadius.circular(8),
                         border: Border.all(
-                          color: hasError 
-                              ? Colors.red 
-                              : (state.value != null ? Colors.grey.shade400 : Colors.grey.shade300),
+                          color: hasError
+                              ? Colors.red
+                              : (state.value != null
+                                    ? Colors.grey.shade400
+                                    : Colors.grey.shade300),
                           width: hasError ? 1.5 : 1,
                         ),
                       ),
@@ -130,15 +144,17 @@ class _CustomDropdownFieldState extends State<CustomDropdownField> {
                               state.value ?? widget.hint,
                               style: TextStyle(
                                 fontSize: 14,
-                                color: state.value != null ? Colors.black87 : Colors.grey.shade400,
+                                color: state.value != null
+                                    ? Colors.black87
+                                    : Colors.grey.shade400,
                               ),
                               overflow: TextOverflow.ellipsis,
                               maxLines: 1,
                             ),
                           ),
                           Icon(
-                            Icons.arrow_drop_down, 
-                            color: hasError ? Colors.red : Colors.grey.shade600, 
+                            Icons.arrow_drop_down,
+                            color: hasError ? Colors.red : Colors.grey.shade600,
                             size: 24,
                           ),
                         ],
@@ -168,9 +184,9 @@ class SearchPickerDialog extends StatefulWidget {
   final List<String> items;
   final String? selectedValue;
   final ValueChanged<String> onSelected;
-  final bool showSearch; 
-  final double? dialogHeight; 
-  final double? dialogWidth;  
+  final bool showSearch;
+  final double? dialogHeight;
+  final double? dialogWidth;
 
   const SearchPickerDialog({
     super.key,
@@ -178,9 +194,9 @@ class SearchPickerDialog extends StatefulWidget {
     required this.items,
     required this.selectedValue,
     required this.onSelected,
-    required this.showSearch, 
-    this.dialogHeight, 
-    this.dialogWidth,  
+    required this.showSearch,
+    this.dialogHeight,
+    this.dialogWidth,
   });
 
   @override
@@ -218,12 +234,17 @@ class _SearchPickerDialogState extends State<SearchPickerDialog> {
     return AlertDialog(
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
       title: Text(
-        widget.title, 
-        style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: Colors.black87),
+        widget.title,
+        style: const TextStyle(
+          fontSize: 16,
+          fontWeight: FontWeight.bold,
+          color: Colors.black87,
+        ),
       ),
       content: SizedBox(
-        width: widget.dialogWidth ?? (screenWidth > 600 ? 450 : screenWidth * 0.9),
-        height: widget.dialogHeight ?? (widget.showSearch ? 300 : 180), 
+        width:
+            widget.dialogWidth ?? (screenWidth > 600 ? 450 : screenWidth * 0.9),
+        height: widget.dialogHeight ?? (widget.showSearch ? 300 : 180),
         child: Column(
           children: [
             if (widget.showSearch) ...[
@@ -233,11 +254,22 @@ class _SearchPickerDialogState extends State<SearchPickerDialog> {
                 style: const TextStyle(fontSize: 14),
                 decoration: InputDecoration(
                   hintText: 'Search here...',
-                  hintStyle: TextStyle(color: Colors.grey.shade400, fontSize: 14),
-                  prefixIcon: const Icon(Icons.search, size: 20, color: Colors.grey),
+                  hintStyle: TextStyle(
+                    color: Colors.grey.shade400,
+                    fontSize: 14,
+                  ),
+                  prefixIcon: const Icon(
+                    Icons.search,
+                    size: 20,
+                    color: Colors.grey,
+                  ),
                   suffixIcon: _searchController.text.isNotEmpty
                       ? IconButton(
-                          icon: const Icon(Icons.clear, size: 18, color: Colors.grey),
+                          icon: const Icon(
+                            Icons.clear,
+                            size: 18,
+                            color: Colors.grey,
+                          ),
                           onPressed: () {
                             _searchController.clear();
                             _filterList('');
@@ -251,18 +283,21 @@ class _SearchPickerDialogState extends State<SearchPickerDialog> {
                   ),
                   focusedBorder: OutlineInputBorder(
                     borderRadius: BorderRadius.circular(8),
-                    borderSide: const BorderSide(color: Colors.blue, width: 1.5),
+                    borderSide: const BorderSide(
+                      color: Colors.blue,
+                      width: 1.5,
+                    ),
                   ),
                 ),
               ),
               const SizedBox(height: 12),
             ],
-            
+
             Expanded(
               child: _filteredItems.isEmpty
                   ? const Center(
                       child: Text(
-                        'No results found.', 
+                        'No results found.',
                         style: TextStyle(color: Colors.grey, fontSize: 14),
                       ),
                     )
@@ -273,14 +308,22 @@ class _SearchPickerDialogState extends State<SearchPickerDialog> {
                         final isSelected = item == widget.selectedValue;
                         return ListTile(
                           title: Text(
-                            item, 
+                            item,
                             style: TextStyle(
-                              fontSize: 14, 
+                              fontSize: 14,
                               color: isSelected ? Colors.blue : Colors.black87,
-                              fontWeight: isSelected ? FontWeight.w600 : FontWeight.normal,
+                              fontWeight: isSelected
+                                  ? FontWeight.w600
+                                  : FontWeight.normal,
                             ),
                           ),
-                          trailing: isSelected ? const Icon(Icons.check, color: Colors.blue, size: 20) : null,
+                          trailing: isSelected
+                              ? const Icon(
+                                  Icons.check,
+                                  color: Colors.blue,
+                                  size: 20,
+                                )
+                              : null,
                           onTap: () {
                             widget.onSelected(item);
                             Navigator.pop(context);
@@ -295,8 +338,11 @@ class _SearchPickerDialogState extends State<SearchPickerDialog> {
       actions: [
         TextButton(
           onPressed: () => Navigator.pop(context),
-          child: const Text('Close', style: TextStyle(color: Colors.grey, fontSize: 14)),
-        )
+          child: const Text(
+            'Close',
+            style: TextStyle(color: Colors.grey, fontSize: 14),
+          ),
+        ),
       ],
     );
   }

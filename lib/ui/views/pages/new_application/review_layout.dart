@@ -6,14 +6,16 @@ class ReviewLayout extends StatelessWidget {
   final Map<String, TextEditingController> controllers;
   final Map<String, dynamic> values;
   final Widget actionButtons;
-  final Function(int targetStep) onEditRequested; 
+  final Function(int targetStep) onEditRequested;
+  final bool isUpdateMode;
 
   const ReviewLayout({
     super.key,
     required this.controllers,
     required this.values,
     required this.actionButtons,
-    required this.onEditRequested, 
+    required this.onEditRequested,
+    required this.isUpdateMode,
   });
 
   String _formatDate(dynamic date) {
@@ -26,7 +28,7 @@ class ReviewLayout extends StatelessWidget {
     return date.toString();
   }
 
-  // ── Modern Information Grid Block 
+  // ── Modern Information Grid Block
   Widget _reviewTile(String label, String value) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -35,8 +37,8 @@ class ReviewLayout extends StatelessWidget {
         Text(
           label.toUpperCase(),
           style: TextStyle(
-            fontSize: 11, 
-            fontWeight: FontWeight.w600, 
+            fontSize: 11,
+            fontWeight: FontWeight.w600,
             color: Colors.grey.shade500,
             letterSpacing: 0.5,
           ),
@@ -45,8 +47,8 @@ class ReviewLayout extends StatelessWidget {
         Text(
           value.isEmpty ? '—' : value,
           style: const TextStyle(
-            fontSize: 14, 
-            fontWeight: FontWeight.w600, 
+            fontSize: 14,
+            fontWeight: FontWeight.w600,
             color: Colors.black87,
           ),
           maxLines: 2,
@@ -56,11 +58,11 @@ class ReviewLayout extends StatelessWidget {
     );
   }
 
-  // ── Premium Card Section Header 
+  // ── Premium Card Section Header
   Widget _sectionBlock({
-    required String title, 
-    required IconData icon, 
-    required int step, 
+    required String title,
+    required IconData icon,
+    required int step,
     required List<Widget> children,
   }) {
     return Container(
@@ -98,8 +100,8 @@ class ReviewLayout extends StatelessWidget {
                 Text(
                   title,
                   style: const TextStyle(
-                    fontSize: 15, 
-                    fontWeight: FontWeight.bold, 
+                    fontSize: 15,
+                    fontWeight: FontWeight.bold,
                     color: Colors.black87,
                   ),
                 ),
@@ -108,10 +110,16 @@ class ReviewLayout extends StatelessWidget {
                   onPressed: () => onEditRequested(step),
                   style: TextButton.styleFrom(
                     foregroundColor: Colors.blue.shade700,
-                    padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 12,
+                      vertical: 4,
+                    ),
                   ),
                   icon: const Icon(Icons.edit_outlined, size: 14),
-                  label: const Text("Edit", style: TextStyle(fontSize: 13, fontWeight: FontWeight.w600)),
+                  label: const Text(
+                    "Edit",
+                    style: TextStyle(fontSize: 13, fontWeight: FontWeight.w600),
+                  ),
                 ),
               ],
             ),
@@ -138,12 +146,12 @@ class ReviewLayout extends StatelessWidget {
     );
   }
 
-  // ── Modern Declaration Block 
+  // ── Modern Declaration Block
   Widget _declarationCard(String label, String? value) {
     final bool isYes = value == 'Yes';
     final color = isYes ? Colors.red.shade700 : Colors.green.shade700;
-    final bg    = isYes ? Colors.red.shade50 : Colors.green.shade50;
-    final text  = value ?? '—';
+    final bg = isYes ? Colors.red.shade50 : Colors.green.shade50;
+    final text = value ?? '—';
 
     return Container(
       margin: const EdgeInsets.only(bottom: 12),
@@ -160,8 +168,8 @@ class ReviewLayout extends StatelessWidget {
             child: Text(
               label,
               style: const TextStyle(
-                fontSize: 13, 
-                fontWeight: FontWeight.w500, 
+                fontSize: 13,
+                fontWeight: FontWeight.w500,
                 color: Colors.black87,
                 height: 1.4,
               ),
@@ -171,14 +179,19 @@ class ReviewLayout extends StatelessWidget {
           Container(
             padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 6),
             decoration: BoxDecoration(
-              color: bg, 
+              color: bg,
               borderRadius: BorderRadius.circular(8),
               // ignore: deprecated_member_use
               border: Border.all(color: color.withOpacity(0.1)),
             ),
             child: Text(
-              text.toUpperCase(), 
-              style: TextStyle(fontSize: 11, fontWeight: FontWeight.bold, color: color, letterSpacing: 0.5),
+              text.toUpperCase(),
+              style: TextStyle(
+                fontSize: 11,
+                fontWeight: FontWeight.bold,
+                color: color,
+                letterSpacing: 0.5,
+              ),
             ),
           ),
         ],
@@ -188,7 +201,8 @@ class ReviewLayout extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final bool isMyanmar = values['country'] == 'Myanmar' || values['country'] == 'MMR';
+    final bool isMyanmar =
+        values['country'] == 'Myanmar' || values['country'] == 'MMR';
 
     // 🎯 Dynamically generate Trip Details widgets list to avoid empty slots or broken UI grids
     final List<Widget> tripDetailsTiles = [
@@ -197,12 +211,17 @@ class ReviewLayout extends StatelessWidget {
       _reviewTile('Port of Arrival', values['portOfArrival'] ?? ''),
       _reviewTile('Vehicle Number', controllers['vehicleNumber']?.text ?? ''),
       _reviewTile('Vehicle Name', controllers['vehicleName']?.text ?? ''),
-      if (!isMyanmar) _reviewTile('Accommodation', values['accommodation'] ?? '—'),
-      _reviewTile('Address in Myanmar', controllers['addressInMyanmar']?.text ?? ''),
+      if (!isMyanmar)
+        _reviewTile('Accommodation', values['accommodation'] ?? '—'),
+      _reviewTile(
+        'Address in Myanmar',
+        controllers['addressInMyanmar']?.text ?? '',
+      ),
       _reviewTile('State/Region', values['stateRegion'] ?? ''),
       _reviewTile('District', values['district'] ?? ''),
       _reviewTile('Township', values['township'] ?? ''),
-      if (isMyanmar) _reviewTile('Mobile (MM)', controllers['mobileNumberMM']?.text ?? ''),
+      if (isMyanmar)
+        _reviewTile('Mobile (MM)', controllers['mobileNumberMM']?.text ?? ''),
       _reviewTile('Purpose of Visit', values['purposeOfVisit'] ?? ''),
       _reviewTile('Previous City', controllers['previousCity']?.text ?? ''),
     ];
@@ -222,7 +241,11 @@ class ReviewLayout extends StatelessWidget {
           child: Row(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Icon(Icons.verified_user_outlined, color: Colors.blue.shade800, size: 20),
+              Icon(
+                Icons.verified_user_outlined,
+                color: Colors.blue.shade800,
+                size: 20,
+              ),
               const SizedBox(width: 12),
               const Expanded(
                 child: Column(
@@ -230,12 +253,20 @@ class ReviewLayout extends StatelessWidget {
                   children: [
                     Text(
                       'Review Application Details',
-                      style: TextStyle(fontSize: 14, fontWeight: FontWeight.bold, color: Color(0xFF003366)),
+                      style: TextStyle(
+                        fontSize: 14,
+                        fontWeight: FontWeight.bold,
+                        color: Color(0xFF003366),
+                      ),
                     ),
                     SizedBox(height: 2),
                     Text(
                       'Please double-check all fields below. You can update any step before final submission.',
-                      style: TextStyle(fontSize: 12, color: Color(0xFF335577), height: 1.3),
+                      style: TextStyle(
+                        fontSize: 12,
+                        color: Color(0xFF335577),
+                        height: 1.3,
+                      ),
                     ),
                   ],
                 ),
@@ -245,10 +276,10 @@ class ReviewLayout extends StatelessWidget {
         ),
         const SizedBox(height: 24),
 
-        // ══ STEP 1: Personal Information 
+        // ══ STEP 1: Personal Information
         _sectionBlock(
-          title: 'Personal Information', 
-          icon: Icons.person_outline_rounded, 
+          title: 'Personal Information',
+          icon: Icons.person_outline_rounded,
           step: 1,
           children: [
             _reviewTile('Full Name', controllers['fullName']?.text ?? ''),
@@ -257,14 +288,17 @@ class ReviewLayout extends StatelessWidget {
             _reviewTile('Country', values['country'] ?? ''),
             _reviewTile('Email', controllers['email']?.text ?? ''),
             _reviewTile('Mobile Number', controllers['mobile']?.text ?? ''),
-           if (values['country'] != 'Myanmar') ...[
-          _reviewTile('Visa Number', controllers['visaNumber']?.text ?? ''),
-              ],
+            if (values['country'] != 'Myanmar') ...[
+              _reviewTile('Visa Number', controllers['visaNumber']?.text ?? ''),
+            ],
             if (values['country'] == 'Myanmar') ...[
-               _reviewTile('NRC', controllers['nrc']?.text ?? ''),
-                _reviewTile('Father Name', controllers['fatherName']?.text ?? ''),
-              ],
-            _reviewTile('Passport Number', controllers['passportNumber']?.text ?? ''),
+              _reviewTile('NRC', controllers['nrc']?.text ?? ''),
+              _reviewTile('Father Name', controllers['fatherName']?.text ?? ''),
+            ],
+            _reviewTile(
+              'Passport Number',
+              controllers['passportNumber']?.text ?? '',
+            ),
             _reviewTile('Issued Date', _formatDate(values['issuedDate'])),
             _reviewTile('Expiry Date', _formatDate(values['expiryDate'])),
             _reviewTile('Issued Country', values['issuedCountry'] ?? ''),
@@ -274,10 +308,11 @@ class ReviewLayout extends StatelessWidget {
 
         // ══ STEP 2: Trip Details ═════════════════════════════════════════════
         _sectionBlock(
-          title: 'Trip Details', 
-          icon: Icons.local_airport_outlined, 
+          title: 'Trip Details',
+          icon: Icons.local_airport_outlined,
           step: 2,
-          children: tripDetailsTiles, // 🎯 Clean list without conditional index bugs
+          children:
+              tripDetailsTiles, // 🎯 Clean list without conditional index bugs
         ),
 
         // ══ STEP 3: Health & Declarations ════════════════════════════════════
@@ -309,19 +344,35 @@ class ReviewLayout extends StatelessWidget {
                         color: Colors.green.shade50,
                         borderRadius: BorderRadius.circular(10),
                       ),
-                      child: Icon(Icons.health_and_safety_outlined, color: Colors.green.shade700, size: 18),
+                      child: Icon(
+                        Icons.health_and_safety_outlined,
+                        color: Colors.green.shade700,
+                        size: 18,
+                      ),
                     ),
                     const SizedBox(width: 12),
                     const Text(
                       'Health & Declarations',
-                      style: TextStyle(fontSize: 15, fontWeight: FontWeight.bold, color: Colors.black87),
+                      style: TextStyle(
+                        fontSize: 15,
+                        fontWeight: FontWeight.bold,
+                        color: Colors.black87,
+                      ),
                     ),
                     const Spacer(),
                     TextButton.icon(
                       onPressed: () => onEditRequested(3),
-                      style: TextButton.styleFrom(foregroundColor: Colors.blue.shade700),
+                      style: TextButton.styleFrom(
+                        foregroundColor: Colors.blue.shade700,
+                      ),
                       icon: const Icon(Icons.edit_outlined, size: 14),
-                      label: const Text("Edit", style: TextStyle(fontSize: 13, fontWeight: FontWeight.w600)),
+                      label: const Text(
+                        "Edit",
+                        style: TextStyle(
+                          fontSize: 13,
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
                     ),
                   ],
                 ),
@@ -331,8 +382,14 @@ class ReviewLayout extends StatelessWidget {
                 padding: const EdgeInsets.all(16),
                 child: Column(
                   children: [
-                    _declarationCard('Fever, cough, sore throat or shortness of breath in past 14 days?', values['hasSymptoms']),
-                    _declarationCard('Carrying prohibited or restricted items?', values['carryingRestricted']),
+                    _declarationCard(
+                      'Fever, cough, sore throat or shortness of breath in past 14 days?',
+                      values['hasSymptoms'],
+                    ),
+                    _declarationCard(
+                      'Carrying prohibited or restricted items?',
+                      values['carryingRestricted'],
+                    ),
                   ],
                 ),
               ),

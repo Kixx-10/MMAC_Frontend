@@ -17,7 +17,7 @@ class ResidencyLayout extends StatelessWidget {
             children: [
               const SizedBox(height: 40),
 
-              // 📦 --- MAIN SELECTION BOX ---
+              //  --- MAIN SELECTION BOX ---
               Container(
                 width: 950,
                 padding: const EdgeInsets.symmetric(
@@ -60,8 +60,8 @@ class ResidencyLayout extends StatelessWidget {
                             children: [
                               ResidencySelectorCard(
                                 title: "Myanmar Citizen /\nPermanent Resident",
-                                imagePath: "assets/images/nrc.jpg", 
-                                onTap: () => onResidencySelected('Myanmar'), 
+                                imagePath: "assets/images/nrc.jpg",
+                                onTap: () => onResidencySelected('Myanmar'),
                               ),
                               const SizedBox(width: 32),
                               ResidencySelectorCard(

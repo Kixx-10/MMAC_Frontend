@@ -19,6 +19,8 @@ class TripFormLayout extends ConsumerStatefulWidget {
   final Widget actionButtons;
   final Function(String, dynamic) onValueChanged;
   final void Function(TripFormLayoutInterface) onReady;
+  final bool isUpdateMode;
+
   const TripFormLayout({
     super.key,
     required this.controllers,
@@ -26,6 +28,7 @@ class TripFormLayout extends ConsumerStatefulWidget {
     required this.actionButtons,
     required this.onValueChanged,
     required this.onReady,
+    required this.isUpdateMode,
   });
 
   @override
@@ -47,6 +50,7 @@ class _TripFormLayoutState extends ConsumerState<TripFormLayout>
   void initState() {
     super.initState();
     widget.onReady(this);
+
     // Purpose Session Restore
     if (widget.values['purposeOfVisit'] != null &&
         ![
@@ -58,7 +62,8 @@ class _TripFormLayoutState extends ConsumerState<TripFormLayout>
         widget.values['purposeOfVisit'].toString().isNotEmpty) {
       _otherPurposeController.text = widget.values['purposeOfVisit'];
     }
-    // accommodation restore
+
+    // Accommodation Session Restore
     if (widget.values['accommodation'] != null &&
         ![
           "Hotel",
@@ -72,48 +77,115 @@ class _TripFormLayoutState extends ConsumerState<TripFormLayout>
         widget.values['accommodation'].toString().isNotEmpty) {
       _otherAccommodationController.text = widget.values['accommodation'];
     }
+
     Future.microtask(() async {
       if (!mounted) return;
-      _loadPurposeFromJson();
-      _loadAccommodationFromJson();
+
+      // 1. Load basic dropdown data
+      await _loadPurposeFromJson();
+      await _loadAccommodationFromJson();
+
+      // 2. Trigger the cascading auto-population (Name-to-ID Reverse Lookup)
+      await _restoreWaterfallData();
+    });
+  }
+
+  // 🌊 THE NAME-TO-ID REVERSE LOOKUP WATERFALL
+  Future<void> _restoreWaterfallData() async {
+    // --- 1. RESTORE TRAVEL MODE & PORT ---
+    String? targetModeName = widget.values['modeOfTravel'];
+
+    if (targetModeName != null) {
+      final modeId = targetModeName == "Land"
+          ? 2
+          : targetModeName == "Sea"
+          ? 3
+          : 1;
+      widget.onValueChanged(
+        'modeOfTravelId',
+        modeId,
+      ); // 🎯 Secure the ID for final submission
+
+      await ref
+          .read(portOfArrivalProvider.notifier)
+          .loadPortOfArrrivalByModeId(modeId);
+
+      String? targetPortName = widget.values['portOfArrival'];
+      if (targetPortName != null) {
+        final portState = ref.read(portOfArrivalProvider).valueOrNull;
+        if (portState != null) {
+          try {
+            final p = portState.portOfArrivalList.firstWhere(
+              (port) => port.portOfArrivalName == targetPortName,
+            );
+            widget.onValueChanged(
+              'portOfArrivalId',
+              p.portOfArrivalId,
+            ); // 🎯 Secure the ID
+          } catch (_) {}
+        }
+      }
+    }
+
+    // --- 2. RESTORE LOCATIONS CASCADING ---
+    var locState = await ref.read(locationProvider.future);
+    if (locState.allStates.isEmpty) {
+      await ref.read(locationProvider.notifier).retry();
+      locState = await ref.read(locationProvider.future);
+    }
+    if (!mounted || locState.allStates.isEmpty) return;
+
+    // STEP A: Select State & Look up ID
+    String? targetStateName = widget.values['stateRegion'];
+    if (targetStateName != null) {
       try {
-        final currentMode = widget.values['modeOfTravel'];
-        final modeId = currentMode == "Land"
-            ? 2
-            : currentMode == "Sea"
-            ? 3
-            : 1;
-        ref
-            .read(portOfArrivalProvider.notifier)
-            .loadPortOfArrrivalByModeId(modeId);
+        final s = locState.allStates.firstWhere(
+          (st) => st.name == targetStateName,
+        );
+        widget.onValueChanged('stateRegionId', s.id); // 🎯 Secure the ID
       } catch (_) {}
 
-      try {
-        var locState = await ref.read(locationProvider.future);
-        if (locState.allStates.isEmpty) {
-          await ref.read(locationProvider.notifier).retry();
-          locState = await ref.read(locationProvider.future);
+      // Tell Riverpod to filter districts for this state
+      ref.read(locationProvider.notifier).selectState(targetStateName);
+
+      // STEP B: Select District & Look up ID
+      String? targetDistrictName = widget.values['district'];
+      if (targetDistrictName != null) {
+        try {
+          final s = locState.allStates.firstWhere(
+            (st) => st.name == targetStateName,
+          );
+          final d = s.districts.firstWhere(
+            (dst) => dst.name == targetDistrictName,
+          );
+          widget.onValueChanged('districtId', d.districtId); // 🎯 Secure the ID
+        } catch (_) {}
+
+        // Tell Riverpod to filter townships for this district
+        ref.read(locationProvider.notifier).selectDistrict(targetDistrictName);
+
+        // STEP C: Select Township & Look up ID
+        String? targetTownshipName = widget.values['township'];
+        if (targetTownshipName != null) {
+          try {
+            final s = locState.allStates.firstWhere(
+              (st) => st.name == targetStateName,
+            );
+            final d = s.districts.firstWhere(
+              (dst) => dst.name == targetDistrictName,
+            );
+            final t = d.townships.firstWhere(
+              (twn) => twn.name == targetTownshipName,
+            );
+            widget.onValueChanged('townshipId', t.id); // 🎯 Secure the ID
+          } catch (_) {}
+
+          ref
+              .read(locationProvider.notifier)
+              .selectTownship(targetTownshipName);
         }
-        if (mounted && locState.allStates.isNotEmpty) {
-          final savedState = widget.values['stateRegion'];
-          final savedDistrict = widget.values['district'];
-          final savedTownship = widget.values['township'];
-          if (savedState != null) {
-            ref.read(locationProvider.notifier).selectState(savedState);
-            if (savedDistrict != null) {
-              ref.read(locationProvider.notifier).selectDistrict(savedDistrict);
-              if (savedTownship != null) {
-                ref
-                    .read(locationProvider.notifier)
-                    .selectTownship(savedTownship);
-              }
-            }
-          }
-        }
-      } catch (e) {
-        debugPrint("❌ Location Restore Error: $e");
       }
-    });
+    }
   }
 
   @override
@@ -426,6 +498,7 @@ class _TripFormLayoutState extends ConsumerState<TripFormLayout>
                   label: "Arrival Date",
                   value: widget.values['arrivalDate'],
                   firstDate: DateTime.now(),
+                  readOnly: widget.isUpdateMode,
                   lastDate: DateTime.now().add(const Duration(days: 3)),
                   errorText:
                       _showDateErrors && widget.values['arrivalDate'] == null
