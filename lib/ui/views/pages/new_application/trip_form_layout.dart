@@ -499,7 +499,7 @@ class _TripFormLayoutState extends ConsumerState<TripFormLayout>
                   value: widget.values['arrivalDate'],
                   firstDate: DateTime.now(),
                   readOnly: widget.isUpdateMode,
-                  lastDate: DateTime.now().add(const Duration(days: 3)),
+                  lastDate: DateTime.now().add(const Duration(days: 2)),
                   errorText:
                       _showDateErrors && widget.values['arrivalDate'] == null
                       ? 'Arrival Date is required'

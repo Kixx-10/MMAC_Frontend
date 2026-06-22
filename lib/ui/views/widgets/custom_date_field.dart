@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 
-class CustomDateField extends StatelessWidget {
+class CustomDateField extends StatefulWidget {
   final String label;
   final DateTime? value;
   final DateTime firstDate;
@@ -21,6 +21,13 @@ class CustomDateField extends StatelessWidget {
     this.errorText,
     this.readOnly = false,
   });
+
+  @override
+  State<CustomDateField> createState() => _CustomDateFieldState();
+}
+
+class _CustomDateFieldState extends State<CustomDateField> {
+  OverlayEntry? _overlayEntry;
 
   String _formatDate(DateTime date) {
     const months = [
@@ -43,43 +50,94 @@ class CustomDateField extends StatelessWidget {
     return "$day $month $year";
   }
 
-  Future<void> _selectDate(BuildContext context) async {
-    DateTime initialDate = value ?? DateTime.now();
-    if (initialDate.isBefore(firstDate)) initialDate = firstDate;
-    if (initialDate.isAfter(lastDate)) initialDate = lastDate;
+  void _toggleOverlay() {
+    if (_overlayEntry == null) {
+      // 🎯 STEP 1: Find the exact absolute screen position of this widget row
+      final RenderBox? renderBox = context.findRenderObject() as RenderBox?;
+      if (renderBox == null || !renderBox.attached) return;
 
-    final DateTime? picked = await showDatePicker(
-      context: context,
-      initialDate: initialDate,
-      firstDate: firstDate,
-      lastDate: lastDate,
-      builder: (context, child) {
-        return Theme(
-          data: Theme.of(context).copyWith(
-            colorScheme: const ColorScheme.light(
-              primary: Colors.blue,
-              onPrimary: Colors.white,
-              onSurface: Colors.black87,
-            ),
-            textButtonTheme: TextButtonThemeData(
-              style: TextButton.styleFrom(foregroundColor: Colors.blue),
+      final Offset fieldPosition = renderBox.localToGlobal(Offset.zero);
+
+      _overlayEntry = _createOverlayEntry(fieldPosition);
+      Overlay.of(context).insert(_overlayEntry!);
+    } else {
+      _closeOverlay();
+    }
+  }
+
+  void _closeOverlay() {
+    _overlayEntry?.remove();
+    _overlayEntry = null;
+  }
+
+  OverlayEntry _createOverlayEntry(Offset fieldPosition) {
+    DateTime initialDate = widget.value ?? DateTime.now();
+    if (initialDate.isBefore(widget.firstDate)) initialDate = widget.firstDate;
+    if (initialDate.isAfter(widget.lastDate)) initialDate = widget.lastDate;
+
+    const double calendarHeight = 350;
+    const double gap = 4;
+
+    // 🎯 STEP 2: Calculate perfect absolute screen alignment coordinates
+    // Shift left past the label text + spacing width to match the box perfectly
+    final double leftPosition = fieldPosition.dx + widget.labelWidth + 8;
+    final double topPosition = fieldPosition.dy - calendarHeight - gap;
+
+    return OverlayEntry(
+      builder: (context) => Stack(
+        children: [
+          // Background listener to dismiss when clicking outside
+          Positioned.fill(
+            child: GestureDetector(
+              behavior: HitTestBehavior.translucent,
+              onTap: _closeOverlay,
+              child: Container(color: Colors.transparent),
             ),
           ),
-          child: child!,
-        );
-      },
+          // 🎯 STEP 3: Position using absolute screen coordinates to bypass Flutter link bugs
+          Positioned(
+            left: leftPosition,
+            top: topPosition,
+            width: 320,
+            height: calendarHeight,
+            child: Material(
+              elevation: 6,
+              shadowColor: Colors.black26,
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(12),
+                side: BorderSide(color: Colors.grey.shade300),
+              ),
+              color: Colors.white,
+              child: Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 4.0),
+                child: CalendarDatePicker(
+                  initialDate: initialDate,
+                  firstDate: widget.firstDate,
+                  lastDate: widget.lastDate,
+                  onDateChanged: (DateTime picked) {
+                    widget.onPicked(picked);
+                    _closeOverlay(); // Closes securely on selection
+                  },
+                ),
+              ),
+            ),
+          ),
+        ],
+      ),
     );
+  }
 
-    if (picked != null) {
-      onPicked(picked);
-    }
+  @override
+  void dispose() {
+    _closeOverlay();
+    super.dispose();
   }
 
   @override
   Widget build(BuildContext context) {
-    final bool hasError = errorText != null;
-    final String displayText = value != null
-        ? _formatDate(value!)
+    final bool hasError = widget.errorText != null;
+    final String displayText = widget.value != null
+        ? _formatDate(widget.value!)
         : "Select Date";
 
     return Row(
@@ -88,10 +146,10 @@ class CustomDateField extends StatelessWidget {
         Padding(
           padding: const EdgeInsets.only(top: 14),
           child: SizedBox(
-            width: labelWidth,
+            width: widget.labelWidth,
             child: RichText(
               text: TextSpan(
-                text: label,
+                text: widget.label,
                 style: const TextStyle(
                   fontSize: 14,
                   fontWeight: FontWeight.w500,
@@ -118,7 +176,7 @@ class CustomDateField extends StatelessWidget {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               InkWell(
-                onTap: readOnly ? null : () => _selectDate(context),
+                onTap: widget.readOnly ? null : _toggleOverlay,
                 borderRadius: BorderRadius.circular(8),
                 child: Container(
                   padding: const EdgeInsets.symmetric(
@@ -126,19 +184,19 @@ class CustomDateField extends StatelessWidget {
                     vertical: 12,
                   ),
                   decoration: BoxDecoration(
-                    // 🎯 1. BACKGROUND: Turn light grey if readOnly is true
-                    color: readOnly ? Colors.grey.shade200 : Colors.white,
+                    color: widget.readOnly
+                        ? Colors.grey.shade200
+                        : Colors.white,
                     borderRadius: BorderRadius.circular(8),
                     border: Border.all(
-                      // 🎯 2. BORDER: Keep it flat grey if readOnly, otherwise show normal/error states
-                      color: readOnly
+                      color: widget.readOnly
                           ? Colors.grey.shade300
                           : (hasError
                                 ? Colors.red
-                                : (value != null
+                                : (widget.value != null
                                       ? Colors.grey
                                       : Colors.grey.shade300)),
-                      width: hasError && !readOnly ? 1.5 : 1,
+                      width: hasError && !widget.readOnly ? 1.5 : 1,
                     ),
                   ),
                   child: Row(
@@ -148,19 +206,19 @@ class CustomDateField extends StatelessWidget {
                         displayText,
                         style: TextStyle(
                           fontSize: 14,
-                          // 🎯 3. TEXT: Fade the text out if it's readOnly
-                          color: readOnly
+                          color: widget.readOnly
                               ? Colors.grey.shade500
-                              : (value != null ? Colors.black87 : Colors.grey),
-                          fontWeight: value != null && !readOnly
+                              : (widget.value != null
+                                    ? Colors.black87
+                                    : Colors.grey),
+                          fontWeight: widget.value != null && !widget.readOnly
                               ? FontWeight.w500
                               : FontWeight.normal,
                         ),
                       ),
                       Icon(
                         Icons.calendar_month_outlined,
-                        // 🎯 4. ICON: Fade the calendar icon if readOnly
-                        color: readOnly
+                        color: widget.readOnly
                             ? Colors.grey
                             : (hasError ? Colors.red : Colors.grey.shade700),
                         size: 20,
@@ -173,7 +231,7 @@ class CustomDateField extends StatelessWidget {
                 Padding(
                   padding: const EdgeInsets.only(left: 12, top: 6),
                   child: Text(
-                    errorText!,
+                    widget.errorText!,
                     style: const TextStyle(fontSize: 12, color: Colors.red),
                   ),
                 ),
