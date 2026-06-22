@@ -6,7 +6,7 @@ class NrcSelectorWidget extends StatelessWidget {
   final String? selectedTownshipCode;
   final String? selectedNrcType;
   final Widget numberField;
-  final bool hasError; //  Error ရှိပါက အနီရောင် Border ပြောင်းရန် Flag
+  final bool hasError;
   final Function(int stateId, String stateIdCode) onStateChanged;
   final Function(String townshipIdCode) onTownshipChanged;
   final Function(String typeCode) onTypeChanged;
@@ -14,6 +14,9 @@ class NrcSelectorWidget extends StatelessWidget {
   final List<dynamic> townshipList;
   final List<Map<String, String>> nrcTypes;
   final int? activeStateId;
+
+  // 🎯 1. Added the readOnly flag
+  final bool readOnly;
 
   const NrcSelectorWidget({
     super.key,
@@ -30,13 +33,16 @@ class NrcSelectorWidget extends StatelessWidget {
     required this.townshipList,
     required this.nrcTypes,
     required this.activeStateId,
+    this.readOnly =
+        false, // Defaults to false so it doesn't break existing screens!
   });
 
+  // 🎯 2. Fade the vertical dividers if disabled
   Widget _divider({Color? color}) => Container(
-        width: 1,
-        height: 24,
-        color: color ?? Colors.grey.shade300,
-      );
+    width: 1,
+    height: 24,
+    color: color ?? (readOnly ? Colors.grey.shade200 : Colors.grey.shade300),
+  );
 
   Widget _dropdown<T>({
     required T? value,
@@ -50,15 +56,22 @@ class NrcSelectorWidget extends StatelessWidget {
         value: value,
         isExpanded: true,
         isDense: true,
-        icon: const Icon(Icons.arrow_drop_down, size: 18, color: Colors.black54),
-        style: const TextStyle(
+        // 🎯 3. Fade the arrow icon
+        icon: Icon(
+          Icons.arrow_drop_down,
+          size: 18,
+          color: readOnly ? Colors.grey.shade400 : Colors.black54,
+        ),
+        // 🎯 4. Fade the selected text
+        style: TextStyle(
           fontSize: 13,
-          color: Colors.black87,
-          fontWeight: FontWeight.w500,
+          color: readOnly ? Colors.grey.shade500 : Colors.black87,
+          fontWeight: readOnly ? FontWeight.normal : FontWeight.w500,
         ),
         hint: hint,
         items: items,
-        onChanged: onChanged,
+        // 🎯 5. Physically disable the dropdown from opening if readOnly is true
+        onChanged: readOnly ? null : onChanged,
         menuMaxHeight: 300,
       ),
     );
@@ -71,22 +84,18 @@ class NrcSelectorWidget extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final String? activeTownship = townshipList.any(
-      (ts) => ts.idCode == selectedTownshipCode,
-    )
+    final String? activeTownship =
+        townshipList.any((ts) => ts.idCode == selectedTownshipCode)
         ? selectedTownshipCode
         : null;
 
-    final String? activeType = nrcTypes.any(
-      (t) => t['code'] == selectedNrcType,
-    )
+    final String? activeType = nrcTypes.any((t) => t['code'] == selectedNrcType)
         ? selectedNrcType
         : null;
 
     final unifiedNrcRow = Row(
       children: [
         const SizedBox(width: 6),
-        // ၁။ တိုင်း/ပြည်နယ် ကုဒ်
         _dropdown<int>(
           value: activeStateId,
           width: 50,
@@ -101,9 +110,13 @@ class NrcSelectorWidget extends StatelessWidget {
             }
           },
         ),
-        _divider(color: hasError ? Colors.red.shade300 : null),
+        // 🎯 6. Ignore the red error state if the field is disabled
+        _divider(
+          color: readOnly
+              ? Colors.grey.shade200
+              : (hasError ? Colors.red.shade300 : null),
+        ),
 
-        // ၂။ မြို့နယ်အတိုကောက်
         const SizedBox(width: 4),
         _dropdown<String>(
           value: activeTownship,
@@ -119,42 +132,46 @@ class NrcSelectorWidget extends StatelessWidget {
             if (v != null) onTownshipChanged(v);
           },
         ),
-        _divider(color: hasError ? Colors.red.shade300 : null),
+        _divider(
+          color: readOnly
+              ? Colors.grey.shade200
+              : (hasError ? Colors.red.shade300 : null),
+        ),
 
-        // ၃။ အမျိုးအစား (နိုင်/ဧည့်/ပြု)
         const SizedBox(width: 6),
         _dropdown<String>(
           value: activeType,
           width: 50,
           hint: Text('နိုင်', style: TextStyle(color: Colors.grey.shade400)),
           items: nrcTypes.map<DropdownMenuItem<String>>((t) {
-            return DropdownMenuItem(
-              value: t['code'],
-              child: Text(t['label']!),
-            );
+            return DropdownMenuItem(value: t['code'], child: Text(t['label']!));
           }).toList(),
           onChanged: (v) {
             if (v != null) onTypeChanged(v);
           },
         ),
-        _divider(color: hasError ? Colors.red.shade300 : null),
-
-        // ၄။ နံပါတ်ရိုက်ထည့်မည့် အကွက်
-        Expanded(
-          flex: 1,
-          child: numberField,
+        _divider(
+          color: readOnly
+              ? Colors.grey.shade200
+              : (hasError ? Colors.red.shade300 : null),
         ),
+
+        Expanded(flex: 1, child: numberField),
       ],
     );
 
     return Container(
       height: 44,
       decoration: BoxDecoration(
-        color: Colors.white,
+        // 🎯 7. Apply the grey disabled background
+        color: readOnly ? Colors.grey.shade200 : Colors.white,
         borderRadius: BorderRadius.circular(8),
         border: Border.all(
-          color: hasError ? Colors.red.shade700 : Colors.grey.shade300,
-          width: hasError ? 1.5 : 1,
+          // 🎯 8. Apply the flat grey disabled border
+          color: readOnly
+              ? Colors.grey.shade300
+              : (hasError ? Colors.red.shade700 : Colors.grey.shade300),
+          width: hasError && !readOnly ? 1.5 : 1,
         ),
       ),
       child: unifiedNrcRow,
