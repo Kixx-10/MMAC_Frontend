@@ -731,7 +731,7 @@ class _IdentificationFormLayoutState
               ],
               style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w500),
               decoration: InputDecoration(
-                fillColor: Colors.grey,
+                fillColor: Colors.grey.shade200,
                 filled: widget.isUpdateMode && isMyanmar,
                 hintText: "၁၂၃၄၅၆",
                 hintStyle: TextStyle(color: Colors.grey.shade400, fontSize: 13),
