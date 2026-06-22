@@ -72,7 +72,19 @@ class CustomTextField extends StatelessWidget {
             controller: controller,
             keyboardType: keyboardtype,
             validator: validator,
-            inputFormatters: filter,
+
+            // 🎯 THE FIX: Injecting the space-blocking rules globally
+            inputFormatters: [
+              // 1. Prevents a space from being the very first character typed
+              FilteringTextInputFormatter.deny(RegExp(r'^ ')),
+
+              // 2. Prevents two or more spaces from being typed consecutively
+              FilteringTextInputFormatter.deny(RegExp(r' {2,}')),
+
+              // 3. Spreads any additional specific filters you pass from the parent widget
+              if (filter != null) ...filter!,
+            ],
+
             maxLength: maxLength,
             onChanged: onChanged,
             autovalidateMode: AutovalidateMode.onUserInteraction,

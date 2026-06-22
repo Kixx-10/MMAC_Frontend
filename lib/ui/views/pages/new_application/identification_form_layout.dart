@@ -326,6 +326,7 @@ class _IdentificationFormLayoutState
 
     // ⏳ Passport Date Relationship Boundaries
     final DateTime today = DateTime.now();
+    final DateTime? dob = widget.values['dateOfBirth'];
     final DateTime? issued = widget.values['issuedDate'];
     final DateTime? expiry = widget.values['expiryDate'];
 
@@ -334,6 +335,8 @@ class _IdentificationFormLayoutState
     if (expiry != null && expiry.isBefore(today)) {
       maxIssuedDate = expiry;
     }
+
+    DateTime minIssuedDate = dob ?? DateTime(1900);
 
     // Expiry Date cannot be before the Issued Date
     DateTime minExpiryDate = issued ?? DateTime(1900);
@@ -381,6 +384,12 @@ class _IdentificationFormLayoutState
           : null,
       onPicked: (d) {
         widget.onValueChanged('dateOfBirth', d);
+
+        // 🎯 Safety clear: If they change their DOB to a date AFTER their currently selected Issued Date, wipe the Issued Date!
+        if (issued != null && d != null && d.isAfter(issued)) {
+          widget.onValueChanged('issuedDate', null);
+        }
+
         if (!mounted) return;
         setState(() => _showDateErrors = false);
       },
@@ -394,7 +403,7 @@ class _IdentificationFormLayoutState
         label: "Country",
         value: widget.values['country'],
         hint: "Select Country",
-        readonly: (widget.isUpdateMode && !isMyanmar),
+        readonly: widget.isUpdateMode || isMyanmar,
         labelWidth: lw,
         dialogWidth: 250,
         dialogHeight: 250,
@@ -628,16 +637,16 @@ class _IdentificationFormLayoutState
       label: "Issued Date",
       value: widget.values['issuedDate'],
       labelWidth: lw,
-      firstDate: DateTime(1900),
-      lastDate:
-          maxIssuedDate, // 🔒 Restricts issue date based on today & expiry date
+      // 🎯 THE FIX: Force the calendar to disable dates before the DOB
+      firstDate: minIssuedDate,
+      lastDate: maxIssuedDate,
       errorText: _showDateErrors && widget.values['issuedDate'] == null
           ? 'Issued Date is required'
           : null,
       onPicked: (d) {
         widget.onValueChanged('issuedDate', d);
 
-        // 🎯 Safety clear: If they pick an Issued Date that is after the current Expiry Date, clear the expiry date
+        // Safety clear: If they pick an Issued Date that is after the current Expiry Date, clear the expiry date
         if (expiry != null && d != null && expiry.isBefore(d)) {
           widget.onValueChanged('expiryDate', null);
         }
@@ -693,7 +702,7 @@ class _IdentificationFormLayoutState
     );
 
     final addressField = CustomTextField(
-      label: "Place Of Residence",
+      label: "Place of Residence",
       controller: widget.controllers['address']!,
       labelWidth: lw,
       maxLength: 100,
@@ -710,11 +719,16 @@ class _IdentificationFormLayoutState
 
         Widget nrcFields() {
           final List<dynamic> stateList = nrcState?.nrcStateList ?? [];
-          final List<dynamic> townshipList =
-              nrcState?.availableNrcTownships ?? [];
+
+          final List<dynamic> townshipList = _selectedNrcStateCode != null
+              ? (nrcState?.availableNrcTownships ?? [])
+              : [];
+
           final int? currentProviderStateId = nrcState?.selectedNrcStateId;
+
           final int? activeStateId =
-              stateList.any((st) => st.id == currentProviderStateId)
+              (_selectedNrcStateCode != null &&
+                  stateList.any((st) => st.id == currentProviderStateId))
               ? currentProviderStateId
               : null;
 
@@ -724,14 +738,19 @@ class _IdentificationFormLayoutState
               controller: _nrcNumberController,
               keyboardType: TextInputType.number,
               readOnly: widget.isUpdateMode && isMyanmar,
-
               inputFormatters: [
                 FilteringTextInputFormatter.allow(RegExp(r'[\u1040-\u1049]')),
                 LengthLimitingTextInputFormatter(6),
               ],
-              style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w500),
+              style: TextStyle(
+                fontSize: 13,
+                fontWeight: FontWeight.w500,
+                color: (widget.isUpdateMode && isMyanmar)
+                    ? Colors.grey.shade500
+                    : Colors.black87,
+              ),
               decoration: InputDecoration(
-                fillColor: Colors.grey,
+                fillColor: Colors.grey.shade200,
                 filled: widget.isUpdateMode && isMyanmar,
                 hintText: "၁၂၃၄၅၆",
                 hintStyle: TextStyle(color: Colors.grey.shade400, fontSize: 13),
