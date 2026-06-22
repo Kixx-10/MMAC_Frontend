@@ -76,9 +76,9 @@ class CustomTextField extends StatelessWidget {
             maxLength: maxLength,
             onChanged: onChanged,
             autovalidateMode: AutovalidateMode.onUserInteraction,
-            style: const TextStyle(
+            style: TextStyle(
               fontWeight: FontWeight.w500,
-              color: Colors.black87,
+              color: readonly ? Colors.grey.shade500 : Colors.black87,
             ),
             decoration: InputDecoration(
               counterText: "",

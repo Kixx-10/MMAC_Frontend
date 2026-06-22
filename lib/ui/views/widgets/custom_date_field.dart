@@ -126,15 +126,19 @@ class CustomDateField extends StatelessWidget {
                     vertical: 12,
                   ),
                   decoration: BoxDecoration(
-                    color: Colors.white,
+                    // 🎯 1. BACKGROUND: Turn light grey if readOnly is true
+                    color: readOnly ? Colors.grey.shade200 : Colors.white,
                     borderRadius: BorderRadius.circular(8),
                     border: Border.all(
-                      color: hasError
-                          ? Colors.red
-                          : (value != null
-                                ? Colors.grey.shade400
-                                : Colors.grey.shade300),
-                      width: hasError ? 1.5 : 1,
+                      // 🎯 2. BORDER: Keep it flat grey if readOnly, otherwise show normal/error states
+                      color: readOnly
+                          ? Colors.grey.shade300
+                          : (hasError
+                                ? Colors.red
+                                : (value != null
+                                      ? Colors.grey
+                                      : Colors.grey.shade300)),
+                      width: hasError && !readOnly ? 1.5 : 1,
                     ),
                   ),
                   child: Row(
@@ -144,17 +148,21 @@ class CustomDateField extends StatelessWidget {
                         displayText,
                         style: TextStyle(
                           fontSize: 14,
-                          color: value != null
-                              ? Colors.black87
-                              : Colors.grey.shade400,
-                          fontWeight: value != null
+                          // 🎯 3. TEXT: Fade the text out if it's readOnly
+                          color: readOnly
+                              ? Colors.grey.shade500
+                              : (value != null ? Colors.black87 : Colors.grey),
+                          fontWeight: value != null && !readOnly
                               ? FontWeight.w500
                               : FontWeight.normal,
                         ),
                       ),
                       Icon(
                         Icons.calendar_month_outlined,
-                        color: hasError ? Colors.red : Colors.grey.shade600,
+                        // 🎯 4. ICON: Fade the calendar icon if readOnly
+                        color: readOnly
+                            ? Colors.grey
+                            : (hasError ? Colors.red : Colors.grey.shade700),
                         size: 20,
                       ),
                     ],
