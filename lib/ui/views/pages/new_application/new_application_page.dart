@@ -644,7 +644,11 @@ class _NewApplicationState extends ConsumerState<NewApplication>
                     color: Colors.white,
                   ),
                 )
-              : Text(currentStep == totalSteps ? 'Confirm & Submit' : 'Next'),
+              : Text(
+                  currentStep == totalSteps
+                      ? (widget.isUpdateMode ? 'Update' : 'Confirm & Submit')
+                      : 'Next',
+                ),
         ),
       ],
     );
@@ -666,8 +670,10 @@ class _NewApplicationState extends ConsumerState<NewApplication>
           values: _formValues,
           actionButtons: _buildActionButtons(),
           onValueChanged: _updateFormValue,
+          isUpdateMode: widget.isUpdateMode,
           formKey: _step1FormKey,
           onReady: (interfaceLayout) => _step1Interface = interfaceLayout,
+          onBackPressed: widget.onBackPressed ?? () {}, // 🟢 FIXED
         );
       case 2:
         return TripFormLayout(
@@ -675,6 +681,7 @@ class _NewApplicationState extends ConsumerState<NewApplication>
           values: _formValues,
           actionButtons: _buildActionButtons(),
           onValueChanged: _updateFormValue,
+          isUpdateMode: widget.isUpdateMode,
           onReady: (interfaceLayout) => _step2Interface = interfaceLayout,
         );
       case 3:
@@ -689,6 +696,7 @@ class _NewApplicationState extends ConsumerState<NewApplication>
           controllers: {..._step1Controllers, ..._step2Controllers},
           values: _formValues,
           actionButtons: _buildActionButtons(),
+          isUpdateMode: widget.isUpdateMode,
           onEditRequested: (step) {
             setState(() => currentStep = step);
             _saveCurrentSession();
@@ -768,20 +776,7 @@ class _NewApplicationState extends ConsumerState<NewApplication>
           child: Center(
             child: Column(
               children: [
-                //back button
-                if (widget.onBackPressed != null)
-                  Align(
-                    alignment: Alignment.centerLeft,
-                    child: TextButton.icon(
-                      onPressed: widget.onBackPressed,
-                      icon: const Icon(Icons.arrow_back),
-                      label: const Text("Change Residency"),
-                      style: TextButton.styleFrom(foregroundColor: Colors.red),
-                    ),
-                  ),
-
                 const SizedBox(height: 20),
-
                 //we will show form progress bar if current step is >1
                 if (currentStep > 0) ...[
                   const Padding(

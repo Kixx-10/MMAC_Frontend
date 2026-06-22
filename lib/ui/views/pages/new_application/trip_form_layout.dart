@@ -19,6 +19,8 @@ class TripFormLayout extends ConsumerStatefulWidget {
   final Widget actionButtons;
   final Function(String, dynamic) onValueChanged;
   final void Function(TripFormLayoutInterface) onReady;
+  final bool isUpdateMode;
+
   const TripFormLayout({
     super.key,
     required this.controllers,
@@ -26,6 +28,7 @@ class TripFormLayout extends ConsumerStatefulWidget {
     required this.actionButtons,
     required this.onValueChanged,
     required this.onReady,
+    required this.isUpdateMode,
   });
 
   @override
@@ -495,6 +498,7 @@ class _TripFormLayoutState extends ConsumerState<TripFormLayout>
                   label: "Arrival Date",
                   value: widget.values['arrivalDate'],
                   firstDate: DateTime.now(),
+                  readOnly: widget.isUpdateMode,
                   lastDate: DateTime.now().add(const Duration(days: 3)),
                   errorText:
                       _showDateErrors && widget.values['arrivalDate'] == null

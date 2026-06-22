@@ -8,6 +8,7 @@ class CustomDateField extends StatelessWidget {
   final ValueChanged<DateTime?> onPicked;
   final double labelWidth;
   final String? errorText;
+  final bool readOnly;
 
   const CustomDateField({
     super.key,
@@ -18,11 +19,24 @@ class CustomDateField extends StatelessWidget {
     required this.onPicked,
     this.labelWidth = 140,
     this.errorText,
+    this.readOnly = false,
   });
 
-  
   String _formatDate(DateTime date) {
-    const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+    const months = [
+      'Jan',
+      'Feb',
+      'Mar',
+      'Apr',
+      'May',
+      'Jun',
+      'Jul',
+      'Aug',
+      'Sep',
+      'Oct',
+      'Nov',
+      'Dec',
+    ];
     final day = date.day.toString().padLeft(2, '0');
     final month = months[date.month - 1];
     final year = date.year;
@@ -43,9 +57,9 @@ class CustomDateField extends StatelessWidget {
         return Theme(
           data: Theme.of(context).copyWith(
             colorScheme: const ColorScheme.light(
-              primary: Colors.blue,      
-              onPrimary: Colors.white,    
-              onSurface: Colors.black87,  
+              primary: Colors.blue,
+              onPrimary: Colors.white,
+              onSurface: Colors.black87,
             ),
             textButtonTheme: TextButtonThemeData(
               style: TextButton.styleFrom(foregroundColor: Colors.blue),
@@ -64,7 +78,9 @@ class CustomDateField extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final bool hasError = errorText != null;
-    final String displayText = value != null ? _formatDate(value!) : "Select Date";
+    final String displayText = value != null
+        ? _formatDate(value!)
+        : "Select Date";
 
     return Row(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -85,7 +101,10 @@ class CustomDateField extends StatelessWidget {
                 children: const [
                   TextSpan(
                     text: ' *',
-                    style: TextStyle(color: Colors.red, fontWeight: FontWeight.bold),
+                    style: TextStyle(
+                      color: Colors.red,
+                      fontWeight: FontWeight.bold,
+                    ),
                   ),
                 ],
               ),
@@ -99,17 +118,22 @@ class CustomDateField extends StatelessWidget {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               InkWell(
-                onTap: () => _selectDate(context),
+                onTap: readOnly ? null : () => _selectDate(context),
                 borderRadius: BorderRadius.circular(8),
                 child: Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 16,
+                    vertical: 12,
+                  ),
                   decoration: BoxDecoration(
                     color: Colors.white,
                     borderRadius: BorderRadius.circular(8),
                     border: Border.all(
                       color: hasError
                           ? Colors.red
-                          : (value != null ? Colors.grey.shade400 : Colors.grey.shade300),
+                          : (value != null
+                                ? Colors.grey.shade400
+                                : Colors.grey.shade300),
                       width: hasError ? 1.5 : 1,
                     ),
                   ),
@@ -120,12 +144,16 @@ class CustomDateField extends StatelessWidget {
                         displayText,
                         style: TextStyle(
                           fontSize: 14,
-                          color: value != null ? Colors.black87 : Colors.grey.shade400,
-                          fontWeight: value != null ? FontWeight.w500 : FontWeight.normal,
+                          color: value != null
+                              ? Colors.black87
+                              : Colors.grey.shade400,
+                          fontWeight: value != null
+                              ? FontWeight.w500
+                              : FontWeight.normal,
                         ),
                       ),
                       Icon(
-                        Icons.calendar_month_outlined, 
+                        Icons.calendar_month_outlined,
                         color: hasError ? Colors.red : Colors.grey.shade600,
                         size: 20,
                       ),
