@@ -10,12 +10,14 @@ class ResidencyLayout extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final double screenSize = MediaQuery.of(context).size.width;
+    final isMobile = screenSize < 500;
     return SafeArea(
       child: SingleChildScrollView(
         child: Center(
           child: Column(
             children: [
-              const SizedBox(height: 40),
+              isMobile ? const SizedBox() : const SizedBox(height: 40),
 
               //  --- MAIN SELECTION BOX ---
               Container(
@@ -43,11 +45,14 @@ class ResidencyLayout extends StatelessWidget {
                       ),
                     ),
                     const SizedBox(height: 8),
-                    const Text(
+                    Text(
                       "Please select your appropriate residency status to continue the application.",
-                      style: TextStyle(fontSize: 14, color: Colors.grey),
+                      style: const TextStyle(fontSize: 14, color: Colors.grey),
+                      textAlign: isMobile ? TextAlign.center : TextAlign.start,
                     ),
-                    const SizedBox(height: 32),
+                    isMobile
+                        ? const SizedBox(height: 18)
+                        : const SizedBox(height: 32),
 
                     LayoutBuilder(
                       builder: (context, constraints) {

@@ -448,29 +448,91 @@ class _IdentificationFormLayoutState
       },
     );
 
-    final mobileField = Row(
+    // Grab screen width, NOT the parent container width
+    final bool isMobileWidth = MediaQuery.of(context).size.width < 500;
+
+    //Extract the Label
+    final mobileLabel = Padding(
+      padding: EdgeInsets.only(
+        top: isMobileWidth ? 0 : 14,
+        bottom: isMobileWidth ? 8 : 0,
+      ),
+      child: SizedBox(
+        width: isMobileWidth ? double.infinity : lw,
+        child: RichText(
+          text: const TextSpan(
+            text: "Mobile Number",
+            style: TextStyle(
+              fontSize: 14,
+              fontWeight: FontWeight.w500,
+              color: Colors.black87,
+              fontFamily: 'sans-serif',
+            ),
+            children: [
+              TextSpan(
+                text: ' *',
+                style: TextStyle(
+                  color: Colors.red,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+
+    // 3. Extract the Inputs (Country Code + Text Field)
+    final mobileInputs = Row(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Padding(
-          padding: const EdgeInsets.only(top: 14),
-          child: SizedBox(
-            width: lw,
-            child: RichText(
-              text: const TextSpan(
-                text: "Mobile Number",
-                style: TextStyle(
-                  fontSize: 14,
-                  fontWeight: FontWeight.w500,
-                  color: Colors.black87,
-                  fontFamily: 'sans-serif',
+        SizedBox(
+          width: 80,
+          child: InkWell(
+            onTap: () {
+              showDialog<String>(
+                context: context,
+                builder: (context) => MobileCodeSearchDialog(
+                  countryCodes: _countryCodes,
+                  selectedValue: widget.values['mobileCode'],
                 ),
+              ).then((code) {
+                if (code != null) {
+                  widget.onValueChanged('mobileCode', code);
+                  _updateMobileControllerValue();
+                }
+              });
+            },
+            borderRadius: BorderRadius.circular(8),
+            child: Container(
+              height: 48,
+              padding: const EdgeInsets.symmetric(horizontal: 8),
+              alignment: Alignment.center,
+              decoration: BoxDecoration(
+                color: Colors.white,
+                borderRadius: BorderRadius.circular(8),
+                border: Border.all(color: Colors.grey.shade300, width: 1),
+              ),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
-                  TextSpan(
-                    text: ' *',
-                    style: TextStyle(
-                      color: Colors.red,
-                      fontWeight: FontWeight.bold,
+                  Expanded(
+                    child: Text(
+                      widget.values['mobileCode'] ?? "Code",
+                      style: TextStyle(
+                        fontSize: 13,
+                        color: widget.values['mobileCode'] != null
+                            ? Colors.black87
+                            : Colors.grey.shade400,
+                        fontWeight: FontWeight.w500,
+                      ),
+                      overflow: TextOverflow.ellipsis,
                     ),
+                  ),
+                  const Icon(
+                    Icons.arrow_drop_down,
+                    size: 18,
+                    color: Colors.black54,
                   ),
                 ],
               ),
@@ -479,131 +541,67 @@ class _IdentificationFormLayoutState
         ),
         const SizedBox(width: 8),
         Expanded(
-          child: Row(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              SizedBox(
-                width: 80,
-                child: InkWell(
-                  onTap: () {
-                    showDialog<String>(
-                      context: context,
-                      builder: (context) => MobileCodeSearchDialog(
-                        countryCodes: _countryCodes,
-                        selectedValue: widget.values['mobileCode'],
-                      ),
-                    ).then((code) {
-                      if (code != null) {
-                        widget.onValueChanged('mobileCode', code);
-                        _updateMobileControllerValue();
-                      }
-                    });
-                  },
-                  borderRadius: BorderRadius.circular(8),
-                  child: Container(
-                    height: 48,
-                    padding: const EdgeInsets.symmetric(horizontal: 8),
-                    alignment: Alignment.center,
-                    decoration: BoxDecoration(
-                      color: Colors.white,
-                      borderRadius: BorderRadius.circular(8),
-                      border: Border.all(color: Colors.grey.shade300, width: 1),
-                    ),
-                    child: Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                      children: [
-                        Expanded(
-                          child: Text(
-                            widget.values['mobileCode'] ?? "Code",
-                            style: TextStyle(
-                              fontSize: 13,
-                              color: widget.values['mobileCode'] != null
-                                  ? Colors.black87
-                                  : Colors.grey.shade400,
-                              fontWeight: FontWeight.w500,
-                            ),
-                            overflow: TextOverflow.ellipsis,
-                          ),
-                        ),
-                        const Icon(
-                          Icons.arrow_drop_down,
-                          size: 18,
-                          color: Colors.black54,
-                        ),
-                      ],
-                    ),
-                  ),
-                ),
-              ),
-              Expanded(
-                child: TextFormField(
-                  controller: _mobileNumberController,
-                  keyboardType: TextInputType.phone,
-                  inputFormatters: [
-                    FilteringTextInputFormatter.digitsOnly,
-                    LengthLimitingTextInputFormatter(15),
-                  ],
-                  style: const TextStyle(
-                    fontSize: 13,
-                    fontWeight: FontWeight.w500,
-                  ),
-                  decoration: InputDecoration(
-                    filled: true,
-                    fillColor: Colors.white,
-                    hintText: "Enter phone number",
-                    hintStyle: TextStyle(
-                      color: Colors.grey.shade400,
-                      fontSize: 13,
-                    ),
-                    contentPadding: const EdgeInsets.symmetric(
-                      horizontal: 10,
-                      vertical: 16,
-                    ),
-                    enabledBorder: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(8),
-                      borderSide: BorderSide(
-                        color: Colors.grey.shade300,
-                        width: 1,
-                      ),
-                    ),
-                    focusedBorder: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(8),
-                      borderSide: const BorderSide(
-                        color: Colors.blue,
-                        width: 1.5,
-                      ),
-                    ),
-                    errorBorder: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(8),
-                      borderSide: const BorderSide(color: Colors.red, width: 1),
-                    ),
-                    focusedErrorBorder: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(8),
-                      borderSide: const BorderSide(
-                        color: Colors.red,
-                        width: 1.5,
-                      ),
-                    ),
-                  ),
-                  onChanged: (v) => _updateMobileControllerValue(),
-                  validator: (v) {
-                    final String? code = widget.values['mobileCode'];
-                    final String number = _mobileNumberController.text;
-                    if (code == null) {
-                      return 'Please select country code';
-                    }
-                    if (number.isEmpty) {
-                      return 'Mobile Number is required';
-                    }
-                    return null;
-                  },
-                ),
-              ),
+          child: TextFormField(
+            controller: _mobileNumberController,
+            keyboardType: TextInputType.phone,
+            inputFormatters: [
+              FilteringTextInputFormatter.digitsOnly,
+              LengthLimitingTextInputFormatter(15),
             ],
+            style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w500),
+            decoration: InputDecoration(
+              filled: true,
+              fillColor: Colors.white,
+              hintText: "Enter phone number",
+              hintStyle: TextStyle(color: Colors.grey.shade400, fontSize: 13),
+              contentPadding: const EdgeInsets.symmetric(
+                horizontal: 10,
+                vertical: 16,
+              ),
+              enabledBorder: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(8),
+                borderSide: BorderSide(color: Colors.grey.shade300, width: 1),
+              ),
+              focusedBorder: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(8),
+                borderSide: const BorderSide(color: Colors.blue, width: 1.5),
+              ),
+              errorBorder: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(8),
+                borderSide: const BorderSide(color: Colors.red, width: 1),
+              ),
+              focusedErrorBorder: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(8),
+                borderSide: const BorderSide(color: Colors.red, width: 1.5),
+              ),
+            ),
+            onChanged: (v) => _updateMobileControllerValue(),
+            validator: (v) {
+              final String? code = widget.values['mobileCode'];
+              final String number = _mobileNumberController.text;
+              if (code == null) return 'Please select country code';
+              if (number.isEmpty) return 'Mobile Number is required';
+              return null;
+            },
           ),
         ),
       ],
     );
+
+    // 4. Final Assembled Field
+    final mobileField = isMobileWidth
+        ? Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [mobileLabel, mobileInputs],
+          )
+        : Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              mobileLabel,
+              const SizedBox(width: 8),
+              Expanded(child: mobileInputs),
+            ],
+          );
 
     final visaNumberField = CustomTextField(
       label: "Visa Number",
@@ -840,6 +838,34 @@ class _IdentificationFormLayoutState
           },
         );
 
+        // 1. Extract the NRC Label
+        final nrcLabel = Padding(
+          padding: EdgeInsets.only(
+            top: isNrcRowDesktop ? 12 : 0,
+            bottom: isNrcRowDesktop ? 0 : 8,
+          ),
+          child: SizedBox(
+            width: isNrcRowDesktop ? lw : double.infinity,
+            child: RichText(
+              text: const TextSpan(
+                text: "NRC",
+                style: TextStyle(
+                  fontSize: 14,
+                  fontWeight: FontWeight.w500,
+                  color: Colors.black87,
+                ),
+                children: [
+                  TextSpan(
+                    text: ' *',
+                    style: TextStyle(color: Colors.red),
+                  ),
+                ],
+              ),
+            ),
+          ),
+        );
+
+        // 2. Responsive Layout
         if (isDesktop) {
           return Row(
             crossAxisAlignment: CrossAxisAlignment.start,
@@ -848,28 +874,7 @@ class _IdentificationFormLayoutState
                 child: Row(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    SizedBox(
-                      width: lw,
-                      child: Padding(
-                        padding: const EdgeInsets.only(top: 12),
-                        child: RichText(
-                          text: const TextSpan(
-                            text: "NRC",
-                            style: TextStyle(
-                              fontSize: 14,
-                              fontWeight: FontWeight.w500,
-                              color: Colors.black87,
-                            ),
-                            children: [
-                              TextSpan(
-                                text: ' *',
-                                style: TextStyle(color: Colors.red),
-                              ),
-                            ],
-                          ),
-                        ),
-                      ),
-                    ),
+                    nrcLabel,
                     const SizedBox(width: 8),
                     Expanded(child: nrcFields()),
                   ],
@@ -881,38 +886,13 @@ class _IdentificationFormLayoutState
           );
         } else {
           return Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Row(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  SizedBox(
-                    width: lw,
-                    child: Padding(
-                      padding: const EdgeInsets.only(top: 12),
-                      child: RichText(
-                        text: const TextSpan(
-                          text: "NRC",
-                          style: TextStyle(
-                            fontSize: 14,
-                            fontWeight: FontWeight.w500,
-                            color: Colors.black87,
-                          ),
-                          children: [
-                            TextSpan(
-                              text: ' *',
-                              style: TextStyle(color: Colors.red),
-                            ),
-                          ],
-                        ),
-                      ),
-                    ),
-                  ),
-                  const SizedBox(width: 8),
-                  Expanded(child: nrcFields()),
-                ],
-              ),
+              // 🎯 Mobile layout for NRC: Stacks the label ON TOP of the complex input row!
+              nrcLabel,
+              nrcFields(),
               const SizedBox(height: 16),
-              fatherNameWidget,
+              fatherNameWidget, // CustomTextField handles its own mobile label natively now
             ],
           );
         }

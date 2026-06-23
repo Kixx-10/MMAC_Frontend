@@ -15,84 +15,101 @@ class FormProgressBar extends StatelessWidget {
       {"number": 4, "label": "Review"},
     ];
 
+    // 🎯 1. Detect screen size dynamically
+    final double screenWidth = MediaQuery.of(context).size.width;
+    final bool isMobile = screenWidth < 500;
+
+    // 🎯 2. Adjust dimensions based on the screen size
+    final double circleSize = isMobile ? 32.0 : 44.0;
+    final double columnWidth = isMobile ? 65.0 : 70.0;
+    final double labelSize = isMobile ? 10.0 : 11.0;
+    final double numberSize = isMobile ? 12.0 : 13.0;
+
     return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 20),
+      padding: EdgeInsets.symmetric(horizontal: isMobile ? 10 : 20),
       child: Row(
-        mainAxisAlignment: MainAxisAlignment.center,
         crossAxisAlignment: CrossAxisAlignment.start,
+        // The list elements are fed directly into the Row's children
         children: List.generate(steps.length, (index) {
           final stepNumber = (steps[index]["number"] as int?) ?? (index + 1);
           final label = (steps[index]["label"] as String?) ?? "";
           final isCompleted = stepNumber < currentStep;
           final isActive = stepNumber == currentStep;
 
-          return Row(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              // Circle + Label
-              SizedBox(
-                width: 70, // ← circle column width fixed
-                child: Column(
-                  children: [
-                    Container(
-                      width: 44,
-                      height: 44,
-                      decoration: BoxDecoration(
-                        shape: BoxShape.circle,
-                        color: isCompleted
-                            ? Colors.blue
-                            : isActive
-                            ? Colors.blue
-                            : Colors.grey.shade200,
-                        border: Border.all(
-                          color: isActive || isCompleted
-                              ? Colors.blue
-                              : Colors.grey.shade300,
-                          width: 1.5,
-                        ),
-                      ),
-                      child: Center(
-                        child: isCompleted
-                            ? const Icon(
-                                Icons.check,
-                                color: Colors.white,
-                                size: 16,
-                              )
-                            : Text(
-                                "$stepNumber",
-                                style: TextStyle(
-                                  fontSize: 13,
-                                  fontWeight: FontWeight.bold,
-                                  color: isActive ? Colors.white : Colors.grey,
-                                ),
-                              ),
-                      ),
-                    ),
-                    const SizedBox(height: 8),
-                    Text(
-                      label,
-                      textAlign: TextAlign.center,
-                      style: TextStyle(
-                        fontSize: 11,
-                        fontWeight: isActive
-                            ? FontWeight.bold
-                            : FontWeight.normal,
-                        color: isActive ? Colors.blue : Colors.grey,
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-
-              // Line between steps (narrow & centered vertically with circle)
-              if (index < steps.length - 1)
+          // 🎯 3. Build the core package (Circle + Text Label)
+          Widget stepContent = SizedBox(
+            width: columnWidth,
+            child: Column(
+              children: [
                 Container(
-                  width: 60,
-                  height: 1.5,
-                  margin: const EdgeInsets.only(top: 10),
-                  color: isCompleted ? Colors.blue : Colors.grey.shade300,
+                  width: circleSize,
+                  height: circleSize,
+                  decoration: BoxDecoration(
+                    shape: BoxShape.circle,
+                    color: isCompleted || isActive
+                        ? Colors.blue
+                        : Colors.grey.shade200,
+                    border: Border.all(
+                      color: isCompleted || isActive
+                          ? Colors.blue
+                          : Colors.grey.shade300,
+                      width: 1.5,
+                    ),
+                  ),
+                  child: Center(
+                    child: isCompleted
+                        ? Icon(
+                            Icons.check,
+                            color: Colors.white,
+                            size: isMobile ? 14 : 16,
+                          )
+                        : Text(
+                            "$stepNumber",
+                            style: TextStyle(
+                              fontSize: numberSize,
+                              fontWeight: FontWeight.bold,
+                              color: isActive ? Colors.white : Colors.grey,
+                            ),
+                          ),
+                  ),
                 ),
-            ],
+                const SizedBox(height: 8),
+                Text(
+                  label,
+                  textAlign: TextAlign.center,
+                  style: TextStyle(
+                    fontSize: labelSize,
+                    fontWeight: isActive ? FontWeight.bold : FontWeight.normal,
+                    color: isActive ? Colors.blue : Colors.grey,
+                  ),
+                ),
+              ],
+            ),
+          );
+
+          // 🎯 4. Last Step Logic: The final step has no line attached to it!
+          if (index == steps.length - 1) {
+            return stepContent;
+          }
+
+          // 🎯 5. The "Flex Spring" Magic for all other steps
+          return Expanded(
+            child: Row(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                stepContent,
+
+                // The flexible connecting line
+                Expanded(
+                  child: Container(
+                    height: 1.5,
+                    // Pushes the line down perfectly to the center of the dynamic circle
+                    margin: EdgeInsets.only(top: circleSize / 2),
+                    color: isCompleted ? Colors.blue : Colors.grey.shade300,
+                  ),
+                ),
+              ],
+            ),
           );
         }),
       ),

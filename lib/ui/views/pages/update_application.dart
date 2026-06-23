@@ -10,7 +10,7 @@ import 'package:mmac/data/models/submit_request_model.dart';
 import 'package:mmac/data/controllers/update_application_provider.dart';
 import 'package:mmac/data/controllers/country_provider.dart';
 import 'package:mmac/data/controllers/nrc_provider.dart';
-import 'package:mmac/ui/views/widgets/nrc_selector_field.dart';
+import 'package:mmac/ui/views/pages/new_application/widget/nrc_selector_widget.dart';
 
 class UpdateApplication extends ConsumerStatefulWidget {
   final String? initialCountry;
@@ -43,7 +43,7 @@ class _UpdateApplicationState extends ConsumerState<UpdateApplication> {
   final Map<String, TextEditingController> _searchControllers = {
     'qrReference': TextEditingController(),
     'passportNumber': TextEditingController(),
-    'nrc': TextEditingController(),
+    // 'nrc': TextEditingController(),
     'nationalityCode': TextEditingController(),
     'dob': TextEditingController(),
     'passportExpiry': TextEditingController(),
@@ -59,8 +59,7 @@ class _UpdateApplicationState extends ConsumerState<UpdateApplication> {
   @override
   void dispose() {
     _searchControllers.forEach((_, controller) => controller.dispose());
-    _nrcNumberController.dispose(); // Controller ဖျက်ပေးရန်
-    _searchControllers.forEach((_, controller) => controller.dispose());
+    _nrcNumberController.dispose();
     super.dispose();
   }
 
@@ -241,6 +240,43 @@ class _UpdateApplicationState extends ConsumerState<UpdateApplication> {
     final searchState = ref.watch(updateApplicationProvider);
     final isLoading = searchState.isLoading;
 
+    final double screenSize = MediaQuery.of(context).size.width;
+    final bool isMobile = screenSize < 500;
+
+    final primaryButton = ElevatedButton(
+      onPressed: isLoading ? null : () => _handleFindApplication(isMyanmar),
+      style: ElevatedButton.styleFrom(
+        backgroundColor: Colors.lightBlue.shade700,
+        foregroundColor: Colors.white,
+        padding: const EdgeInsets.symmetric(horizontal: 36, vertical: 16),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+      ),
+      child: isLoading
+          ? const SizedBox(
+              width: 20,
+              height: 20,
+              child: CircularProgressIndicator(
+                color: Colors.white,
+                strokeWidth: 2,
+              ),
+            )
+          : const Text(
+              'Find & Edit Application',
+              style: TextStyle(fontWeight: FontWeight.bold),
+            ),
+    );
+
+    final secondaryButton = ElevatedButton(
+      onPressed: isLoading ? null : widget.onBackPressed,
+      style: ElevatedButton.styleFrom(
+        backgroundColor: Colors.white,
+        foregroundColor: Colors.black87,
+        padding: const EdgeInsets.symmetric(horizontal: 36, vertical: 16),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+      ),
+      child: const Text('Back', style: TextStyle(fontWeight: FontWeight.bold)),
+    );
+
     return SingleChildScrollView(
       padding: const EdgeInsets.all(16),
       child: Center(
@@ -296,17 +332,27 @@ class _UpdateApplicationState extends ConsumerState<UpdateApplication> {
                   _buildLabel("Expected Date of Arrival *"),
 
                   // 🎯 The Radio Layout
-                  Row(
-                    children: [
-                      _buildArrivalRadioOption(0),
-                      const SizedBox(
-                        width: 8,
-                      ), // Exact spacing between the 3 boxes
-                      _buildArrivalRadioOption(1),
-                      const SizedBox(width: 8),
-                      _buildArrivalRadioOption(2),
-                    ],
-                  ),
+                  isMobile
+                      ? Column(
+                          children: [
+                            _buildArrivalRadioOption(0),
+                            const SizedBox(height: 8),
+                            _buildArrivalRadioOption(1),
+                            const SizedBox(height: 8),
+                            _buildArrivalRadioOption(2),
+                          ],
+                        )
+                      : Row(
+                          children: [
+                            Expanded(child: _buildArrivalRadioOption(0)),
+                            const SizedBox(
+                              width: 8,
+                            ), // Exact spacing between the 3 boxes
+                            Expanded(child: _buildArrivalRadioOption(1)),
+                            const SizedBox(width: 8),
+                            Expanded(child: _buildArrivalRadioOption(2)),
+                          ],
+                        ),
 
                   // 🎯 Hidden Validation Field
                   // We keep a hidden field here just so your form validation
@@ -330,133 +376,103 @@ class _UpdateApplicationState extends ConsumerState<UpdateApplication> {
                   const SizedBox(height: 8),
 
                   // Riverpod ကနေ NRC Master Data ကို စောင့်ကြည့်ခြင်း
+                  // Riverpod ကနေ NRC Master Data ကို စောင့်ကြည့်ခြင်း
                   (() {
                     final nrcAsync = ref.watch(nrcProvider);
                     final nrcState = nrcAsync.valueOrNull;
+
                     final List<dynamic> stateList =
                         nrcState?.nrcStateList ?? [];
+
+                    // 🎯 1. Block Ghost Townships: Only load if local code isn't wiped!
                     final List<dynamic> townshipList =
-                        nrcState?.availableNrcTownships ?? [];
+                        _selectedNrcStateCode != null
+                        ? (nrcState?.availableNrcTownships ?? [])
+                        : [];
+
                     final int? currentProviderStateId =
                         nrcState?.selectedNrcStateId;
 
+                    // 🎯 2. Block Ghost State ID: Force to null if local code is wiped!
                     final int? activeStateId =
-                        stateList.any((st) => st.id == currentProviderStateId)
+                        (_selectedNrcStateCode != null &&
+                            stateList.any(
+                              (st) => st.id == currentProviderStateId,
+                            ))
                         ? currentProviderStateId
                         : null;
-                    final String? activeTownshipCode =
-                        townshipList.any(
-                          (ts) => ts.idCode == _selectedTownshipCode,
-                        )
-                        ? _selectedTownshipCode
-                        : null;
-                    final String? activeNrcType =
-                        _nrcTypes.any((t) => t['code'] == _selectedNrcType)
-                        ? _selectedNrcType
-                        : null;
 
-                    return NrcSelectorField(
+                    // 🎯 Create the seamless Number Field (unchanged)
+                    final numberField = Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: 10),
+                      child: TextFormField(
+                        controller: _nrcNumberController,
+                        keyboardType: TextInputType.number,
+                        inputFormatters: [
+                          FilteringTextInputFormatter.allow(
+                            RegExp(r'[\u1040-\u1049]'),
+                          ),
+                          LengthLimitingTextInputFormatter(6),
+                        ],
+                        style: const TextStyle(
+                          fontSize: 13,
+                          fontWeight: FontWeight.w500,
+                          color: Colors.black87,
+                        ),
+                        decoration: InputDecoration(
+                          hintText: "၁၂၃၄၅၆",
+                          hintStyle: TextStyle(
+                            color: Colors.grey.shade400,
+                            fontSize: 13,
+                          ),
+                          isDense: true,
+                          border: InputBorder.none,
+                          enabledBorder: InputBorder.none,
+                          focusedBorder: InputBorder.none,
+                          contentPadding: EdgeInsets.zero,
+                        ),
+                        onChanged: (v) => setState(() {}),
+                      ),
+                    );
+
+                    // 🎯 3. Return Widget with SAFE CONTAIN CHECKS!
+                    return NrcSelectorWidget(
                       isDesktop: MediaQuery.of(context).size.width > 600,
-                      stateDropdown: buildCustomDropdownContainer(
-                        child: DropdownButton<int>(
-                          value: activeStateId,
-                          isExpanded: true,
-                          hint: const Text(
-                            "ပြည်နယ်/တိုင်း",
-                            style: TextStyle(fontSize: 12),
-                          ),
-                          items: stateList
-                              .map<DropdownMenuItem<int>>(
-                                (st) => DropdownMenuItem<int>(
-                                  value: st.id,
-                                  child: Text(st.codeMM),
-                                ),
-                              )
-                              .toList(),
-                          onChanged: (id) {
-                            if (id != null) {
-                              ref.read(nrcProvider.notifier).selectNrcState(id);
-                              final match = stateList.firstWhere(
-                                (s) => s.id == id,
-                              );
-                              setState(() {
-                                _selectedNrcStateCode = match.idCode;
-                                _selectedTownshipCode = null;
-                              });
-                            }
-                          },
-                        ),
-                      ),
-                      townshipDropdown: buildCustomDropdownContainer(
-                        child: DropdownButton<String>(
-                          value: activeTownshipCode,
-                          isExpanded: true,
-                          hint: const Text(
-                            "မြို့နယ်",
-                            style: TextStyle(fontSize: 12),
-                          ),
-                          items: townshipList
-                              .map<DropdownMenuItem<String>>(
-                                (ts) => DropdownMenuItem<String>(
-                                  value: ts.idCode,
-                                  child: Text(
-                                    ts.codeMM,
-                                    overflow: TextOverflow.ellipsis,
-                                  ),
-                                ),
-                              )
-                              .toList(),
-                          onChanged: (v) =>
-                              setState(() => _selectedTownshipCode = v),
-                        ),
-                      ),
-                      typeDropdown: buildCustomDropdownContainer(
-                        child: DropdownButton<String>(
-                          value: activeNrcType,
-                          isExpanded: true,
-                          items: _nrcTypes
-                              .map<DropdownMenuItem<String>>(
-                                (t) => DropdownMenuItem<String>(
-                                  value: t['code'],
-                                  child: Text(t['label']!),
-                                ),
-                              )
-                              .toList(),
-                          onChanged: (v) =>
-                              setState(() => _selectedNrcType = v),
-                        ),
-                      ),
-                      numberField: Container(
-                        height: 44,
-                        padding: const EdgeInsets.symmetric(horizontal: 10),
-                        decoration: BoxDecoration(
-                          color: Colors.white,
-                          borderRadius: BorderRadius.circular(8),
-                          border: Border.all(color: Colors.grey.shade300),
-                        ),
-                        child: TextFormField(
-                          controller: _nrcNumberController,
-                          textAlign: TextAlign.start,
-                          keyboardType: TextInputType.number,
-                          inputFormatters: [
-                            FilteringTextInputFormatter.allow(
-                              RegExp(r'[\u1040-\u1049]'),
-                            ),
-                            LengthLimitingTextInputFormatter(6),
-                          ],
-                          decoration: const InputDecoration(
-                            hintText: "၁၂၃၄၅၆",
-                            hintStyle: TextStyle(
-                              fontSize: 12,
-                              color: Colors.grey,
-                            ),
-                            border: InputBorder.none,
-                            isDense: true,
-                            contentPadding: EdgeInsets.only(top: 10),
-                          ),
-                          onChanged: (v) => setState(() {}),
-                        ),
-                      ),
+
+                      // 🛡️ Safe checks prevent dropdown crashes when clearing data
+                      selectedNrcStateCode:
+                          stateList.any(
+                            (s) => s.idCode == _selectedNrcStateCode,
+                          )
+                          ? _selectedNrcStateCode
+                          : null,
+                      selectedTownshipCode:
+                          townshipList.any(
+                            (t) => t.idCode == _selectedTownshipCode,
+                          )
+                          ? _selectedTownshipCode
+                          : null,
+
+                      selectedNrcType: _selectedNrcType,
+                      numberField: numberField,
+                      hasError: false,
+                      stateList: stateList,
+                      townshipList: townshipList,
+                      nrcTypes: _nrcTypes,
+                      activeStateId: activeStateId,
+                      onStateChanged: (id, idCode) {
+                        ref.read(nrcProvider.notifier).selectNrcState(id);
+                        setState(() {
+                          _selectedNrcStateCode = idCode;
+                          _selectedTownshipCode = null;
+                        });
+                      },
+                      onTownshipChanged: (v) {
+                        setState(() => _selectedTownshipCode = v);
+                      },
+                      onTypeChanged: (v) {
+                        setState(() => _selectedNrcType = v);
+                      },
                     );
                   })(),
                 ],
@@ -500,7 +516,12 @@ class _UpdateApplicationState extends ConsumerState<UpdateApplication> {
                                       : _searchControllers['nationalityCode']
                                             ?.text,
                                   isExpanded: true,
-                                  hint: const Text("Select Nationality"),
+                                  hint: Text(
+                                    "Select Nationality",
+                                    style: TextStyle(
+                                      fontSize: isMobile ? 10 : 12,
+                                    ),
+                                  ),
                                   items: _rawCountryObjects
                                       .map<DropdownMenuItem<String>>((
                                         dynamic country,
@@ -573,61 +594,25 @@ class _UpdateApplicationState extends ConsumerState<UpdateApplication> {
                   ),
                 ],
                 const SizedBox(height: 32),
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    // 🎯 ပုံစံတူညီအောင် ပြင်ဆင်ထားသော Back Button အသစ်
-                    ElevatedButton(
-                      onPressed: isLoading ? null : widget.onBackPressed,
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: Colors.lightBlue.shade700,
-                        foregroundColor: Colors.white,
-                        padding: const EdgeInsets.symmetric(
-                          horizontal: 36,
-                          vertical: 16,
-                        ),
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(8),
-                        ),
-                      ),
-                      child: const Text(
-                        'Back',
-                        style: TextStyle(fontWeight: FontWeight.bold),
-                      ),
-                    ),
 
-                    // မူလ Find & Edit Application Button
-                    ElevatedButton(
-                      onPressed: isLoading
-                          ? null
-                          : () => _handleFindApplication(isMyanmar),
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: Colors.lightBlue.shade700,
-                        foregroundColor: Colors.white,
-                        padding: const EdgeInsets.symmetric(
-                          horizontal: 36,
-                          vertical: 16,
-                        ),
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(8),
-                        ),
+                isMobile
+                    ? Column(
+                        crossAxisAlignment: CrossAxisAlignment.stretch,
+                        children: [
+                          secondaryButton,
+                          const SizedBox(height: 10),
+                          primaryButton,
+                        ],
+                      )
+                    : Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: [
+                          // 🎯 ပုံစံတူညီအောင် ပြင်ဆင်ထားသော Back Button အသစ်
+                          secondaryButton,
+                          // Find & Edit Application Button
+                          primaryButton,
+                        ],
                       ),
-                      child: isLoading
-                          ? const SizedBox(
-                              width: 20,
-                              height: 20,
-                              child: CircularProgressIndicator(
-                                color: Colors.white,
-                                strokeWidth: 2,
-                              ),
-                            )
-                          : const Text(
-                              'Find & Edit Application',
-                              style: TextStyle(fontWeight: FontWeight.bold),
-                            ),
-                    ),
-                  ],
-                ),
               ],
             ),
           ),
@@ -679,71 +664,69 @@ class _UpdateApplicationState extends ConsumerState<UpdateApplication> {
 
     final bool isSelected = _arrivalDateOffset == offset;
 
-    return Expanded(
-      child: InkWell(
-        onTap: () {
-          setState(() {
-            _arrivalDateOffset = offset;
-            _searchControllers['arrivalDate']?.text =
-                "${targetDate.year}-$month-$day";
-          });
-        },
-        borderRadius: BorderRadius.circular(8),
-        child: Container(
-          padding: const EdgeInsets.symmetric(
-            vertical: 10,
-          ), // Removed horizontal padding so it auto-centers
-          decoration: BoxDecoration(
-            color: Colors.white,
-            borderRadius: BorderRadius.circular(8),
-            border: Border.all(
-              color: isSelected
-                  ? Colors.lightBlue.shade700
-                  : Colors.grey.shade300,
-              width: isSelected ? 1.5 : 1.0,
+    return InkWell(
+      onTap: () {
+        setState(() {
+          _arrivalDateOffset = offset;
+          _searchControllers['arrivalDate']?.text =
+              "${targetDate.year}-$month-$day";
+        });
+      },
+      borderRadius: BorderRadius.circular(8),
+      child: Container(
+        padding: const EdgeInsets.symmetric(
+          vertical: 10,
+        ), // Removed horizontal padding so it auto-centers
+        decoration: BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(8),
+          border: Border.all(
+            color: isSelected
+                ? Colors.lightBlue.shade700
+                : Colors.grey.shade300,
+            width: isSelected ? 1.5 : 1.0,
+          ),
+        ),
+        child: Row(
+          mainAxisAlignment: MainAxisAlignment
+              .center, // 🎯 Centers the circle and text inside the box
+          children: [
+            SizedBox(
+              width: 20,
+              height: 20,
+              child: Radio<int>(
+                value: offset,
+                groupValue: _arrivalDateOffset,
+                activeColor: Colors.lightBlue.shade700,
+                materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                onChanged: (int? val) {
+                  if (val != null) {
+                    setState(() {
+                      _arrivalDateOffset = val;
+                      _searchControllers['arrivalDate']?.text =
+                          "${targetDate.year}-$month-$day";
+                    });
+                  }
+                },
+              ),
             ),
-          ),
-          child: Row(
-            mainAxisAlignment: MainAxisAlignment
-                .center, // 🎯 Centers the circle and text inside the box
-            children: [
-              SizedBox(
-                width: 20,
-                height: 20,
-                child: Radio<int>(
-                  value: offset,
-                  groupValue: _arrivalDateOffset,
-                  activeColor: Colors.lightBlue.shade700,
-                  materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
-                  onChanged: (int? val) {
-                    if (val != null) {
-                      setState(() {
-                        _arrivalDateOffset = val;
-                        _searchControllers['arrivalDate']?.text =
-                            "${targetDate.year}-$month-$day";
-                      });
-                    }
-                  },
+            const SizedBox(width: 4),
+            Flexible(
+              // 🎯 Prevents text from breaking if viewed on a super tiny phone screen
+              child: Text(
+                displayDate,
+                style: TextStyle(
+                  fontSize:
+                      12, // 🎯 Scaled down slightly to fit 3 perfectly on mobile
+                  fontWeight: isSelected ? FontWeight.w600 : FontWeight.w400,
+                  color: isSelected
+                      ? Colors.lightBlue.shade700
+                      : Colors.black87,
                 ),
+                overflow: TextOverflow.ellipsis,
               ),
-              const SizedBox(width: 4),
-              Flexible(
-                // 🎯 Prevents text from breaking if viewed on a super tiny phone screen
-                child: Text(
-                  displayDate,
-                  style: TextStyle(
-                    fontSize:
-                        12, // 🎯 Scaled down slightly to fit 3 perfectly on mobile
-                    fontWeight: isSelected ? FontWeight.w600 : FontWeight.w400,
-                    color: isSelected
-                        ? Colors.lightBlue.shade700
-                        : Colors.black87,
-                  ),
-                  overflow: TextOverflow.ellipsis,
-                ),
-              ),
-            ],
-          ),
+            ),
+          ],
         ),
       ),
     );
