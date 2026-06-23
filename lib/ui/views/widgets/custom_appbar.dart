@@ -40,6 +40,7 @@ PreferredSizeWidget customAppBar({
           navButton("New Application", 1),
           navButton("Update Application", 2),
           navButton("FAQs", 3),
+          navButton("ScanQR", 4),
           const SizedBox(width: 100), 
         ],
       ),

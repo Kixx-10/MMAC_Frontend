@@ -12,7 +12,7 @@ import 'package:mmac/data/models/submit_response_model.dart';
 class SubmitRepository {
   final ApiClient _apiClient = ApiClient();
 
-  Future<SubmitResponseModel?> submitApplication(
+  Future<SubmitResponseModel?> submitApplication( 
     SubmitRequestModel submitRequestModel,
   ) async {
     try {
