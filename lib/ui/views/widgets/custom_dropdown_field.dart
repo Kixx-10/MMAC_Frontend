@@ -126,128 +126,143 @@ class _CustomDropdownFieldState extends State<CustomDropdownField> {
 
   @override
   Widget build(BuildContext context) {
-    return Row(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Padding(
-          padding: const EdgeInsets.only(top: 14),
-          child: SizedBox(
-            width: widget.labelWidth,
-            child: RichText(
-              text: TextSpan(
-                text: widget.label,
-                style: const TextStyle(
-                  fontSize: 14,
-                  fontWeight: FontWeight.w500,
-                  color: Colors.black87,
-                ),
-                children: const [
-                  TextSpan(
-                    text: ' *',
-                    style: TextStyle(
-                      color: Colors.red,
-                      fontWeight: FontWeight.bold,
-                    ),
-                  ),
-                ],
-              ),
+    final bool isMobile = MediaQuery.of(context).size.width < 500;
+
+    final Widget lableWidget = Padding(
+      padding: EdgeInsets.only(
+        top: isMobile ? 0 : 14,
+        bottom: isMobile ? 8 : 0,
+      ),
+      child: SizedBox(
+        width: isMobile ? double.infinity : widget.labelWidth,
+        child: RichText(
+          text: TextSpan(
+            text: widget.label,
+            style: const TextStyle(
+              fontSize: 14,
+              fontWeight: FontWeight.w500,
+              color: Colors.black87,
             ),
+            children: const [
+              TextSpan(
+                text: ' *',
+                style: TextStyle(
+                  color: Colors.red,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+            ],
           ),
         ),
-        SizedBox(width: widget.spacing),
-        Expanded(
-          child: FormField<String>(
-            key: _fieldKey,
-            initialValue: widget.value,
-            validator: widget.validator,
-            autovalidateMode: AutovalidateMode.onUserInteraction,
-            builder: (FormFieldState<String> state) {
-              final bool hasError = state.hasError;
+      ),
+    );
 
-              return Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  // 🎯 LayoutBuilder measures exact responsive width available
-                  LayoutBuilder(
-                    builder: (context, constraints) {
-                      return CompositedTransformTarget(
-                        link: _layerLink,
-                        child: InkWell(
-                          onTap: widget.readonly
-                              ? null
-                              : () =>
-                                    _toggleOverlay(state, constraints.maxWidth),
-                          borderRadius: BorderRadius.circular(8),
-                          child: Container(
-                            padding: const EdgeInsets.symmetric(
-                              horizontal: 16,
-                              vertical: 12,
-                            ),
-                            decoration: BoxDecoration(
-                              color: widget.readonly
-                                  ? Colors.grey.shade100
-                                  : Colors.white,
-                              borderRadius: BorderRadius.circular(8),
-                              border: Border.all(
+    final Widget dropDownField = FormField<String>(
+      key: _fieldKey,
+      initialValue: widget.value,
+      validator: widget.validator,
+      autovalidateMode: AutovalidateMode.onUserInteraction,
+      builder: (FormFieldState<String> state) {
+        final bool hasError = state.hasError;
+
+        return Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            // 🎯 LayoutBuilder measures exact responsive width available
+            LayoutBuilder(
+              builder: (context, constraints) {
+                return CompositedTransformTarget(
+                  link: _layerLink,
+                  child: InkWell(
+                    onTap: widget.readonly
+                        ? null
+                        : () => _toggleOverlay(state, constraints.maxWidth),
+                    borderRadius: BorderRadius.circular(8),
+                    child: Container(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 16,
+                        vertical: 12,
+                      ),
+                      decoration: BoxDecoration(
+                        color: widget.readonly
+                            ? Colors.grey.shade100
+                            : Colors.white,
+                        borderRadius: BorderRadius.circular(8),
+                        border: Border.all(
+                          color: widget.readonly
+                              ? Colors.grey.shade300
+                              : (hasError
+                                    ? Colors.red
+                                    : (state.value != null
+                                          ? Colors.grey.shade400
+                                          : Colors.grey.shade300)),
+                          width: hasError && !widget.readonly ? 1.5 : 1,
+                        ),
+                      ),
+                      child: Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: [
+                          Expanded(
+                            child: Text(
+                              state.value ?? widget.hint,
+                              style: TextStyle(
+                                fontSize: 14,
                                 color: widget.readonly
-                                    ? Colors.grey.shade300
-                                    : (hasError
-                                          ? Colors.red
-                                          : (state.value != null
-                                                ? Colors.grey.shade400
-                                                : Colors.grey.shade300)),
-                                width: hasError && !widget.readonly ? 1.5 : 1,
+                                    ? Colors.grey.shade500
+                                    : (state.value != null
+                                          ? Colors.black87
+                                          : Colors.grey.shade400),
                               ),
-                            ),
-                            child: Row(
-                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                              children: [
-                                Expanded(
-                                  child: Text(
-                                    state.value ?? widget.hint,
-                                    style: TextStyle(
-                                      fontSize: 14,
-                                      color: widget.readonly
-                                          ? Colors.grey.shade500
-                                          : (state.value != null
-                                                ? Colors.black87
-                                                : Colors.grey.shade400),
-                                    ),
-                                    overflow: TextOverflow.ellipsis,
-                                    maxLines: 1,
-                                  ),
-                                ),
-                                Icon(
-                                  Icons.arrow_drop_down,
-                                  color: widget.readonly
-                                      ? Colors.grey.shade400
-                                      : (hasError
-                                            ? Colors.red
-                                            : Colors.grey.shade600),
-                                  size: 24,
-                                ),
-                              ],
+                              overflow: TextOverflow.ellipsis,
+                              maxLines: 1,
                             ),
                           ),
-                        ),
-                      );
-                    },
-                  ),
-                  if (hasError)
-                    Padding(
-                      padding: const EdgeInsets.only(left: 12, top: 6),
-                      child: Text(
-                        state.errorText ?? '',
-                        style: const TextStyle(fontSize: 12, color: Colors.red),
+                          Icon(
+                            Icons.arrow_drop_down,
+                            color: widget.readonly
+                                ? Colors.grey.shade400
+                                : (hasError
+                                      ? Colors.red
+                                      : Colors.grey.shade600),
+                            size: 24,
+                          ),
+                        ],
                       ),
                     ),
-                ],
-              );
-            },
-          ),
-        ),
-      ],
+                  ),
+                );
+              },
+            ),
+            if (hasError)
+              Padding(
+                padding: const EdgeInsets.only(left: 12, top: 6),
+                child: Text(
+                  state.errorText ?? '',
+                  style: const TextStyle(fontSize: 12, color: Colors.red),
+                ),
+              ),
+          ],
+        );
+      },
     );
+
+    return isMobile
+        ? Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              lableWidget,
+              SizedBox(height: widget.spacing),
+              dropDownField,
+            ],
+          )
+        : Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              lableWidget,
+              SizedBox(width: widget.spacing),
+              Expanded(child: dropDownField),
+            ],
+          );
   }
 }
 

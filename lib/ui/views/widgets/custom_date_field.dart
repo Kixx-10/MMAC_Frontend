@@ -50,9 +50,41 @@ class _CustomDateFieldState extends State<CustomDateField> {
     return "$day $month $year";
   }
 
+  // 🎯 1. New Compact Native Dialog for Mobile Viewports
+  void _showMobileDatePicker() async {
+    DateTime initialDate = widget.value ?? DateTime.now();
+    if (initialDate.isBefore(widget.firstDate)) initialDate = widget.firstDate;
+    if (initialDate.isAfter(widget.lastDate)) initialDate = widget.lastDate;
+
+    final DateTime? picked = await showDatePicker(
+      context: context,
+      initialDate: initialDate,
+      firstDate: widget.firstDate,
+      lastDate: widget.lastDate,
+      initialEntryMode: DatePickerEntryMode
+          .calendarOnly, // ⚡ Trims header down so height is NOT too long!
+      builder: (context, child) {
+        return Theme(
+          data: Theme.of(context).copyWith(
+            // Optional: Matches your web/desktop blue theme profile
+            colorScheme: const ColorScheme.light(
+              primary: Colors.blue,
+              onPrimary: Colors.white,
+              onSurface: Colors.black87,
+            ),
+          ),
+          child: child!,
+        );
+      },
+    );
+
+    if (picked != null) {
+      widget.onPicked(picked);
+    }
+  }
+
   void _toggleOverlay() {
     if (_overlayEntry == null) {
-      // 🎯 STEP 1: Find the exact absolute screen position of this widget row
       final RenderBox? renderBox = context.findRenderObject() as RenderBox?;
       if (renderBox == null || !renderBox.attached) return;
 
@@ -75,18 +107,15 @@ class _CustomDateFieldState extends State<CustomDateField> {
     if (initialDate.isBefore(widget.firstDate)) initialDate = widget.firstDate;
     if (initialDate.isAfter(widget.lastDate)) initialDate = widget.lastDate;
 
-    const double calendarHeight = 350;
+    const double calendarHeight = 200;
     const double gap = 4;
 
-    // 🎯 STEP 2: Calculate perfect absolute screen alignment coordinates
-    // Shift left past the label text + spacing width to match the box perfectly
     final double leftPosition = fieldPosition.dx + widget.labelWidth + 8;
     final double topPosition = fieldPosition.dy - calendarHeight - gap;
 
     return OverlayEntry(
       builder: (context) => Stack(
         children: [
-          // Background listener to dismiss when clicking outside
           Positioned.fill(
             child: GestureDetector(
               behavior: HitTestBehavior.translucent,
@@ -94,7 +123,6 @@ class _CustomDateFieldState extends State<CustomDateField> {
               child: Container(color: Colors.transparent),
             ),
           ),
-          // 🎯 STEP 3: Position using absolute screen coordinates to bypass Flutter link bugs
           Positioned(
             left: leftPosition,
             top: topPosition,
@@ -116,7 +144,7 @@ class _CustomDateFieldState extends State<CustomDateField> {
                   lastDate: widget.lastDate,
                   onDateChanged: (DateTime picked) {
                     widget.onPicked(picked);
-                    _closeOverlay(); // Closes securely on selection
+                    _closeOverlay();
                   },
                 ),
               ),
@@ -140,105 +168,114 @@ class _CustomDateFieldState extends State<CustomDateField> {
         ? _formatDate(widget.value!)
         : "Select Date";
 
-    return Row(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Padding(
-          padding: const EdgeInsets.only(top: 14),
-          child: SizedBox(
-            width: widget.labelWidth,
-            child: RichText(
-              text: TextSpan(
-                text: widget.label,
-                style: const TextStyle(
-                  fontSize: 14,
-                  fontWeight: FontWeight.w500,
-                  color: Colors.black87,
-                  fontFamily: 'sans-serif',
-                ),
-                children: const [
-                  TextSpan(
-                    text: ' *',
-                    style: TextStyle(
-                      color: Colors.red,
-                      fontWeight: FontWeight.bold,
-                    ),
-                  ),
-                ],
-              ),
-            ),
-          ),
-        ),
-        const SizedBox(width: 8),
+    // 🎯 2. Check current screen dimensions inside build loop
+    final bool isMobile = MediaQuery.of(context).size.width < 500;
 
-        Expanded(
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              InkWell(
-                onTap: widget.readOnly ? null : _toggleOverlay,
-                borderRadius: BorderRadius.circular(8),
-                child: Container(
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 16,
-                    vertical: 12,
-                  ),
-                  decoration: BoxDecoration(
-                    color: widget.readOnly
-                        ? Colors.grey.shade200
-                        : Colors.white,
-                    borderRadius: BorderRadius.circular(8),
-                    border: Border.all(
-                      color: widget.readOnly
-                          ? Colors.grey.shade300
-                          : (hasError
-                                ? Colors.red
-                                : (widget.value != null
-                                      ? Colors.grey
-                                      : Colors.grey.shade300)),
-                      width: hasError && !widget.readOnly ? 1.5 : 1,
-                    ),
-                  ),
-                  child: Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [
-                      Text(
-                        displayText,
-                        style: TextStyle(
-                          fontSize: 14,
-                          color: widget.readOnly
-                              ? Colors.grey.shade500
-                              : (widget.value != null
-                                    ? Colors.black87
-                                    : Colors.grey),
-                          fontWeight: widget.value != null && !widget.readOnly
-                              ? FontWeight.w500
-                              : FontWeight.normal,
-                        ),
-                      ),
-                      Icon(
-                        Icons.calendar_month_outlined,
-                        color: widget.readOnly
-                            ? Colors.grey
-                            : (hasError ? Colors.red : Colors.grey.shade700),
-                        size: 20,
-                      ),
-                    ],
-                  ),
+    final Widget lableWidget = Padding(
+      padding: EdgeInsets.only(
+        top: isMobile ? 0 : 14,
+        bottom: isMobile ? 8 : 0,
+      ),
+      child: SizedBox(
+        width: isMobile ? double.infinity : widget.labelWidth,
+        child: RichText(
+          text: TextSpan(
+            text: widget.label,
+            style: const TextStyle(
+              fontSize: 14,
+              fontWeight: FontWeight.w500,
+              color: Colors.black87,
+              fontFamily: 'sans-serif',
+            ),
+            children: const [
+              TextSpan(
+                text: ' *',
+                style: TextStyle(
+                  color: Colors.red,
+                  fontWeight: FontWeight.bold,
                 ),
               ),
-              if (hasError)
-                Padding(
-                  padding: const EdgeInsets.only(left: 12, top: 6),
-                  child: Text(
-                    widget.errorText!,
-                    style: const TextStyle(fontSize: 12, color: Colors.red),
-                  ),
-                ),
             ],
           ),
         ),
+      ),
+    );
+
+    final Widget dateField = Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        InkWell(
+          // 🎯 3. Responsive Tap router branch
+          onTap: widget.readOnly
+              ? null
+              : (isMobile ? _showMobileDatePicker : _toggleOverlay),
+          borderRadius: BorderRadius.circular(8),
+          child: Container(
+            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+            decoration: BoxDecoration(
+              color: widget.readOnly ? Colors.grey.shade200 : Colors.white,
+              borderRadius: BorderRadius.circular(8),
+              border: Border.all(
+                color: widget.readOnly
+                    ? Colors.grey.shade300
+                    : (hasError
+                          ? Colors.red
+                          : (widget.value != null
+                                ? Colors.grey
+                                : Colors.grey.shade300)),
+                width: hasError && !widget.readOnly ? 1.5 : 1,
+              ),
+            ),
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                Text(
+                  displayText,
+                  style: TextStyle(
+                    fontSize: 14,
+                    color: widget.readOnly
+                        ? Colors.grey.shade500
+                        : (widget.value != null ? Colors.black87 : Colors.grey),
+                    fontWeight: widget.value != null && !widget.readOnly
+                        ? FontWeight.w500
+                        : FontWeight.normal,
+                  ),
+                ),
+                Icon(
+                  Icons.calendar_month_outlined,
+                  color: widget.readOnly
+                      ? Colors.grey
+                      : (hasError ? Colors.red : Colors.grey.shade700),
+                  size: 20,
+                ),
+              ],
+            ),
+          ),
+        ),
+        if (hasError)
+          Padding(
+            padding: const EdgeInsets.only(left: 12, top: 6),
+            child: Text(
+              widget.errorText!,
+              style: const TextStyle(fontSize: 12, color: Colors.red),
+            ),
+          ),
       ],
     );
+
+    return isMobile
+        ? Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [lableWidget, const SizedBox(height: 8), dateField],
+          )
+        : Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              lableWidget,
+              const SizedBox(width: 8),
+
+              Expanded(child: dateField),
+            ],
+          );
   }
 }

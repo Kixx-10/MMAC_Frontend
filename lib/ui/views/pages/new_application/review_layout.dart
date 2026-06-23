@@ -29,6 +29,7 @@ class ReviewLayout extends StatelessWidget {
   }
 
   // ── Modern Information Grid Block
+  // ── Modern Information Grid Block
   Widget _reviewTile(String label, String value) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -43,11 +44,11 @@ class ReviewLayout extends StatelessWidget {
             letterSpacing: 0.5,
           ),
         ),
-        const SizedBox(height: 4),
+        const SizedBox(height: 2), // 🎯 Made gap tighter
         Text(
           value.isEmpty ? '—' : value,
           style: const TextStyle(
-            fontSize: 14,
+            fontSize: 13, // 🎯 Dropped from 14 to 13 so long ports fit cleaner
             fontWeight: FontWeight.w600,
             color: Colors.black87,
           ),
@@ -136,7 +137,7 @@ class ReviewLayout extends StatelessWidget {
                 crossAxisCount: 2,
                 crossAxisSpacing: 16,
                 mainAxisSpacing: 16,
-                mainAxisExtent: 46, // Fix height overflow
+                mainAxisExtent: 58, // Fix height overflow
               ),
               itemBuilder: (context, index) => children[index],
             ),
