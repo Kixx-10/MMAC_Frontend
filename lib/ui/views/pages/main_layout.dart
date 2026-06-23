@@ -6,6 +6,7 @@ import 'package:mmac/ui/views/pages/home.dart';
 import 'package:mmac/ui/views/pages/new_application/new_application_page.dart';
 import 'package:mmac/ui/views/pages/new_application/residency_layout.dart';
 import 'package:mmac/ui/views/pages/faqs.dart';
+import 'package:mmac/ui/views/pages/qr_scan_page.dart';
 import 'package:mmac/ui/views/pages/update_application.dart';
 import 'package:mmac/ui/views/widgets/national_header.dart';
 import 'package:mmac/utils/form_session_service.dart';
@@ -29,7 +30,7 @@ class _MainLayoutState extends State<MainLayout>
   @override
   void initState() {
     super.initState();
-    _tabController = TabController(length: 4, vsync: this);
+    _tabController = TabController(length: 5, vsync: this);
 
     // 🎯 Tab ပြောင်းတိုင်း ဘယ် Tab ရောက်နေလဲဆိုတာကို မှတ်ထားမည် (Refresh လုပ်ရင် ပြန်သိအောင်)
     _tabController.addListener(() async {
@@ -357,6 +358,7 @@ class _MainLayoutState extends State<MainLayout>
                                 _buildCustomTab("New Application"),
                                 _buildCustomTab("Update Application"),
                                 _buildCustomTab("FAQs"),
+                                _buildCustomTab("QrScan")
                               ],
                               onTap: (index) async {
                                 final prefs =
@@ -460,6 +462,7 @@ class _MainLayoutState extends State<MainLayout>
                     _tabController.animateTo(0);
                   },
                 ),
+                const QrScanPage(),
               ],
             ),
     );

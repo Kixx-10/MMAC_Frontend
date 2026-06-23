@@ -7,5 +7,7 @@ class ApiEndpoints {
   static const String submitApplication = "Application/Submit&UpdateApplication";
   static const String findNative = "searchDetails/myanmarDetails";
   static const String findForeigner = "searchDetails/foreignerDetails";
-  
+  // ignore: non_constant_identifier_names
+  static String searchApplicationByQRCode(String AppNo) => 
+      "Application/SearchApplicationByQRCode$AppNo";
 }
