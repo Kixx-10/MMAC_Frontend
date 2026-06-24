@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:mmac/ui/views/pages/main_layout.dart';
-//import 'package:mmac/ui/views/pages/new_application/residency_layout.dart';
 
 void main() {
   runApp(const ProviderScope(child: MyApp()));

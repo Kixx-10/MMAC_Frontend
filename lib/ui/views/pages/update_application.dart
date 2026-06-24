@@ -74,7 +74,21 @@ class _UpdateApplicationState extends ConsumerState<UpdateApplication> {
       initialDate: DateTime(2000),
       firstDate: DateTime(1900),
       lastDate: DateTime(2100),
+      // 🎯 THE FIX: Wrap the picker in your custom button blue theme!
+      builder: (context, child) {
+        return Theme(
+          data: Theme.of(context).copyWith(
+            colorScheme: ColorScheme.light(
+              primary: Colors.lightBlue.shade700,
+              onPrimary: Colors.white,
+              onSurface: Colors.black87,
+            ),
+          ),
+          child: child!,
+        );
+      },
     );
+
     if (picked != null) {
       setState(() {
         controller.text =
@@ -221,7 +235,7 @@ class _UpdateApplicationState extends ConsumerState<UpdateApplication> {
         color: Colors.white,
         borderRadius: BorderRadius.circular(8),
         border: Border.all(
-          color: isFocused ? Colors.blue : Colors.grey.shade300,
+          color: isFocused ? Colors.blue : Colors.black87,
           width: isFocused ? 1.5 : 1,
         ),
       ),
@@ -274,14 +288,18 @@ class _UpdateApplicationState extends ConsumerState<UpdateApplication> {
       child: const Text('Back', style: TextStyle(fontWeight: FontWeight.bold)),
     );
 
-    // 📦 1. Packaged DE Number Widget
+    //  1. Packaged DE Number Widget
     final Widget deNumberWidget = Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         _buildLabel("DE Number"),
         TextFormField(
           controller: _searchControllers['qrReference'],
-          decoration: _inputDecoration("", Icons.qr_code_scanner_outlined),
+          decoration: _inputDecoration(
+            "",
+            Icons.qr_code_scanner_outlined,
+            isMobile,
+          ),
           validator: (v) => (v == null || v.trim().isEmpty)
               ? 'QR Reference is mandatory'
               : null,
@@ -289,11 +307,11 @@ class _UpdateApplicationState extends ConsumerState<UpdateApplication> {
       ],
     );
 
-    // 📦 2. Packaged NRC Widget (With Full Riverpod Logic!)
+    //  2. Packaged NRC Widget (With Full Riverpod Logic!)
     final Widget nrcWidgetBlock = Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        _buildLabel("NRC Number *"),
+        _buildLabel("NRC Number"),
         (() {
           final nrcAsync = ref.watch(nrcProvider);
           final nrcState = nrcAsync.valueOrNull;
@@ -314,6 +332,7 @@ class _UpdateApplicationState extends ConsumerState<UpdateApplication> {
             child: TextFormField(
               controller: _nrcNumberController,
               keyboardType: TextInputType.number,
+              textAlign: TextAlign.center,
               inputFormatters: [
                 FilteringTextInputFormatter.allow(RegExp(r'[\u1040-\u1049]')),
                 LengthLimitingTextInputFormatter(6),
@@ -368,6 +387,98 @@ class _UpdateApplicationState extends ConsumerState<UpdateApplication> {
             },
           );
         })(),
+      ],
+    );
+
+    final Widget passportNumberBlock = Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        _buildLabel("Passport Number "),
+        TextFormField(
+          controller: _searchControllers['passportNumber'],
+          textCapitalization: TextCapitalization.characters,
+          decoration: _inputDecoration("", Icons.badge_outlined, isMobile),
+          validator: (v) => (v == null || v.trim().isEmpty)
+              ? 'Passport Number required'
+              : null,
+        ),
+      ],
+    );
+
+    final Widget countryBlock = Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        _buildLabel("Country"),
+        _isLoadingCountries
+            ? const LinearProgressIndicator()
+            : buildCustomDropdownContainer(
+                child: DropdownButton<String>(
+                  value:
+                      _searchControllers['nationalityCode']?.text.isEmpty ??
+                          true
+                      ? null
+                      : _searchControllers['nationalityCode']?.text,
+                  isExpanded: true,
+                  hint: Text(
+                    "Select Nationality",
+                    style: TextStyle(fontSize: isMobile ? 10 : 12),
+                  ),
+                  items: _rawCountryObjects.map<DropdownMenuItem<String>>((
+                    dynamic country,
+                  ) {
+                    return DropdownMenuItem<String>(
+                      value: country.countryCode,
+                      child: Text(country.countryName),
+                    );
+                  }).toList(),
+                  onChanged: (newValue) {
+                    if (newValue != null) {
+                      setState(() {
+                        _searchControllers['nationalityCode']?.text = newValue;
+                      });
+                    }
+                  },
+                ),
+              ),
+      ],
+    );
+
+    final Widget dateOfBirthBlock = Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        _buildLabel("Date of Birth "),
+        TextFormField(
+          controller: _searchControllers['dob'],
+          readOnly: true,
+          onTap: () => _selectDate(context, _searchControllers['dob']!),
+          decoration: _inputDecoration(
+            "YYYY-MM-DD",
+            Icons.calendar_today,
+            isMobile,
+          ),
+          validator: (v) =>
+              (v == null || v.trim().isEmpty) ? 'DOB required' : null,
+        ),
+      ],
+    );
+
+    final passportExpiryBlock = Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        _buildLabel("Passport Expiry Date "),
+        TextFormField(
+          controller: _searchControllers['passportExpiry'],
+          readOnly: true,
+          onTap: () =>
+              _selectDate(context, _searchControllers['passportExpiry']!),
+          decoration: _inputDecoration(
+            "YYYY-MM-DD",
+            Icons.calendar_today,
+            isMobile,
+          ),
+          validator: (v) =>
+              (v == null || v.trim().isEmpty) ? 'Expiry date required' : null,
+        ),
       ],
     );
 
@@ -431,7 +542,7 @@ class _UpdateApplicationState extends ConsumerState<UpdateApplication> {
                   const SizedBox(height: 20),
 
                   // 🎯 ROW 2: Expected Date of Arrival
-                  _buildLabel("Expected Date of Arrival *"),
+                  _buildLabel("Expected Date of Arrival"),
                   isMobile
                       ? Column(
                           children: [
@@ -470,119 +581,27 @@ class _UpdateApplicationState extends ConsumerState<UpdateApplication> {
                   const SizedBox(height: 20),
 
                   // 1️⃣ First Row: Passport Number & Nationality
-
-                  // 1️⃣ First Row: Passport Number & Nationality
-                  _pair(
-                    Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        _buildLabel("Passport Number "),
-                        TextFormField(
-                          controller: _searchControllers['passportNumber'],
-                          textCapitalization: TextCapitalization.characters,
-                          decoration: _inputDecoration(
-                            "",
-                            Icons.badge_outlined,
-                          ),
-                          validator: (v) => (v == null || v.trim().isEmpty)
-                              ? 'Passport Number required'
-                              : null,
-                        ),
-                      ],
-                    ),
-                    Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        _buildLabel("Country"),
-                        _isLoadingCountries
-                            ? const LinearProgressIndicator()
-                            : buildCustomDropdownContainer(
-                                child: DropdownButton<String>(
-                                  value:
-                                      _searchControllers['nationalityCode']
-                                              ?.text
-                                              .isEmpty ??
-                                          true
-                                      ? null
-                                      : _searchControllers['nationalityCode']
-                                            ?.text,
-                                  isExpanded: true,
-                                  hint: Text(
-                                    "Select Nationality",
-                                    style: TextStyle(
-                                      fontSize: isMobile ? 10 : 12,
-                                    ),
-                                  ),
-                                  items: _rawCountryObjects
-                                      .map<DropdownMenuItem<String>>((
-                                        dynamic country,
-                                      ) {
-                                        return DropdownMenuItem<String>(
-                                          value: country.countryCode,
-                                          child: Text(country.countryName),
-                                        );
-                                      })
-                                      .toList(),
-                                  onChanged: (newValue) {
-                                    if (newValue != null) {
-                                      setState(() {
-                                        _searchControllers['nationalityCode']
-                                                ?.text =
-                                            newValue;
-                                      });
-                                    }
-                                  },
-                                ),
-                              ),
-                      ],
-                    ),
-                  ),
+                  isMobile
+                      ? Column(
+                          children: [
+                            passportNumberBlock,
+                            const SizedBox(height: 20),
+                            countryBlock,
+                          ],
+                        )
+                      : _pair(passportNumberBlock, countryBlock),
                   const SizedBox(height: 20),
 
                   // 2️⃣ Second Row: Date of Birth & Passport Expiry Date
-                  // (You already had these in a Row, but using _pair keeps spacing identical!)
-                  _pair(
-                    Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        _buildLabel("Date of Birth "),
-                        TextFormField(
-                          controller: _searchControllers['dob'],
-                          readOnly: true,
-                          onTap: () =>
-                              _selectDate(context, _searchControllers['dob']!),
-                          decoration: _inputDecoration(
-                            "YYYY-MM-DD",
-                            Icons.calendar_today,
-                          ),
-                          validator: (v) => (v == null || v.trim().isEmpty)
-                              ? 'DOB required'
-                              : null,
-                        ),
-                      ],
-                    ),
-                    Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        _buildLabel("Passport Expiry Date "),
-                        TextFormField(
-                          controller: _searchControllers['passportExpiry'],
-                          readOnly: true,
-                          onTap: () => _selectDate(
-                            context,
-                            _searchControllers['passportExpiry']!,
-                          ),
-                          decoration: _inputDecoration(
-                            "YYYY-MM-DD",
-                            Icons.calendar_today,
-                          ),
-                          validator: (v) => (v == null || v.trim().isEmpty)
-                              ? 'Expiry date required'
-                              : null,
-                        ),
-                      ],
-                    ),
-                  ),
+                  isMobile
+                      ? Column(
+                          children: [
+                            dateOfBirthBlock,
+                            const SizedBox(height: 20),
+                            passportExpiryBlock,
+                          ],
+                        )
+                      : _pair(dateOfBirthBlock, passportExpiryBlock),
                 ],
                 const SizedBox(height: 32),
 
@@ -622,10 +641,11 @@ class _UpdateApplicationState extends ConsumerState<UpdateApplication> {
     );
   }
 
-  InputDecoration _inputDecoration(String hint, IconData icon) {
+  InputDecoration _inputDecoration(String hint, IconData icon, bool isMobile) {
     return InputDecoration(
       hintText: hint,
-      prefixIcon: Icon(icon, size: 20),
+      hintStyle: TextStyle(fontSize: isMobile ? 10 : 12, color: Colors.grey),
+      prefixIcon: Icon(icon, size: 15),
       border: OutlineInputBorder(borderRadius: BorderRadius.circular(8)),
       contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
     );
