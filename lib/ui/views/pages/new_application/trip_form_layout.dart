@@ -605,6 +605,7 @@ class _TripFormLayoutState extends ConsumerState<TripFormLayout>
                   label: "Vehicle Name",
                   controller: _getSafeController('vehicleName'),
                   maxLength: 50,
+                  filter: [FilteringTextInputFormatter.singleLineFormatter],
                   validator: (v) => FormValidators.required(v, 'Vehicle Name'),
                   onChanged: (v) {
                     widget.onValueChanged('vehicleName', v);
@@ -613,7 +614,7 @@ class _TripFormLayoutState extends ConsumerState<TripFormLayout>
                 CustomTextField(
                   label: "Vehicle Number",
                   controller: _getSafeController('vehicleNumber'),
-                  maxLength: 15,
+                  maxLength: 20,
                   validator: (v) =>
                       FormValidators.required(v, 'Vehicle Number'),
                   onChanged: (v) {
@@ -742,7 +743,7 @@ class _TripFormLayoutState extends ConsumerState<TripFormLayout>
                 ),
                 CustomTextField(
                   label: "Address in Myanmar",
-                  maxLength: 150,
+                  maxLength: 100,
                   controller: _getSafeController('addressInMyanmar'),
                   validator: (v) =>
                       FormValidators.required(v, 'Address in Myanmar'),
@@ -758,6 +759,11 @@ class _TripFormLayoutState extends ConsumerState<TripFormLayout>
                 CustomTextField(
                   label: "Previous City",
                   controller: _getSafeController('previousCity'),
+                  maxLength: 50,
+                  filter: [
+                    FilteringTextInputFormatter.singleLineFormatter,
+                    LengthLimitingTextInputFormatter(50),
+                  ],
                   validator: (v) => FormValidators.required(v, 'Previous City'),
                   onChanged: (v) {
                     widget.onValueChanged('previousCity', v);

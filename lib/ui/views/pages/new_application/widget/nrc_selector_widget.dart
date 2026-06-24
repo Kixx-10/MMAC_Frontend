@@ -54,8 +54,11 @@ class NrcSelectorWidget extends StatelessWidget {
     final dropdownBody = DropdownButtonHideUnderline(
       child: DropdownButton<T>(
         value: value,
+
+        alignment: Alignment.center,
         isExpanded: true,
         isDense: true,
+        dropdownColor: Colors.white,
         // 🎯 3. Fade the arrow icon
         icon: Icon(
           Icons.arrow_drop_down,
@@ -101,7 +104,11 @@ class NrcSelectorWidget extends StatelessWidget {
           width: 50,
           hint: Text('၁၂/', style: TextStyle(color: Colors.grey.shade400)),
           items: stateList.map<DropdownMenuItem<int>>((st) {
-            return DropdownMenuItem(value: st.id, child: Text(st.codeMM));
+            return DropdownMenuItem(
+              value: st.id,
+              alignment: Alignment.center,
+              child: Text(st.codeMM),
+            );
           }).toList(),
           onChanged: (id) {
             if (id != null) {
@@ -125,6 +132,7 @@ class NrcSelectorWidget extends StatelessWidget {
           items: townshipList.map<DropdownMenuItem<String>>((t) {
             return DropdownMenuItem(
               value: t.idCode,
+              alignment: Alignment.center,
               child: Text(t.codeMM, overflow: TextOverflow.ellipsis),
             );
           }).toList(),
@@ -144,7 +152,11 @@ class NrcSelectorWidget extends StatelessWidget {
           width: 50,
           hint: Text('နိုင်', style: TextStyle(color: Colors.grey.shade400)),
           items: nrcTypes.map<DropdownMenuItem<String>>((t) {
-            return DropdownMenuItem(value: t['code'], child: Text(t['label']!));
+            return DropdownMenuItem(
+              value: t['code'],
+              alignment: Alignment.center,
+              child: Text(t['label']!),
+            );
           }).toList(),
           onChanged: (v) {
             if (v != null) onTypeChanged(v);
