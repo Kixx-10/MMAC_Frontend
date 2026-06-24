@@ -56,6 +56,7 @@ class NrcSelectorWidget extends StatelessWidget {
         value: value,
         isExpanded: true,
         isDense: true,
+        dropdownColor: Colors.white,
         // 🎯 3. Fade the arrow icon
         icon: Icon(
           Icons.arrow_drop_down,

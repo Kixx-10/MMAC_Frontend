@@ -107,7 +107,11 @@ class _CustomDateFieldState extends State<CustomDateField> {
     if (initialDate.isBefore(widget.firstDate)) initialDate = widget.firstDate;
     if (initialDate.isAfter(widget.lastDate)) initialDate = widget.lastDate;
 
-    const double calendarHeight = 300;
+    // 🎯 1. Create a temporary state variable to hold the user's selection
+    DateTime tempSelectedDate = initialDate;
+
+    // 🎯 2. Increased height safely from 300 to 380 to fit the new buttons!
+    const double calendarHeight = 380;
     const double gap = 4;
 
     final double leftPosition = fieldPosition.dx + widget.labelWidth + 8;
@@ -136,17 +140,79 @@ class _CustomDateFieldState extends State<CustomDateField> {
                 side: BorderSide(color: Colors.grey.shade300),
               ),
               color: Colors.white,
-              child: Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 4.0),
-                child: CalendarDatePicker(
-                  initialDate: initialDate,
-                  firstDate: widget.firstDate,
-                  lastDate: widget.lastDate,
-                  onDateChanged: (DateTime picked) {
-                    widget.onPicked(picked);
-                    _closeOverlay();
-                  },
-                ),
+              // 🎯 3. Wrap in StatefulBuilder so the calendar can update without closing!
+              child: StatefulBuilder(
+                builder: (context, setStateOverlay) {
+                  return Column(
+                    children: [
+                      Expanded(
+                        child: Padding(
+                          padding: const EdgeInsets.symmetric(horizontal: 4.0),
+                          child: CalendarDatePicker(
+                            initialDate: tempSelectedDate,
+                            firstDate: widget.firstDate,
+                            lastDate: widget.lastDate,
+                            onDateChanged: (DateTime picked) {
+                              // Only update the temporary variable inside the overlay!
+                              setStateOverlay(() {
+                                tempSelectedDate = picked;
+                              });
+                            },
+                          ),
+                        ),
+                      ),
+                      Divider(height: 1, color: Colors.grey.shade200),
+                      // 🎯 4. Add the Cancel and OK Action Buttons
+                      Padding(
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 16.0,
+                          vertical: 10.0,
+                        ),
+                        child: Row(
+                          mainAxisAlignment: MainAxisAlignment.end,
+                          children: [
+                            TextButton(
+                              onPressed: _closeOverlay,
+                              style: TextButton.styleFrom(
+                                foregroundColor: Colors.black54,
+                                padding: const EdgeInsets.symmetric(
+                                  horizontal: 16,
+                                ),
+                              ),
+                              child: const Text(
+                                'Cancel',
+                                style: TextStyle(fontWeight: FontWeight.w600),
+                              ),
+                            ),
+                            const SizedBox(width: 8),
+                            ElevatedButton(
+                              onPressed: () {
+                                // Apply the final value back to the parent ONLY when OK is clicked!
+                                widget.onPicked(tempSelectedDate);
+                                _closeOverlay();
+                              },
+                              style: ElevatedButton.styleFrom(
+                                backgroundColor: Colors.blue,
+                                foregroundColor: Colors.white,
+                                elevation: 0,
+                                shape: RoundedRectangleBorder(
+                                  borderRadius: BorderRadius.circular(8),
+                                ),
+                                padding: const EdgeInsets.symmetric(
+                                  horizontal: 20,
+                                ),
+                              ),
+                              child: const Text(
+                                'OK',
+                                style: TextStyle(fontWeight: FontWeight.bold),
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ],
+                  );
+                },
               ),
             ),
           ),
