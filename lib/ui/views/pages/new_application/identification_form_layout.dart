@@ -295,6 +295,11 @@ class _IdentificationFormLayoutState
     final bool isMyanmar =
         widget.values['country'] == 'Myanmar' ||
         widget.values['country'] == 'MMR';
+
+    final List<String> availableCountry = isMyanmar
+        ? _countryNameList
+        : _countryNameList.where((c) => c != 'Myanmar' && c != 'MMR').toList();
+
     const double lw = 140;
 
     final nrcAsync = ref.watch(nrcProvider);
@@ -411,7 +416,7 @@ class _IdentificationFormLayoutState
         labelWidth: lw,
         dialogWidth: 250,
         dialogHeight: 250,
-        items: _countryNameList,
+        items: availableCountry,
         validator: (v) => FormValidators.requiredDropdown(v, 'Country'),
         onChanged: (v) {
           widget.onValueChanged('country', v);

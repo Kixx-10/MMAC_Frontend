@@ -168,9 +168,6 @@ class _UpdateApplicationState extends ConsumerState<UpdateApplication> {
             _rawCountryObjects.clear();
             _countryNameList.clear();
             _rawCountryObjects.addAll(countryState.countryList);
-            _countryNameList.addAll(
-              countryState.countryList.map((c) => c.countryName).toList(),
-            );
             _isLoadingCountries = false;
           });
         }
@@ -277,6 +274,103 @@ class _UpdateApplicationState extends ConsumerState<UpdateApplication> {
       child: const Text('Back', style: TextStyle(fontWeight: FontWeight.bold)),
     );
 
+    // 📦 1. Packaged DE Number Widget
+    final Widget deNumberWidget = Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        _buildLabel("DE Number"),
+        TextFormField(
+          controller: _searchControllers['qrReference'],
+          decoration: _inputDecoration("", Icons.qr_code_scanner_outlined),
+          validator: (v) => (v == null || v.trim().isEmpty)
+              ? 'QR Reference is mandatory'
+              : null,
+        ),
+      ],
+    );
+
+    // 📦 2. Packaged NRC Widget (With Full Riverpod Logic!)
+    final Widget nrcWidgetBlock = Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        _buildLabel("NRC Number *"),
+        (() {
+          final nrcAsync = ref.watch(nrcProvider);
+          final nrcState = nrcAsync.valueOrNull;
+
+          final List<dynamic> stateList = nrcState?.nrcStateList ?? [];
+          final List<dynamic> townshipList = _selectedNrcStateCode != null
+              ? (nrcState?.availableNrcTownships ?? [])
+              : [];
+          final int? currentProviderStateId = nrcState?.selectedNrcStateId;
+          final int? activeStateId =
+              (_selectedNrcStateCode != null &&
+                  stateList.any((st) => st.id == currentProviderStateId))
+              ? currentProviderStateId
+              : null;
+
+          final numberField = Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 10),
+            child: TextFormField(
+              controller: _nrcNumberController,
+              keyboardType: TextInputType.number,
+              inputFormatters: [
+                FilteringTextInputFormatter.allow(RegExp(r'[\u1040-\u1049]')),
+                LengthLimitingTextInputFormatter(6),
+              ],
+              style: const TextStyle(
+                fontSize: 13,
+                fontWeight: FontWeight.w500,
+                color: Colors.black87,
+              ),
+              decoration: InputDecoration(
+                hintText: "၁၂၃၄၅၆",
+                hintStyle: TextStyle(color: Colors.grey.shade400, fontSize: 13),
+                isDense: true,
+                border: InputBorder.none,
+                enabledBorder: InputBorder.none,
+                focusedBorder: InputBorder.none,
+                contentPadding: EdgeInsets.zero,
+              ),
+              onChanged: (v) => setState(() {}),
+            ),
+          );
+
+          return NrcSelectorWidget(
+            isDesktop: MediaQuery.of(context).size.width > 600,
+            selectedNrcStateCode:
+                stateList.any((s) => s.idCode == _selectedNrcStateCode)
+                ? _selectedNrcStateCode
+                : null,
+            selectedTownshipCode:
+                townshipList.any((t) => t.idCode == _selectedTownshipCode)
+                ? _selectedTownshipCode
+                : null,
+            selectedNrcType: _selectedNrcType,
+            numberField: numberField,
+            hasError: false,
+            stateList: stateList,
+            townshipList: townshipList,
+            nrcTypes: _nrcTypes,
+            activeStateId: activeStateId,
+            onStateChanged: (id, idCode) {
+              ref.read(nrcProvider.notifier).selectNrcState(id);
+              setState(() {
+                _selectedNrcStateCode = idCode;
+                _selectedTownshipCode = null;
+              });
+            },
+            onTownshipChanged: (v) {
+              setState(() => _selectedTownshipCode = v);
+            },
+            onTypeChanged: (v) {
+              setState(() => _selectedNrcType = v);
+            },
+          );
+        })(),
+      ],
+    );
+
     return SingleChildScrollView(
       padding: const EdgeInsets.all(16),
       child: Center(
@@ -314,24 +408,30 @@ class _UpdateApplicationState extends ConsumerState<UpdateApplication> {
                 ),
                 const SizedBox(height: 24),
 
-                // (ကျန်သော Form Field များသည် မူလအတိုင်းဖြစ်သည် - QR, NRC, Passport စသည်)
-                _buildLabel("DE Number"),
-                TextFormField(
-                  controller: _searchControllers['qrReference'],
-                  decoration: _inputDecoration(
-                    "",
-                    Icons.qr_code_scanner_outlined,
-                  ),
-                  validator: (v) => (v == null || v.trim().isEmpty)
-                      ? 'QR Reference is mandatory'
-                      : null,
-                ),
-
+                // 🇲🇲 NATIVE (MYANMAR) LAYOUT
                 if (isMyanmar) ...[
+                  // 🎯 ROW 1: DE Number & NRC Number (Side-by-Side on Desktop)
+                  isMobile
+                      ? Column(
+                          crossAxisAlignment: CrossAxisAlignment.stretch,
+                          children: [
+                            deNumberWidget,
+                            const SizedBox(height: 20),
+                            nrcWidgetBlock,
+                          ],
+                        )
+                      : Row(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Expanded(child: deNumberWidget),
+                            const SizedBox(width: 16),
+                            Expanded(child: nrcWidgetBlock),
+                          ],
+                        ),
                   const SizedBox(height: 20),
-                  _buildLabel("Expected Date of Arrival *"),
 
-                  // 🎯 The Radio Layout
+                  // 🎯 ROW 2: Expected Date of Arrival
+                  _buildLabel("Expected Date of Arrival *"),
                   isMobile
                       ? Column(
                           children: [
@@ -345,18 +445,14 @@ class _UpdateApplicationState extends ConsumerState<UpdateApplication> {
                       : Row(
                           children: [
                             Expanded(child: _buildArrivalRadioOption(0)),
-                            const SizedBox(
-                              width: 8,
-                            ), // Exact spacing between the 3 boxes
+                            const SizedBox(width: 8),
                             Expanded(child: _buildArrivalRadioOption(1)),
                             const SizedBox(width: 8),
                             Expanded(child: _buildArrivalRadioOption(2)),
                           ],
                         ),
 
-                  // 🎯 Hidden Validation Field
-                  // We keep a hidden field here just so your form validation
-                  // still works if they click "Find Application" without selecting a radio option.
+                  // Hidden Validation Field
                   Offstage(
                     child: TextFormField(
                       controller: _searchControllers['arrivalDate'],
@@ -366,119 +462,14 @@ class _UpdateApplicationState extends ConsumerState<UpdateApplication> {
                     ),
                   ),
                 ],
-                const SizedBox(height: 20),
 
-                if (isMyanmar) ...[
-                  const Text(
-                    "NRC Number *",
-                    style: TextStyle(fontSize: 13, fontWeight: FontWeight.w600),
-                  ),
-                  const SizedBox(height: 8),
-
-                  // Riverpod ကနေ NRC Master Data ကို စောင့်ကြည့်ခြင်း
-                  // Riverpod ကနေ NRC Master Data ကို စောင့်ကြည့်ခြင်း
-                  (() {
-                    final nrcAsync = ref.watch(nrcProvider);
-                    final nrcState = nrcAsync.valueOrNull;
-
-                    final List<dynamic> stateList =
-                        nrcState?.nrcStateList ?? [];
-
-                    // 🎯 1. Block Ghost Townships: Only load if local code isn't wiped!
-                    final List<dynamic> townshipList =
-                        _selectedNrcStateCode != null
-                        ? (nrcState?.availableNrcTownships ?? [])
-                        : [];
-
-                    final int? currentProviderStateId =
-                        nrcState?.selectedNrcStateId;
-
-                    // 🎯 2. Block Ghost State ID: Force to null if local code is wiped!
-                    final int? activeStateId =
-                        (_selectedNrcStateCode != null &&
-                            stateList.any(
-                              (st) => st.id == currentProviderStateId,
-                            ))
-                        ? currentProviderStateId
-                        : null;
-
-                    // 🎯 Create the seamless Number Field (unchanged)
-                    final numberField = Padding(
-                      padding: const EdgeInsets.symmetric(horizontal: 10),
-                      child: TextFormField(
-                        controller: _nrcNumberController,
-                        keyboardType: TextInputType.number,
-                        inputFormatters: [
-                          FilteringTextInputFormatter.allow(
-                            RegExp(r'[\u1040-\u1049]'),
-                          ),
-                          LengthLimitingTextInputFormatter(6),
-                        ],
-                        style: const TextStyle(
-                          fontSize: 13,
-                          fontWeight: FontWeight.w500,
-                          color: Colors.black87,
-                        ),
-                        decoration: InputDecoration(
-                          hintText: "၁၂၃၄၅၆",
-                          hintStyle: TextStyle(
-                            color: Colors.grey.shade400,
-                            fontSize: 13,
-                          ),
-                          isDense: true,
-                          border: InputBorder.none,
-                          enabledBorder: InputBorder.none,
-                          focusedBorder: InputBorder.none,
-                          contentPadding: EdgeInsets.zero,
-                        ),
-                        onChanged: (v) => setState(() {}),
-                      ),
-                    );
-
-                    // 🎯 3. Return Widget with SAFE CONTAIN CHECKS!
-                    return NrcSelectorWidget(
-                      isDesktop: MediaQuery.of(context).size.width > 600,
-
-                      // 🛡️ Safe checks prevent dropdown crashes when clearing data
-                      selectedNrcStateCode:
-                          stateList.any(
-                            (s) => s.idCode == _selectedNrcStateCode,
-                          )
-                          ? _selectedNrcStateCode
-                          : null,
-                      selectedTownshipCode:
-                          townshipList.any(
-                            (t) => t.idCode == _selectedTownshipCode,
-                          )
-                          ? _selectedTownshipCode
-                          : null,
-
-                      selectedNrcType: _selectedNrcType,
-                      numberField: numberField,
-                      hasError: false,
-                      stateList: stateList,
-                      townshipList: townshipList,
-                      nrcTypes: _nrcTypes,
-                      activeStateId: activeStateId,
-                      onStateChanged: (id, idCode) {
-                        ref.read(nrcProvider.notifier).selectNrcState(id);
-                        setState(() {
-                          _selectedNrcStateCode = idCode;
-                          _selectedTownshipCode = null;
-                        });
-                      },
-                      onTownshipChanged: (v) {
-                        setState(() => _selectedTownshipCode = v);
-                      },
-                      onTypeChanged: (v) {
-                        setState(() => _selectedNrcType = v);
-                      },
-                    );
-                  })(),
-                ],
-
+                // ✈️ FOREIGNER LAYOUT
                 if (!isMyanmar) ...[
+                  // Foreigners still need the DE Number field at the top!
+                  deNumberWidget,
                   const SizedBox(height: 20),
+
+                  // 1️⃣ First Row: Passport Number & Nationality
 
                   // 1️⃣ First Row: Passport Number & Nationality
                   _pair(
@@ -599,9 +590,9 @@ class _UpdateApplicationState extends ConsumerState<UpdateApplication> {
                     ? Column(
                         crossAxisAlignment: CrossAxisAlignment.stretch,
                         children: [
-                          secondaryButton,
-                          const SizedBox(height: 10),
                           primaryButton,
+                          const SizedBox(height: 10),
+                          secondaryButton,
                         ],
                       )
                     : Row(

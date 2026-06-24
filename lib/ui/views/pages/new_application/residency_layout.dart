@@ -137,7 +137,7 @@ class _ResidencySelectorCardState extends State<ResidencySelectorCard> {
       duration: const Duration(milliseconds: 200),
       curve: Curves.easeInOut,
       // ignore: deprecated_member_use
-      transform: Matrix4.identity()..translate(0, _isHovered ? -4 : 0),
+      transform: Matrix4.identity()..translate(0.0, _isHovered ? -4.0 : 0.0),
       constraints: const BoxConstraints(maxWidth: 290),
       decoration: BoxDecoration(
         color: Colors.white,
