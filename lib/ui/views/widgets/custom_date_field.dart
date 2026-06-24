@@ -107,7 +107,7 @@ class _CustomDateFieldState extends State<CustomDateField> {
     if (initialDate.isBefore(widget.firstDate)) initialDate = widget.firstDate;
     if (initialDate.isAfter(widget.lastDate)) initialDate = widget.lastDate;
 
-    const double calendarHeight = 200;
+    const double calendarHeight = 300;
     const double gap = 4;
 
     final double leftPosition = fieldPosition.dx + widget.labelWidth + 8;

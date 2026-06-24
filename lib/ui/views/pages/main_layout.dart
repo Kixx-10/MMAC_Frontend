@@ -300,7 +300,7 @@ class _MainLayoutState extends State<MainLayout>
   @override
   Widget build(BuildContext context) {
     final double screenWidth = MediaQuery.of(context).size.width;
-    final bool isMobile = screenWidth < 900;
+    final bool isMobile = screenWidth < 500;
 
     return Scaffold(
       backgroundColor: const Color(0xFFF8F9FA),
@@ -329,7 +329,9 @@ class _MainLayoutState extends State<MainLayout>
                     bottom: 10,
                   ),
                   child: Row(
-                    mainAxisAlignment: MainAxisAlignment.center,
+                    mainAxisAlignment: isMobile
+                        ? MainAxisAlignment.spaceEvenly
+                        : MainAxisAlignment.center,
                     children: [
                       Expanded(
                         child: Align(
@@ -339,9 +341,10 @@ class _MainLayoutState extends State<MainLayout>
                             child: TabBar(
                               controller: _tabController,
                               isScrollable: isMobile,
+
                               dividerColor: Colors.transparent,
                               labelColor: Colors.blue.shade800,
-                              unselectedLabelColor: Colors.grey.shade600,
+                              unselectedLabelColor: Colors.black87,
                               labelStyle: const TextStyle(
                                 fontWeight: FontWeight.bold,
                                 fontFamily: 'sans-serif',
@@ -358,7 +361,7 @@ class _MainLayoutState extends State<MainLayout>
                                 _buildCustomTab("New Application"),
                                 _buildCustomTab("Update Application"),
                                 _buildCustomTab("FAQs"),
-                                _buildCustomTab("QrScan")
+                                _buildCustomTab("QrScan"),
                               ],
                               onTap: (index) async {
                                 final prefs =
@@ -368,7 +371,7 @@ class _MainLayoutState extends State<MainLayout>
                                 if (index == 1 || index == 2) {
                                   await _resumeOrStartNew(
                                     index,
-                                  ); // 🎯 သက်ဆိုင်ရာ Session ကို ပြန်စစ်မည်
+                                  ); //  သက်ဆိုင်ရာ Session ကို ပြန်စစ်မည်
                                 } else {
                                   setState(() {
                                     _selectedResidency = null;
