@@ -74,7 +74,21 @@ class _UpdateApplicationState extends ConsumerState<UpdateApplication> {
       initialDate: DateTime(2000),
       firstDate: DateTime(1900),
       lastDate: DateTime(2100),
+      // 🎯 THE FIX: Wrap the picker in your custom button blue theme!
+      builder: (context, child) {
+        return Theme(
+          data: Theme.of(context).copyWith(
+            colorScheme: ColorScheme.light(
+              primary: Colors.lightBlue.shade700,
+              onPrimary: Colors.white,
+              onSurface: Colors.black87,
+            ),
+          ),
+          child: child!,
+        );
+      },
     );
+
     if (picked != null) {
       setState(() {
         controller.text =
@@ -281,7 +295,11 @@ class _UpdateApplicationState extends ConsumerState<UpdateApplication> {
         _buildLabel("DE Number"),
         TextFormField(
           controller: _searchControllers['qrReference'],
-          decoration: _inputDecoration("", Icons.qr_code_scanner_outlined),
+          decoration: _inputDecoration(
+            "",
+            Icons.qr_code_scanner_outlined,
+            isMobile,
+          ),
           validator: (v) => (v == null || v.trim().isEmpty)
               ? 'QR Reference is mandatory'
               : null,
@@ -293,7 +311,7 @@ class _UpdateApplicationState extends ConsumerState<UpdateApplication> {
     final Widget nrcWidgetBlock = Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        _buildLabel("NRC Number *"),
+        _buildLabel("NRC Number"),
         (() {
           final nrcAsync = ref.watch(nrcProvider);
           final nrcState = nrcAsync.valueOrNull;
@@ -314,6 +332,7 @@ class _UpdateApplicationState extends ConsumerState<UpdateApplication> {
             child: TextFormField(
               controller: _nrcNumberController,
               keyboardType: TextInputType.number,
+              textAlign: TextAlign.center,
               inputFormatters: [
                 FilteringTextInputFormatter.allow(RegExp(r'[\u1040-\u1049]')),
                 LengthLimitingTextInputFormatter(6),
@@ -378,7 +397,7 @@ class _UpdateApplicationState extends ConsumerState<UpdateApplication> {
         TextFormField(
           controller: _searchControllers['passportNumber'],
           textCapitalization: TextCapitalization.characters,
-          decoration: _inputDecoration("", Icons.badge_outlined),
+          decoration: _inputDecoration("", Icons.badge_outlined, isMobile),
           validator: (v) => (v == null || v.trim().isEmpty)
               ? 'Passport Number required'
               : null,
@@ -432,7 +451,11 @@ class _UpdateApplicationState extends ConsumerState<UpdateApplication> {
           controller: _searchControllers['dob'],
           readOnly: true,
           onTap: () => _selectDate(context, _searchControllers['dob']!),
-          decoration: _inputDecoration("YYYY-MM-DD", Icons.calendar_today),
+          decoration: _inputDecoration(
+            "YYYY-MM-DD",
+            Icons.calendar_today,
+            isMobile,
+          ),
           validator: (v) =>
               (v == null || v.trim().isEmpty) ? 'DOB required' : null,
         ),
@@ -448,7 +471,11 @@ class _UpdateApplicationState extends ConsumerState<UpdateApplication> {
           readOnly: true,
           onTap: () =>
               _selectDate(context, _searchControllers['passportExpiry']!),
-          decoration: _inputDecoration("YYYY-MM-DD", Icons.calendar_today),
+          decoration: _inputDecoration(
+            "YYYY-MM-DD",
+            Icons.calendar_today,
+            isMobile,
+          ),
           validator: (v) =>
               (v == null || v.trim().isEmpty) ? 'Expiry date required' : null,
         ),
@@ -515,7 +542,7 @@ class _UpdateApplicationState extends ConsumerState<UpdateApplication> {
                   const SizedBox(height: 20),
 
                   // 🎯 ROW 2: Expected Date of Arrival
-                  _buildLabel("Expected Date of Arrival *"),
+                  _buildLabel("Expected Date of Arrival"),
                   isMobile
                       ? Column(
                           children: [
@@ -614,10 +641,11 @@ class _UpdateApplicationState extends ConsumerState<UpdateApplication> {
     );
   }
 
-  InputDecoration _inputDecoration(String hint, IconData icon) {
+  InputDecoration _inputDecoration(String hint, IconData icon, bool isMobile) {
     return InputDecoration(
       hintText: hint,
-      prefixIcon: Icon(icon, size: 20),
+      hintStyle: TextStyle(fontSize: isMobile ? 10 : 12, color: Colors.grey),
+      prefixIcon: Icon(icon, size: 15),
       border: OutlineInputBorder(borderRadius: BorderRadius.circular(8)),
       contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
     );

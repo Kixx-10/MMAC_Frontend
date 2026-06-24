@@ -16,20 +16,22 @@ class ApiClient {
     );
   }
 
-  Future<Response> get(String path, {Map<String, dynamic>? queryParameters}) async {
+  Future<Response> get(
+    String path, {
+    Map<String, dynamic>? queryParameters,
+  }) async {
     try {
       return await dio.get(path, queryParameters: queryParameters);
     } on DioException {
-      rethrow; 
+      rethrow;
     }
   }
 
- 
   Future<Response> post(String path, {dynamic data}) async {
     try {
       return await dio.post(path, data: data);
     } on DioException {
-      rethrow; 
+      rethrow;
     }
   }
 }

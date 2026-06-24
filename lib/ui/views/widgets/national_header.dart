@@ -70,7 +70,7 @@ class NationalHeader extends StatelessWidget {
                   Text(
                     "The Republic of the Union of Myanmar",
                     style: TextStyle(
-                      fontSize: isMobile ? 14 : 16,
+                      fontSize: isMobile ? 12 : 16,
                       fontWeight: FontWeight.bold,
                       color: const Color(0xff6B7280),
                     ),
@@ -80,7 +80,7 @@ class NationalHeader extends StatelessWidget {
                   Text(
                     "Department of Immigration and Population",
                     style: TextStyle(
-                      fontSize: isMobile ? 17 : 20,
+                      fontSize: isMobile ? 13 : 20,
                       fontWeight: FontWeight.bold,
                       color: Colors.black,
                     ),

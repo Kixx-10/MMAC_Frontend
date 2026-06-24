@@ -68,7 +68,7 @@ class _CustomDateFieldState extends State<CustomDateField> {
           data: Theme.of(context).copyWith(
             // Optional: Matches your web/desktop blue theme profile
             colorScheme: const ColorScheme.light(
-              primary: Colors.blue,
+              primary: Colors.lightBlue,
               onPrimary: Colors.white,
               onSurface: Colors.black87,
             ),
@@ -148,16 +148,25 @@ class _CustomDateFieldState extends State<CustomDateField> {
                       Expanded(
                         child: Padding(
                           padding: const EdgeInsets.symmetric(horizontal: 4.0),
-                          child: CalendarDatePicker(
-                            initialDate: tempSelectedDate,
-                            firstDate: widget.firstDate,
-                            lastDate: widget.lastDate,
-                            onDateChanged: (DateTime picked) {
-                              // Only update the temporary variable inside the overlay!
-                              setStateOverlay(() {
-                                tempSelectedDate = picked;
-                              });
-                            },
+                          child: Theme(
+                            data: Theme.of(context).copyWith(
+                              colorScheme: const ColorScheme.light(
+                                primary: Colors.lightBlue,
+                                onPrimary: Colors.white,
+                                onSurface: Colors.black87,
+                              ),
+                            ),
+                            child: CalendarDatePicker(
+                              initialDate: tempSelectedDate,
+                              firstDate: widget.firstDate,
+                              lastDate: widget.lastDate,
+                              onDateChanged: (DateTime picked) {
+                                // Only update the temporary variable inside the overlay!
+                                setStateOverlay(() {
+                                  tempSelectedDate = picked;
+                                });
+                              },
+                            ),
                           ),
                         ),
                       ),
