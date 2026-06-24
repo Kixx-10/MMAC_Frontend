@@ -1,3 +1,4 @@
+import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:mmac/data/models/qr_response_model.dart';
 import 'package:mmac/data/reposistories/qr_scan_repository.dart';
@@ -17,7 +18,7 @@ class QrScanState {
   }
 }
 
-// 🧠 2. AsyncNotifier 
+
 class QrScanNotifier extends AsyncNotifier<QrScanState> {
   final QrScanRepository _repository = QrScanRepository();
 
@@ -35,6 +36,7 @@ class QrScanNotifier extends AsyncNotifier<QrScanState> {
       
       if (result != null) {
         return QrScanState(scannedDataList: [result]);
+        
       } else {
         throw Exception("Invalid QR");
       }
@@ -54,7 +56,7 @@ class QrScanNotifier extends AsyncNotifier<QrScanState> {
   }
 }
 
-// 🔗 3. Global Provider
+// Global Provider
 final qrScanProvider = AsyncNotifierProvider<QrScanNotifier, QrScanState>(
   QrScanNotifier.new,
 );

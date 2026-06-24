@@ -6,7 +6,11 @@ import 'package:mobile_scanner/mobile_scanner.dart';
 import 'package:permission_handler/permission_handler.dart';
 
 class QrScannerView extends ConsumerStatefulWidget {
-  const QrScannerView({super.key});
+
+  final Function(String)? onScanned;
+  const QrScannerView({
+    super.key,
+    this.onScanned});
 
   @override
   ConsumerState<QrScannerView> createState() => _QrScannerViewState();
@@ -65,7 +69,10 @@ class _QrScannerViewState extends ConsumerState<QrScannerView> {
                      final barcodes = capture.barcodes;
                      if (barcodes.isNotEmpty && barcodes.first.rawValue != null) {
                        cameraController.stop();
+                       final String qrData = barcodes.first.rawValue!;
                        ref.read(qrScanProvider.notifier).verifyQrCode(barcodes.first.rawValue!);
+                       widget.onScanned?.call(qrData);
+                       //debugPrint('appNo:$qrData');
                      }
                    },
                  ),
