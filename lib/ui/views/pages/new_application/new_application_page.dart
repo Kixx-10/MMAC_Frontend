@@ -513,38 +513,81 @@ class _NewApplicationState extends ConsumerState<NewApplication>
       currentStep = 1;
     });
   }
+Future<void> _submitApplication() async {
+  _showLoadingDialog();
 
-  Future<void> _submitApplication() async {
+  try {
     final requestModel = _buildRequestModel();
-    showDialog(
-      context: context,
-      barrierDismissible: false,
-      builder: (_) => const Center(child: CircularProgressIndicator()),
-    );
-    try {
-      final response = await ref
-          .read(submitControllerProvider.notifier)
-          .submitApplicationAction(requestModel);
-      if (!mounted) return;
-      Navigator.of(context).pop();
-      if (response != null) {
-        FormSessionService.clearDraft(isUpdateMode: widget.isUpdateMode);
-        setState(() {
-          _submittedData = requestModel;
-          _generatedApplicationNo = response.applicationNo;
-          currentStep = 5;
-        });
-      } else {
-        _showErrorDialog(
-          'The server could not process your application. Please re-check your info.',
-        );
-      }
-    } catch (e) {
-      if (!mounted) return;
-      Navigator.of(context).pop();
-      _showErrorDialog('An unexpected error occurred. Please try again later.');
+    
+    final response = await ref
+        .read(submitControllerProvider.notifier)
+        .submitApplicationAction(requestModel);
+
+    if (mounted) Navigator.of(context).pop();
+
+    if (response != null) {
+      _handleSuccess(response, requestModel);
+    } else {
+  
+      _showErrorDialog('The server could not process your application.');
     }
+  } catch (e) {
+    if (mounted) Navigator.of(context).pop();
+    _showErrorDialog(e.toString().replaceAll("Exception: ", ""));
   }
+}
+
+void _showLoadingDialog() {
+  showDialog(
+    context: context,
+    barrierDismissible: false,
+    builder: (_) => const Center(child: CircularProgressIndicator()),
+  );
+}
+
+void _handleSuccess(var response, var requestModel) {
+  FormSessionService.clearDraft(isUpdateMode: widget.isUpdateMode);
+  setState(() {
+    _submittedData = requestModel;
+    _generatedApplicationNo = response.applicationNo;
+    currentStep = 5;
+  });
+}
+
+
+
+
+  // Future<void> _submitApplication() async {
+  //   final requestModel = _buildRequestModel();
+  //   showDialog(
+  //     context: context,
+  //     barrierDismissible: false,
+  //     builder: (_) => const Center(child: CircularProgressIndicator()),
+  //   );
+  //   try {
+  //     final response = await ref
+  //         .read(submitControllerProvider.notifier)
+  //         .submitApplicationAction(requestModel);
+  //     if (!mounted) return;
+  //     Navigator.of(context).pop();
+  //     if (response != null) {
+  //       FormSessionService.clearDraft(isUpdateMode: widget.isUpdateMode);
+  //       setState(() {
+  //         _submittedData = requestModel;
+  //         _generatedApplicationNo = response.applicationNo;
+  //         currentStep = 5;
+  //       });
+  //     } else {
+  //       _showErrorDialog(
+  //         'The server could not process your application. Please re-check your info.',
+  //       );
+  //     }
+  //   } catch (e) {
+  //     if (!mounted) return;
+  //     Navigator.of(context).pop();
+  //     _showErrorDialog('An unexpected error occurred. Please try again later.');
+  //   }
+  // }
 
   void _showError(String msg) {
     if (!mounted) return;
@@ -659,7 +702,7 @@ class _NewApplicationState extends ConsumerState<NewApplication>
       case 0:
         return UpdateApplication(
           onBackPressed: widget.onBackPressed ?? () {},
-          initialCountry: widget.initialCountry, // 🎯 ဒါလေး ထပ်ထည့်ပေးပါ
+          initialCountry: widget.initialCountry, 
           onApplicationFetched: (SubmitRequestModel fetchedData) {
             _injectFetchedData(fetchedData);
           },
@@ -673,7 +716,7 @@ class _NewApplicationState extends ConsumerState<NewApplication>
           isUpdateMode: widget.isUpdateMode,
           formKey: _step1FormKey,
           onReady: (interfaceLayout) => _step1Interface = interfaceLayout,
-          onBackPressed: widget.onBackPressed ?? () {}, // 🟢 FIXED
+          onBackPressed: widget.onBackPressed ?? () {}, 
         );
       case 2:
         return TripFormLayout(
