@@ -501,9 +501,18 @@ class _IdentificationFormLayoutState
             onTap: () {
               showDialog<String>(
                 context: context,
-                builder: (context) => MobileCodeSearchDialog(
-                  countryCodes: _countryCodes,
-                  selectedValue: widget.values['mobileCode'],
+                builder: (context) => Theme(
+                  data: Theme.of(context).copyWith(
+                    colorScheme: const ColorScheme.light(
+                      primary: Colors.white,
+                      onPrimary: Colors.grey,
+                      onSurface: Colors.black87,
+                    ),
+                  ),
+                  child: MobileCodeSearchDialog(
+                    countryCodes: _countryCodes,
+                    selectedValue: widget.values['mobileCode'],
+                  ),
                 ),
               ).then((code) {
                 if (code != null) {
@@ -965,8 +974,8 @@ class _IdentificationFormLayoutState
             ElevatedButton(
               onPressed: widget.onBackPressed,
               style: ElevatedButton.styleFrom(
-                backgroundColor: Colors.lightBlue.shade700,
-                foregroundColor: Colors.white,
+                backgroundColor: Colors.white,
+                foregroundColor: Colors.black87,
                 padding: const EdgeInsets.symmetric(
                   horizontal: 32,
                   vertical: 12,

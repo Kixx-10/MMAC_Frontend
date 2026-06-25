@@ -281,7 +281,8 @@ class _MainLayoutState extends State<MainLayout>
     super.dispose();
   }
 
-  Widget _buildCustomTab(String label, bool isMobile) {
+  Widget _buildCustomTab(String label) {
+    final bool isMobile = MediaQuery.of(context).size.width < 900;
     return Tab(
       height: 38,
       child: Row(
@@ -291,7 +292,7 @@ class _MainLayoutState extends State<MainLayout>
           Text(
             label,
             style: TextStyle(
-              fontSize: isMobile ? 8 : 14,
+              fontSize: isMobile ? 12 : 14,
               fontFamily: 'sans-serif',
             ),
           ),
@@ -360,11 +361,11 @@ class _MainLayoutState extends State<MainLayout>
                                 horizontal: 4,
                               ),
                               tabs: [
-                                _buildCustomTab("Home", isMobile),
-                                _buildCustomTab("New Application", isMobile),
-                                _buildCustomTab("Update Application", isMobile),
-                                _buildCustomTab("FAQs", isMobile),
-                                _buildCustomTab("QrScan", isMobile),
+                                _buildCustomTab("Home"),
+                                _buildCustomTab("New Application"),
+                                _buildCustomTab("Update Application"),
+                                _buildCustomTab("FAQs"),
+                                _buildCustomTab("QrScan"),
                               ],
                               onTap: (index) async {
                                 final prefs =
