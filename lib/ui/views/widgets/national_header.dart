@@ -8,7 +8,7 @@ class NationalHeader extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final double screenWidth = MediaQuery.of(context).size.width;
-    final bool isMobile = screenWidth < 900; // Mobile/Tablet breakpoint
+    final bool isMobile = screenWidth < 950; // Mobile/Tablet breakpoint
 
     return Container(
       padding: EdgeInsets.only(
