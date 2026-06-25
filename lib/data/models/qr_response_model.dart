@@ -21,14 +21,14 @@ class QrResponseModel {
   final String districtName;
   final String townshipName;
 
-  // 🎯 ပြည်တွင်း/ပြည်ပပေါ်မူတည်ပြီး Null ဖြစ်နိုင်သော Field များ
-  final String? visaNo; // Myanmar Citizen အတွက် Null ဖြစ်မည်
-  final String? accommodation; // Myanmar Citizen အတွက် Null ဖြစ်မည်
-  final String? nrc; // Foreigner အတွက် Null ဖြစ်မည်
-  final String? fatherName; // Foreigner အတွက် Null ဖြစ်မည်
-  final String? mobileNumberMM; // Foreigner အတွက် Null ဖြစ်မည်
+  
+  final String? visaNo; 
+  final String? accommodation; 
+  final String? nrc; 
+  final String? fatherName; 
+  final String? mobileNumberMM; 
 
-  // Optional ဖြစ်နိုင်သော Vehicle Info များ
+
   final String? vehicleNumber;
   final String? vehicleName;
   final String? previousCity;
