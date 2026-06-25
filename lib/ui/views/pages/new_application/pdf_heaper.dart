@@ -1,4 +1,4 @@
-// ignore_for_file: prefer_const_constructors, dead_null_aware_expression, dead_code
+// ignore_for_file: deprecated_member_use, prefer_const_constructors, dead_null_aware_expression, dead_code
 
 import 'dart:io';
 import 'dart:typed_data';
@@ -23,7 +23,6 @@ class PdfHelper {
       final painter = QrPainter.withQr(
         qr: qrCode,
         color: const Color(0xFF000000),
-        // ignore: deprecated_member_use
         emptyColor: const Color(0xFFFFFFFF),
         gapless: true,
       );
