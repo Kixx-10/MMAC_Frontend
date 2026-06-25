@@ -3,8 +3,8 @@
 class SubmitResponseModel {
   final String message;
   final String applicationNo;
-  final String referenceNo; // ဖြည့်စွက်ချက်
-  final String pdfData;      // Base64 String အတွက် ဖြည့်စွက်ချက်
+  final String referenceNo; 
+  final String pdfData;      
 
   SubmitResponseModel({
     required this.message,
