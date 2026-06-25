@@ -295,6 +295,11 @@ class _IdentificationFormLayoutState
     final bool isMyanmar =
         widget.values['country'] == 'Myanmar' ||
         widget.values['country'] == 'MMR';
+
+    final List<String> availableCountry = isMyanmar
+        ? _countryNameList
+        : _countryNameList.where((c) => c != 'Myanmar' && c != 'MMR').toList();
+
     const double lw = 140;
 
     final nrcAsync = ref.watch(nrcProvider);
@@ -346,7 +351,11 @@ class _IdentificationFormLayoutState
     final fullNameField = CustomTextField(
       label: "Full Name",
       controller: widget.controllers['fullName']!,
-      filter: [UpperCaseTextFormatter()],
+      filter: [
+        FilteringTextInputFormatter.singleLineFormatter,
+        UpperCaseTextFormatter(),
+        LengthLimitingTextInputFormatter(50),
+      ],
       maxLength: 50,
       labelWidth: lw,
       readonly: widget.isUpdateMode,
@@ -407,7 +416,7 @@ class _IdentificationFormLayoutState
         labelWidth: lw,
         dialogWidth: 250,
         dialogHeight: 250,
-        items: _countryNameList,
+        items: availableCountry,
         validator: (v) => FormValidators.requiredDropdown(v, 'Country'),
         onChanged: (v) {
           widget.onValueChanged('country', v);
@@ -492,9 +501,18 @@ class _IdentificationFormLayoutState
             onTap: () {
               showDialog<String>(
                 context: context,
-                builder: (context) => MobileCodeSearchDialog(
-                  countryCodes: _countryCodes,
-                  selectedValue: widget.values['mobileCode'],
+                builder: (context) => Theme(
+                  data: Theme.of(context).copyWith(
+                    colorScheme: const ColorScheme.light(
+                      primary: Colors.white,
+                      onPrimary: Colors.grey,
+                      onSurface: Colors.black87,
+                    ),
+                  ),
+                  child: MobileCodeSearchDialog(
+                    countryCodes: _countryCodes,
+                    selectedValue: widget.values['mobileCode'],
+                  ),
                 ),
               ).then((code) {
                 if (code != null) {
@@ -546,7 +564,7 @@ class _IdentificationFormLayoutState
             keyboardType: TextInputType.phone,
             inputFormatters: [
               FilteringTextInputFormatter.digitsOnly,
-              LengthLimitingTextInputFormatter(15),
+              LengthLimitingTextInputFormatter(20),
             ],
             style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w500),
             decoration: InputDecoration(
@@ -574,6 +592,7 @@ class _IdentificationFormLayoutState
                 borderRadius: BorderRadius.circular(8),
                 borderSide: const BorderSide(color: Colors.red, width: 1.5),
               ),
+              errorStyle: const TextStyle(color: Colors.red),
             ),
             onChanged: (v) => _updateMobileControllerValue(),
             validator: (v) {
@@ -607,6 +626,10 @@ class _IdentificationFormLayoutState
       label: "Visa Number",
       controller: widget.controllers['visaNumber']!,
       maxLength: 50,
+      filter: [
+        FilteringTextInputFormatter.singleLineFormatter,
+        FilteringTextInputFormatter.allow(RegExp(r'[a-zA-Z0-9]')),
+      ],
       labelWidth: lw,
       isRequired: false,
       validator: (v) => null,
@@ -624,6 +647,11 @@ class _IdentificationFormLayoutState
       controller: widget.controllers['passportNumber']!,
       maxLength: 20,
       labelWidth: lw,
+      filter: [
+        FilteringTextInputFormatter.singleLineFormatter,
+        LengthLimitingTextInputFormatter(20),
+        FilteringTextInputFormatter.allow(RegExp(r'[a-zA-Z0-9]')),
+      ],
       readonly: (widget.isUpdateMode && !isMyanmar),
       validator: (v) => FormValidators.required(v, 'Passport Number'),
       onChanged: (value) {
@@ -703,6 +731,11 @@ class _IdentificationFormLayoutState
       label: "Place of Residence",
       controller: widget.controllers['address']!,
       labelWidth: lw,
+      filter: [
+        // FilteringTextInputFormatter.singleLineFormatter,
+        LengthLimitingTextInputFormatter(100),
+        FilteringTextInputFormatter.allow(RegExp(r'[a-zA-Z0-9]')),
+      ],
       maxLength: 100,
       validator: (v) => FormValidators.required(v, 'Address'),
       onChanged: (value) {
@@ -941,8 +974,8 @@ class _IdentificationFormLayoutState
             ElevatedButton(
               onPressed: widget.onBackPressed,
               style: ElevatedButton.styleFrom(
-                backgroundColor: Colors.lightBlue.shade700,
-                foregroundColor: Colors.white,
+                backgroundColor: Colors.white,
+                foregroundColor: Colors.black87,
                 padding: const EdgeInsets.symmetric(
                   horizontal: 32,
                   vertical: 12,
@@ -985,8 +1018,8 @@ class _IdentificationFormLayoutState
             ElevatedButton(
               onPressed: widget.onBackPressed,
               style: ElevatedButton.styleFrom(
-                backgroundColor: Colors.lightBlue.shade700,
-                foregroundColor: Colors.white,
+                backgroundColor: Colors.white,
+                foregroundColor: Colors.black87,
                 padding: const EdgeInsets.symmetric(
                   horizontal: 32,
                   vertical: 12,

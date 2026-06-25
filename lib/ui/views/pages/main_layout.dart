@@ -103,7 +103,7 @@ class _MainLayoutState extends State<MainLayout>
             ),
             content: const SizedBox(
               width:
-                  320, // 🎯 Box ကို ရှည်မထွက်သွားစေရန် အကျယ်ထိန်းပေးခြင်း (Square-ish Shape)
+                  320, //  Box ကို ရှည်မထွက်သွားစေရန် အကျယ်ထိန်းပေးခြင်း (Square-ish Shape)
               child: Text(
                 'Changing your residency type will clear all the data you have filled so far. Are you sure you want to proceed?',
                 style: TextStyle(fontSize: 15, height: 1.5),
@@ -159,7 +159,7 @@ class _MainLayoutState extends State<MainLayout>
       if (confirmReset != true) return;
       await FormSessionService.clearDraft(
         isUpdateMode: isUpdate,
-      ); // 🎯 သက်ဆိုင်ရာ Tab ရဲ့ Data ကိုသာ ဖျက်မည်
+      ); //  သက်ဆိုင်ရာ Tab ရဲ့ Data ကိုသာ ဖျက်မည်
     }
 
     setState(() {
@@ -170,7 +170,7 @@ class _MainLayoutState extends State<MainLayout>
   }
 
   Future<void> _goBackToResidency() async {
-    final bool isUpdate = _tabController.index == 2; // 🎯 လက်ရှိ Tab ကို စစ်မည်
+    final bool isUpdate = _tabController.index == 2; //  လက်ရှိ Tab ကို စစ်မည်
 
     final bool? confirmReset = await showDialog<bool>(
       context: context,
@@ -190,7 +190,7 @@ class _MainLayoutState extends State<MainLayout>
             style: TextStyle(fontWeight: FontWeight.bold, fontSize: 18),
           ),
           content: const SizedBox(
-            width: 320, // 🎯 Box ကို ရှည်မထွက်သွားစေရန် အကျယ်ထိန်းပေးခြင်း
+            width: 320, //  Box ကို ရှည်မထွက်သွားစေရန် အကျယ်ထိန်းပေးခြင်း
             child: Text(
               'Going back to change your residency will clear all the data you have filled so far. Are you sure?',
               style: TextStyle(fontSize: 15, height: 1.5),
@@ -246,7 +246,7 @@ class _MainLayoutState extends State<MainLayout>
     if (confirmReset == true) {
       await FormSessionService.clearDraft(
         isUpdateMode: isUpdate,
-      ); // 🎯 သက်ဆိုင်ရာ Tab ရဲ့ Data ကိုသာ ဖျက်မည်
+      ); //  သက်ဆိုင်ရာ Tab ရဲ့ Data ကိုသာ ဖျက်မည်
       setState(() {
         _selectedResidency = null;
         _formKey = UniqueKey();
@@ -255,7 +255,7 @@ class _MainLayoutState extends State<MainLayout>
     }
   }
 
-  // 🎯 Parameter ထည့်ပြီး သက်ဆိုင်ရာ Tab ရဲ့ Session ကို စစ်ဆေးအောင် ပြင်ဆင်ထားသည်
+  //  Parameter ထည့်ပြီး သက်ဆိုင်ရာ Tab ရဲ့ Session ကို စစ်ဆေးအောင် ပြင်ဆင်ထားသည်
   Future<void> _resumeOrStartNew(int targetTabIndex) async {
     final bool isUpdate = targetTabIndex == 2;
     final sessionData = await FormSessionService.loadDraft(
@@ -282,7 +282,7 @@ class _MainLayoutState extends State<MainLayout>
   }
 
   Widget _buildCustomTab(String label) {
-    final bool isMobile = MediaQuery.of(context).size.width < 950;
+    final bool isMobile = MediaQuery.of(context).size.width < 900;
     return Tab(
       height: 38,
       child: Row(
@@ -292,6 +292,7 @@ class _MainLayoutState extends State<MainLayout>
           Text(
             label,
             style: TextStyle(
+              fontWeight: FontWeight.bold,
               fontSize: isMobile ? 12 : 14,
               fontFamily: 'sans-serif',
             ),
@@ -344,9 +345,10 @@ class _MainLayoutState extends State<MainLayout>
                               child: TabBar(
                                 controller: _tabController,
                                 isScrollable: isMobile,
+
                                 dividerColor: Colors.transparent,
                                 labelColor: Colors.blue.shade800,
-                                unselectedLabelColor: Colors.grey.shade600,
+                                unselectedLabelColor: Colors.black87,
                                 labelStyle: const TextStyle(
                                   fontWeight: FontWeight.bold,
                                   fontFamily: 'sans-serif',
@@ -373,7 +375,7 @@ class _MainLayoutState extends State<MainLayout>
                                   if (index == 1 || index == 2) {
                                     await _resumeOrStartNew(
                                       index,
-                                    ); // 🎯 သက်ဆိုင်ရာ Session ကို ပြန်စစ်မည်
+                                    ); //  သက်ဆိုင်ရာ Session ကို ပြန်စစ်မည်
                                   } else {
                                     setState(() {
                                       _selectedResidency = null;
@@ -438,7 +440,14 @@ class _MainLayoutState extends State<MainLayout>
                     : (_fetchedUpdateData == null
                           // အခြေအနေ (က) - ဒေတာမရှိသေးရင် Verification (ရှာဖွေရေးဖောင်) ကို ပြထားမည်
                           ? UpdateApplication(
-                              onBackPressed: _goBackToResidency,
+                              onBackPressed: () {
+                                setState(() {
+                                  _selectedResidency = null;
+                                  _formKey = UniqueKey();
+                                  _fetchedUpdateData = null;
+                                });
+                              },
+
                               initialCountry: _selectedResidency,
                               onApplicationFetched: (SubmitRequestModel data) {
                                 // ဒေတာရှာတွေ့တာနဲ့ ၎င်းဒေတာကို သိမ်းပြီး UI ကို Update ဖြစ်စေမည်

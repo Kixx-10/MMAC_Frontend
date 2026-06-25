@@ -1,10 +1,10 @@
 // lib/data/models/search_request_model.dart
 
-// 🇲🇲 ၁။ မြန်မာနိုင်ငံသားများအတွက် သီးသန့် ရှာဖွေရေး Model
+
 class NativeSearchRequestModel {
   final String qrReference;
   final String
-  residencyType; // Backend က မတောင်းပေမယ့် Internal သုံးဖို့ ထားထားပါမည်
+  residencyType; 
   final String nrc;
   final DateTime arrivalDate;
 
@@ -17,16 +17,14 @@ class NativeSearchRequestModel {
 
   Map<String, dynamic> toJson() {
     return {
-      // 🎯 ပြင်ဆင်ချက်: Backend က လိုချင်သော နာမည်များအတိုင်း Key များကို ပြောင်းပေးလိုက်ပါသည်
       'referenceNo': qrReference,
       'nrc': nrc,
-      // Backend က "2026-06-17T..." ပုံစံတောင်းထားသဖြင့် toIso8601String() အပြည့်ပို့ပါမည်
       'arrivalDate': arrivalDate.toIso8601String(),
     };
   }
 }
 
-// ✈️ ၂။ နိုင်ငံခြားသားများအတွက် သီးသန့် ရှာဖွေရေး Model
+// နိုင်ငံခြားသားများအတွက် သီးသန့် ရှာဖွေရေး Model
 class ForeignerSearchRequestModel {
   final String qrReference;
   final String residencyType;

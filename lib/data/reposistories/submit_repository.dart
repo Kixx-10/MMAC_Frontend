@@ -1,6 +1,5 @@
 // ignore_for_file: avoid_print
 
-import 'dart:convert';
 import 'dart:developer' as dev;
 import 'package:dio/dio.dart';
 import 'package:mmac/core/constants/api_endpoints.dart';
@@ -12,46 +11,29 @@ import 'package:mmac/data/models/submit_response_model.dart';
 class SubmitRepository {
   final ApiClient _apiClient = ApiClient();
 
-  Future<SubmitResponseModel?> submitApplication( 
-    SubmitRequestModel submitRequestModel,
-  ) async {
-    try {
-      final payload = submitRequestModel.toJson();
-      print(jsonEncode(payload));
-      dev.log("SENDING JSON PAYLOAD: $payload", name: "SubmitRepository");
-
-      final response = await _apiClient.post(
-        ApiEndpoints.submitApplication,
-        data: payload,
-      );
-
-      if (response.statusCode == 200 && response.data != null) {
-        dev.log(
-          "APPLICATION SUBMITTED SUCCESSFULLY!",
-          name: "SubmitRepository",
-        );
-        return SubmitResponseModel.fromJson(response.data);
+Future<SubmitResponseModel?> submitApplication(SubmitRequestModel submitRequestModel) async {
+  try {
+    final payload = submitRequestModel.toJson();
+    final response = await _apiClient.post(ApiEndpoints.submitApplication, data: payload);
+    return SubmitResponseModel.fromJson(response.data);
+  } on DioException catch (e) {
+    if (e.response != null) {
+      final responseData = e.response?.data;
+      
+      if (e.response?.statusCode == 400 && responseData is Map && responseData.containsKey('errors')) {
+        final Map<String, dynamic> errors = responseData['errors'];
+        final String firstError = errors.values.first.first; 
+        throw Exception(firstError); 
       }
-      return null;
-    } catch (e) {
-      dev.log("SUBMISSION FAILED", name: "SubmitRepository", error: e);
-      if (e is DioException) {
-        if (e.response != null) {
-          dev.log(
-            "[SERVER STATUS CODE]: ${e.response?.statusCode}",
-            name: "SubmitRepository",
-          );
-          dev.log("[SERVER VALIDATION ERROR DETAILS]: ${e.response?.data}");
-        } else {
-          dev.log(
-            "[NETWORK ERROR / NO RESPONSE FROM SERVER]: ${e.message}",
-            name: "SubmitRepository",
-          );
-        }
-      }
-      throw Exception('Failed to submit application: $e');
+      
+      throw Exception("Server Error Occur! (Error: ${e.response?.statusCode})");
     }
+  
+    throw Exception("Network Connection Failed");
+  } catch (e) {
+    throw Exception("Something want wrong!: $e");
   }
+}
 
   Future<SubmitResponseModel?> updateApplication(
     SubmitRequestModel updateRequestModel,
@@ -103,7 +85,7 @@ class SubmitRepository {
     }
   }
 
-  // ✈️ ၃။ နိုင်ငံခြားသားများအတွက် ရှာဖွေခြင်း
+  // ၃။ နိုင်ငံခြားသားများအတွက် ရှာဖွေခြင်း
   Future<SubmitRequestModel?> fetchForeignerApplication(
     ForeignerSearchRequestModel request,
   ) async {

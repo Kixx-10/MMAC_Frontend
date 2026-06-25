@@ -35,12 +35,12 @@ class ResidencyLayout extends StatelessWidget {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    const Text(
+                    Text(
                       "Select Residency Type",
                       style: TextStyle(
-                        fontSize: 26,
+                        fontSize: isMobile ? 18 : 26,
                         fontWeight: FontWeight.bold,
-                        color: Color(0xFF0F172A),
+                        color: const Color(0xFF0F172A),
                         letterSpacing: -0.5,
                       ),
                     ),
@@ -137,7 +137,7 @@ class _ResidencySelectorCardState extends State<ResidencySelectorCard> {
       duration: const Duration(milliseconds: 200),
       curve: Curves.easeInOut,
       // ignore: deprecated_member_use
-      transform: Matrix4.identity()..translate(0, _isHovered ? -4 : 0),
+      transform: Matrix4.identity()..translate(0.0, _isHovered ? -4.0 : 0.0),
       constraints: const BoxConstraints(maxWidth: 290),
       decoration: BoxDecoration(
         color: Colors.white,

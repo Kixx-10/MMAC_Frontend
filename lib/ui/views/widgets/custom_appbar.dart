@@ -4,8 +4,8 @@ PreferredSizeWidget customAppBar({
   required BuildContext context,
   required int currentIndex,
   required Function(int) onTabSelected,
+  required bool isMobile,
 }) {
-  
   // Helper function for Navigation Buttons
   Widget navButton(String title, int index) {
     return TextButton(
@@ -15,6 +15,7 @@ PreferredSizeWidget customAppBar({
         style: TextStyle(
           color: currentIndex == index ? Colors.blue : Colors.black,
           fontWeight: FontWeight.bold,
+          fontSize: isMobile ? 12 : 18,
         ),
       ),
     );
@@ -22,15 +23,12 @@ PreferredSizeWidget customAppBar({
 
   return AppBar(
     backgroundColor: const Color.fromARGB(255, 255, 255, 255),
-    elevation: 1, 
+    elevation: 1,
     automaticallyImplyLeading: false, //no back arrow
     leading: const SizedBox(width: 20), //left padding
     title: const Text(
-      "eArrival", 
-      style: TextStyle(
-        color: Color(0xFF0B355B), 
-        fontWeight: FontWeight.bold,
-      ),
+      "eArrival",
+      style: TextStyle(color: Color(0xFF0B355B), fontWeight: FontWeight.bold),
     ),
     actions: [
       Row(
@@ -41,7 +39,6 @@ PreferredSizeWidget customAppBar({
           navButton("Update Application", 2),
           navButton("FAQs", 3),
           navButton("ScanQR", 4),
-          const SizedBox(width: 100), 
         ],
       ),
     ],
