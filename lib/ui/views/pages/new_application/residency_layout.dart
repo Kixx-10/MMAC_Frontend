@@ -11,95 +11,127 @@ class ResidencyLayout extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final double screenSize = MediaQuery.of(context).size.width;
-    final isMobile = screenSize < 500;
+    final isMobile = screenSize < 650;
+
     return SafeArea(
       child: SingleChildScrollView(
         child: Center(
           child: Column(
             children: [
-              isMobile ? const SizedBox() : const SizedBox(height: 40),
+              SizedBox(height: isMobile ? 40 : 80),
 
-              //  --- MAIN SELECTION BOX ---
+              //  --- OFFICIAL DASHBOARD BOX ---
               Container(
-                width: 950,
-                padding: const EdgeInsets.symmetric(
-                  horizontal: 24,
-                  vertical: 32,
-                ),
+                width: 850, // 🎯 Perfectly balanced width for a 2-column grid
                 margin: const EdgeInsets.symmetric(horizontal: 24),
                 decoration: BoxDecoration(
                   color: Colors.white,
-                  borderRadius: BorderRadius.circular(16),
-                  border: Border.all(color: Colors.grey.shade200),
+                  border: Border.all(color: Colors.grey.shade300, width: 1),
+                  borderRadius: BorderRadius.circular(
+                    4,
+                  ), // 🎯 Very sharp, document-like corners
+                  boxShadow: [
+                    BoxShadow(
+                      color: Colors.black.withOpacity(0.03),
+                      blurRadius: 10,
+                      offset: const Offset(0, 4),
+                    ),
+                  ],
                 ),
                 child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
                   children: [
-                    Text(
-                      "Select Residency Type",
-                      style: TextStyle(
-                        fontSize: isMobile ? 18 : 26,
-                        fontWeight: FontWeight.bold,
-                        color: const Color(0xFF0F172A),
-                        letterSpacing: -0.5,
+                    // 🎯 Header Section
+                    Padding(
+                      padding: EdgeInsets.all(isMobile ? 24 : 40),
+                      child: Column(
+                        crossAxisAlignment:
+                            CrossAxisAlignment.center, // Centered for authority
+                        children: [
+                          // Icon(
+                          //   Icons
+                          //       .gavel_rounded, // Official legal/government icon
+                          //   color: Colors.lightBlue.shade700,
+                          //   size: 36,
+                          // ),
+                          // const SizedBox(height: 16),
+                          const Text(
+                            "Declaration of Residency",
+                            style: TextStyle(
+                              fontSize: 26,
+                              fontWeight: FontWeight.w800,
+                              color: Colors.black87,
+                              letterSpacing: -0.5,
+                            ),
+                            textAlign: TextAlign.center,
+                          ),
+                          const SizedBox(height: 12),
+                          Text(
+                            "Please identify your official residency status. Providing incorrect information may result in processing delays.",
+                            style: TextStyle(
+                              fontSize: 15,
+                              color: Colors.black87.withOpacity(0.7),
+                              height: 1.5,
+                            ),
+                            textAlign: TextAlign.center,
+                          ),
+
+                          SizedBox(height: isMobile ? 32 : 48),
+
+                          // 🎯 Side-by-Side Grid Layout
+                          if (isMobile)
+                            Column(
+                              children: [
+                                OfficialGridCard(
+                                  title: "Myanmar Citizen",
+                                  subtitle:
+                                      "National Registration Card (NRC) or Permanent Resident.",
+                                  icon: Icons.badge_outlined,
+                                  onTap: () => onResidencySelected('Myanmar'),
+                                ),
+                                const SizedBox(height: 16),
+                                OfficialGridCard(
+                                  title: "Foreign National",
+                                  subtitle:
+                                      "International visitor holding a valid passport and visa.",
+                                  icon: Icons.public,
+                                  onTap: () => onResidencySelected('Foreigner'),
+                                ),
+                              ],
+                            )
+                          else
+                            Row(
+                              children: [
+                                Expanded(
+                                  child: OfficialGridCard(
+                                    title: "Myanmar Citizen",
+                                    subtitle:
+                                        "National Registration Card (NRC) or Permanent Resident.",
+                                    icon: Icons.badge_outlined,
+                                    onTap: () => onResidencySelected('Myanmar'),
+                                  ),
+                                ),
+                                const SizedBox(width: 24),
+                                Expanded(
+                                  child: OfficialGridCard(
+                                    title: "Foreign National",
+                                    subtitle:
+                                        "International visitor holding a valid passport and visa.",
+                                    icon: Icons.public,
+                                    onTap: () =>
+                                        onResidencySelected('Foreigner'),
+                                  ),
+                                ),
+                              ],
+                            ),
+                        ],
                       ),
-                    ),
-                    const SizedBox(height: 8),
-                    Text(
-                      "Please select your appropriate residency status to continue the application.",
-                      style: const TextStyle(fontSize: 14, color: Colors.grey),
-                      textAlign: isMobile ? TextAlign.center : TextAlign.start,
-                    ),
-                    isMobile
-                        ? const SizedBox(height: 18)
-                        : const SizedBox(height: 32),
-
-                    LayoutBuilder(
-                      builder: (context, constraints) {
-                        bool isDesktopCard = constraints.maxWidth > 650;
-
-                        if (isDesktopCard) {
-                          return Row(
-                            mainAxisAlignment: MainAxisAlignment.center,
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              ResidencySelectorCard(
-                                title: "Myanmar Citizen /\nPermanent Resident",
-                                imagePath: "assets/images/nrc.jpg",
-                                onTap: () => onResidencySelected('Myanmar'),
-                              ),
-                              const SizedBox(width: 32),
-                              ResidencySelectorCard(
-                                title: "Foreigner \nPass Holder",
-                                imagePath: "assets/images/passport.jpg",
-                                onTap: () => onResidencySelected('Foreigner'),
-                              ),
-                            ],
-                          );
-                        } else {
-                          return Column(
-                            children: [
-                              ResidencySelectorCard(
-                                title: "Myanmar Citizen /\nPermanent Resident",
-                                imagePath: "assets/images/nrc.jpg",
-                                onTap: () => onResidencySelected('Myanmar'),
-                              ),
-                              const SizedBox(height: 20),
-                              ResidencySelectorCard(
-                                title: "Foreigner \nPass Holder",
-                                imagePath: "assets/images/passport.jpg",
-                                onTap: () => onResidencySelected('Foreigner'),
-                              ),
-                            ],
-                          );
-                        }
-                      },
                     ),
                   ],
                 ),
               ),
 
-              const SizedBox(height: 40),
+              const SizedBox(height: 60),
 
               // Footer
               const FormFooter(),
@@ -111,84 +143,116 @@ class ResidencyLayout extends StatelessWidget {
   }
 }
 
-class ResidencySelectorCard extends StatefulWidget {
+class OfficialGridCard extends StatefulWidget {
   final String title;
-  final String imagePath;
+  final String subtitle;
+  final IconData icon;
   final VoidCallback onTap;
 
-  const ResidencySelectorCard({
+  const OfficialGridCard({
     super.key,
     required this.title,
-    required this.imagePath,
+    required this.subtitle,
+    required this.icon,
     required this.onTap,
   });
 
   @override
-  State<ResidencySelectorCard> createState() => _ResidencySelectorCardState();
+  State<OfficialGridCard> createState() => _OfficialGridCardState();
 }
 
-class _ResidencySelectorCardState extends State<ResidencySelectorCard> {
+class _OfficialGridCardState extends State<OfficialGridCard> {
   bool _isHovered = false;
   bool _isActive = false;
 
   @override
   Widget build(BuildContext context) {
-    return AnimatedContainer(
-      duration: const Duration(milliseconds: 200),
-      curve: Curves.easeInOut,
-      // ignore: deprecated_member_use
-      transform: Matrix4.identity()..translate(0.0, _isHovered ? -4.0 : 0.0),
-      constraints: const BoxConstraints(maxWidth: 290),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(12),
-        border: Border.all(
-          color: _isHovered ? const Color(0xFF0F2942) : Colors.transparent,
-          width: 1.5,
-        ),
-        boxShadow: [
-          BoxShadow(
+    return MouseRegion(
+      onEnter: (_) => setState(() => _isHovered = true),
+      onExit: (_) => setState(() => _isHovered = false),
+      child: GestureDetector(
+        onTapDown: (_) => setState(() => _isActive = true),
+        onTapUp: (_) {
+          setState(() => _isActive = false);
+          widget.onTap();
+        },
+        onTapCancel: () => setState(() => _isActive = false),
+
+        child: AnimatedContainer(
+          duration: const Duration(milliseconds: 150),
+          padding: const EdgeInsets.all(32),
+          decoration: BoxDecoration(
             color: _isActive
-                ? Colors.black.withAlpha(10)
+                ? Colors.lightBlue.shade700.withOpacity(0.05)
                 : (_isHovered
-                      ? Colors.black.withAlpha(25)
-                      : Colors.black.withAlpha(15)),
-            blurRadius: _isHovered ? 24 : 16,
-            offset: _isHovered ? const Offset(0, 10) : const Offset(0, 6),
+                      ? Colors.lightBlue.shade700.withOpacity(0.02)
+                      : Colors.white),
+            borderRadius: BorderRadius.circular(4), // 🎯 Sharp corners
+            border: Border.all(
+              color: _isHovered
+                  ? Colors.lightBlue.shade700
+                  : Colors.grey.shade300,
+              width: _isHovered ? 2.0 : 1.0, // 🎯 Thicker border on hover
+            ),
           ),
-        ],
-      ),
-      child: ClipRRect(
-        borderRadius: BorderRadius.circular(10),
-        child: InkWell(
-          onTap: widget.onTap,
-          onHover: (hovered) => setState(() => _isHovered = hovered),
-          onTapDown: (_) => setState(() => _isActive = true),
-          onTapUp: (_) => setState(() => _isActive = false),
-          onTapCancel: () => setState(() => _isActive = false),
           child: Column(
-            crossAxisAlignment: CrossAxisAlignment.stretch,
+            crossAxisAlignment:
+                CrossAxisAlignment.start, // Left aligned text inside the card
             children: [
-              Container(
-                height: 190,
+              // 🎯 Top Icon
+              Icon(
+                widget.icon,
+                size: 40,
                 color: _isHovered
-                    ? const Color(0xFF0A1424)
-                    : const Color(0xFF0F1E36),
-                padding: const EdgeInsets.all(20),
-                child: Image.asset(widget.imagePath, fit: BoxFit.contain),
+                    ? Colors.lightBlue.shade700
+                    : Colors.black87.withOpacity(0.7),
               ),
-              Container(
-                padding: const EdgeInsets.all(20),
-                color: Colors.white,
-                child: Text(
-                  widget.title,
-                  style: const TextStyle(
-                    fontSize: 18,
-                    fontWeight: FontWeight.w800,
-                    color: Color(0xFF0F2942),
-                    height: 1.4,
-                  ),
+              const SizedBox(height: 24),
+
+              // 🎯 Title
+              Text(
+                widget.title,
+                style: const TextStyle(
+                  fontSize: 20,
+                  fontWeight: FontWeight.w800,
+                  color: Colors.black87,
                 ),
+              ),
+              const SizedBox(height: 12),
+
+              // 🎯 Subtitle
+              Text(
+                widget.subtitle,
+                style: TextStyle(
+                  fontSize: 14,
+                  color: Colors.black87.withOpacity(0.6),
+                  height: 1.5,
+                ),
+              ),
+              const SizedBox(height: 32),
+
+              // 🎯 Action Arrow / "Select" Indicator
+              Row(
+                children: [
+                  Text(
+                    "Select Status",
+                    style: TextStyle(
+                      fontSize: 14,
+                      fontWeight: FontWeight.bold,
+                      color: _isHovered
+                          ? Colors.lightBlue.shade700
+                          : Colors.black87.withOpacity(0.5),
+                    ),
+                  ),
+                  const SizedBox(width: 8),
+                  Icon(
+                    Icons.arrow_forward,
+                    size: 16,
+                    color: _isHovered
+                        ? Colors.lightBlue.shade700
+                        : Colors.black87.withOpacity(0.5),
+                  ),
+                ],
               ),
             ],
           ),
