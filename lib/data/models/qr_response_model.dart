@@ -4,7 +4,8 @@ class QrResponseModel {
   final String fullName;
   final String gender;
   final DateTime? dob;
-  final String countryOfBirthCode;
+
+  final String name;//country name
   final String email;
   final String mobileNumber;
   final String address;
@@ -41,7 +42,8 @@ class QrResponseModel {
     required this.fullName,
     required this.gender,
     this.dob,
-    required this.countryOfBirthCode,
+  
+    required this.name,//country name
     required this.email,
     required this.mobileNumber,
     required this.address,
@@ -77,7 +79,8 @@ class QrResponseModel {
       fullName: json['fullName'] ?? '',
       gender: json['gender'] ?? '',
       dob: json['dob'] != null ? DateTime.tryParse(json['dob']) : null,
-      countryOfBirthCode: json['countryOfBirthCode'] ?? '',
+      
+      name: json['name'] ?? '',//country name
       email: json['email'] ?? '',
       mobileNumber: json['mobileNumber'] ?? '',
       address: json['address'] ?? '',

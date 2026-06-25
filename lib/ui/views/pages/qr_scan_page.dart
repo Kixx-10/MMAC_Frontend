@@ -95,11 +95,8 @@ class _QrScanPageState extends ConsumerState<QrScanPage> {
             },
           );
         }
-
         final data = scanState.scannedDataList[0];
         final bool isMyanmar = data.issuedCountryCode == 'MMR';
-
-        
         // ignore: no_leading_underscores_for_local_identifiers
         Widget _infoItem(String title, String value) => Padding(
           padding: const EdgeInsets.symmetric(vertical: 6, horizontal: 6),
@@ -148,7 +145,8 @@ class _QrScanPageState extends ConsumerState<QrScanPage> {
                                 _infoItem("AppStatus", data.appStatus),
                                 _infoItem("Gender", data.gender),
                                 _infoItem("Date of Birth", data.dob?.toString().split(' ')[0] ?? "--"),
-                                _infoItem("Country", data.countryOfBirthCode),
+                                //_infoItem("Country", data.countryOfBirthCode),
+                                 _infoItem("Country", data.name),
                                 if (isMyanmar) ...[
                                   _infoItem("NRC", data.nrc ?? "--"),
                                   _infoItem("Father Name", data.fatherName ?? "--"),
