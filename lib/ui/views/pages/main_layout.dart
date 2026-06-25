@@ -282,6 +282,7 @@ class _MainLayoutState extends State<MainLayout>
   }
 
   Widget _buildCustomTab(String label) {
+    final bool isMobile = MediaQuery.of(context).size.width < 950;
     return Tab(
       height: 38,
       child: Row(
@@ -290,7 +291,10 @@ class _MainLayoutState extends State<MainLayout>
           const SizedBox(width: 8),
           Text(
             label,
-            style: const TextStyle(fontSize: 13, fontFamily: 'sans-serif'),
+            style: TextStyle(
+              fontSize: isMobile ? 12 : 14,
+              fontFamily: 'sans-serif',
+            ),
           ),
         ],
       ),
@@ -331,54 +335,57 @@ class _MainLayoutState extends State<MainLayout>
                   child: Row(
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
-                      Expanded(
-                        child: Align(
-                          alignment: Alignment.center,
-                          child: SizedBox(
-                            width: isMobile ? null : 700,
-                            child: TabBar(
-                              controller: _tabController,
-                              isScrollable: isMobile,
-                              dividerColor: Colors.transparent,
-                              labelColor: Colors.blue.shade800,
-                              unselectedLabelColor: Colors.grey.shade600,
-                              labelStyle: const TextStyle(
-                                fontWeight: FontWeight.bold,
-                                fontFamily: 'sans-serif',
-                              ),
-                              unselectedLabelStyle: const TextStyle(
-                                fontWeight: FontWeight.w500,
-                              ),
-                              indicatorColor: Colors.blue.shade800,
-                              labelPadding: const EdgeInsets.symmetric(
-                                horizontal: 4,
-                              ),
-                              tabs: [
-                                _buildCustomTab("Home"),
-                                _buildCustomTab("New Application"),
-                                _buildCustomTab("Update Application"),
-                                _buildCustomTab("FAQs"),
-                                _buildCustomTab("QrScan")
-                              ],
-                              onTap: (index) async {
-                                final prefs =
-                                    await SharedPreferences.getInstance();
-                                await prefs.setInt('last_active_tab', index);
+                      Center(
+                        child: Expanded(
+                          child: Align(
+                            alignment: Alignment.center,
+                            child: SizedBox(
+                              width: isMobile ? null : 700,
+                              child: TabBar(
+                                controller: _tabController,
+                                isScrollable: isMobile,
+                                dividerColor: Colors.transparent,
+                                labelColor: Colors.blue.shade800,
+                                unselectedLabelColor: Colors.grey.shade600,
+                                labelStyle: const TextStyle(
+                                  fontWeight: FontWeight.bold,
+                                  fontFamily: 'sans-serif',
+                                ),
+                                unselectedLabelStyle: const TextStyle(
+                                  fontWeight: FontWeight.w500,
+                                ),
+                                indicatorColor: Colors.blue.shade800,
+                                labelPadding: const EdgeInsets.symmetric(
+                                  horizontal: 4,
+                                ),
+                                tabs: [
+                                  _buildCustomTab("Home"),
+                                  _buildCustomTab("New Application"),
+                                  _buildCustomTab("Update Application"),
+                                  _buildCustomTab("FAQs"),
+                                  _buildCustomTab("QrScan"),
+                                ],
+                                onTap: (index) async {
+                                  final prefs =
+                                      await SharedPreferences.getInstance();
+                                  await prefs.setInt('last_active_tab', index);
 
-                                if (index == 1 || index == 2) {
-                                  await _resumeOrStartNew(
-                                    index,
-                                  ); // 🎯 သက်ဆိုင်ရာ Session ကို ပြန်စစ်မည်
-                                } else {
-                                  setState(() {
-                                    _selectedResidency = null;
-                                  });
-                                }
-                              },
+                                  if (index == 1 || index == 2) {
+                                    await _resumeOrStartNew(
+                                      index,
+                                    ); // 🎯 သက်ဆိုင်ရာ Session ကို ပြန်စစ်မည်
+                                  } else {
+                                    setState(() {
+                                      _selectedResidency = null;
+                                    });
+                                  }
+                                },
+                              ),
                             ),
                           ),
                         ),
                       ),
+                      isMobile ? const SizedBox(width: 50) : const SizedBox(),
                     ],
                   ),
                 ),
