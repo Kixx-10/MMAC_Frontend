@@ -1018,8 +1018,8 @@ class _IdentificationFormLayoutState
             ElevatedButton(
               onPressed: widget.onBackPressed,
               style: ElevatedButton.styleFrom(
-                backgroundColor: Colors.lightBlue.shade700,
-                foregroundColor: Colors.white,
+                backgroundColor: Colors.white,
+                foregroundColor: Colors.black87,
                 padding: const EdgeInsets.symmetric(
                   horizontal: 32,
                   vertical: 12,
