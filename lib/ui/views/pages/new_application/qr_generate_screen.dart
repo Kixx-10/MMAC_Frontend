@@ -7,7 +7,7 @@ import 'dart:typed_data';
 import 'package:flutter/material.dart';
 import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:path_provider/path_provider.dart';
-import 'package:pdfrx/pdfrx.dart'; // ✅ လုံးဝအခမဲ့ဖြစ်ပြီး Smooth အဖြစ်ဆုံး pdfrx package ကို ပြောင်းသုံးထားပါသည်
+import 'package:pdfx/pdfx.dart'; // 📄 pdfx package
 import 'package:mmac/data/models/submit_response_model.dart';
 import 'package:universal_html/html.dart' as html;
 
@@ -31,15 +31,18 @@ class _QrGenerateScreenState extends State<QrGenerateScreen> {
   String? localFilePath;
   Uint8List? _pdfBytes;
 
+  PdfControllerPinch? _pdfController;
+
   @override
   void initState() {
     super.initState();
-    fileName = "ArrivalForm_${widget.responseData.referenceNo}.pdf";
+    fileName = "ArrivalForm_${widget.responseData.applicationNo}.pdf";
     _convertBase64ToPdfFile();
   }
 
   @override
   void dispose() {
+    _pdfController?.dispose();
     super.dispose();
   }
 
@@ -58,6 +61,11 @@ class _QrGenerateScreenState extends State<QrGenerateScreen> {
       }
 
       _pdfBytes = base64Decode(base64String.trim());
+
+      // ✅ FIX: PdfControllerPinch ကို အသုံးပြု၍ openData ဖြင့် ဆောက်လုပ်သည်
+      _pdfController = PdfControllerPinch(
+        document: PdfDocument.openData(_pdfBytes!),
+      );
 
       if (kIsWeb) {
         final blob = html.Blob([_pdfBytes], 'application/pdf');
@@ -89,7 +97,7 @@ class _QrGenerateScreenState extends State<QrGenerateScreen> {
 
   // 📄 FILE NAME BOX ကို နှိပ်လျှင် Dialog Box ဖြင့် PDF Preview ပြသမည့် လုပ်ဆောင်ချက်
   void _showPdfPreviewDialog() {
-    if (_pdfBytes == null) {
+    if (_pdfController == null) {
       _showSnackBar("PDF preview is not ready yet.");
       return;
     }
@@ -127,7 +135,8 @@ class _QrGenerateScreenState extends State<QrGenerateScreen> {
             height: MediaQuery.of(context).size.height * 0.6,
             child: ClipRRect(
               borderRadius: BorderRadius.circular(8),
-              child: PdfViewer.data(_pdfBytes!,sourceName: fileName),
+              // ✅ ဤနေရာတွင် Type တူညီသွားပြီဖြစ်၍ error လုံးဝမတက်တော့ပါ
+              child: PdfViewPinch(controller: _pdfController!),
             ),
           ),
           actions: [
@@ -144,6 +153,7 @@ class _QrGenerateScreenState extends State<QrGenerateScreen> {
     );
   }
 
+  // 💾 SAVE BUTTON ကို နှိပ်လျှင် Dialog ဖြင့် အမည်ပြောင်းပြီး သိမ်းဆည်းမည့် လုပ်ဆောင်ချက်
   Future<void> _savePdfFile() async {
     if (_pdfBytes == null) {
       _showSnackBar("No PDF data available to save.");
@@ -258,7 +268,7 @@ class _QrGenerateScreenState extends State<QrGenerateScreen> {
               mainAxisAlignment: MainAxisAlignment.center,
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
-                // 📄 ၁။ FILE NAME BOX
+                // 📄 ၁။ FILE NAME BOX (နှိပ်လျှင် Web/Mobile နှစ်ခုလုံး Dialog ဖြင့် Preview ပွင့်မည်)
                 InkWell(
                   onTap: _showPdfPreviewDialog,
                   borderRadius: BorderRadius.circular(12),
