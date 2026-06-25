@@ -99,7 +99,7 @@ class _QrScanPageState extends ConsumerState<QrScanPage> {
         final data = scanState.scannedDataList[0];
         final bool isMyanmar = data.issuedCountryCode == 'MMR';
 
-        // 🔧 Simple info item
+        
         // ignore: no_leading_underscores_for_local_identifiers
         Widget _infoItem(String title, String value) => Padding(
           padding: const EdgeInsets.symmetric(vertical: 6, horizontal: 6),
