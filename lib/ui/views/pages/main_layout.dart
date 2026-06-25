@@ -103,7 +103,7 @@ class _MainLayoutState extends State<MainLayout>
             ),
             content: const SizedBox(
               width:
-                  320, // 🎯 Box ကို ရှည်မထွက်သွားစေရန် အကျယ်ထိန်းပေးခြင်း (Square-ish Shape)
+                  320, //  Box ကို ရှည်မထွက်သွားစေရန် အကျယ်ထိန်းပေးခြင်း (Square-ish Shape)
               child: Text(
                 'Changing your residency type will clear all the data you have filled so far. Are you sure you want to proceed?',
                 style: TextStyle(fontSize: 15, height: 1.5),
@@ -159,7 +159,7 @@ class _MainLayoutState extends State<MainLayout>
       if (confirmReset != true) return;
       await FormSessionService.clearDraft(
         isUpdateMode: isUpdate,
-      ); // 🎯 သက်ဆိုင်ရာ Tab ရဲ့ Data ကိုသာ ဖျက်မည်
+      ); //  သက်ဆိုင်ရာ Tab ရဲ့ Data ကိုသာ ဖျက်မည်
     }
 
     setState(() {
@@ -170,7 +170,7 @@ class _MainLayoutState extends State<MainLayout>
   }
 
   Future<void> _goBackToResidency() async {
-    final bool isUpdate = _tabController.index == 2; // 🎯 လက်ရှိ Tab ကို စစ်မည်
+    final bool isUpdate = _tabController.index == 2; //  လက်ရှိ Tab ကို စစ်မည်
 
     final bool? confirmReset = await showDialog<bool>(
       context: context,
@@ -190,7 +190,7 @@ class _MainLayoutState extends State<MainLayout>
             style: TextStyle(fontWeight: FontWeight.bold, fontSize: 18),
           ),
           content: const SizedBox(
-            width: 320, // 🎯 Box ကို ရှည်မထွက်သွားစေရန် အကျယ်ထိန်းပေးခြင်း
+            width: 320, //  Box ကို ရှည်မထွက်သွားစေရန် အကျယ်ထိန်းပေးခြင်း
             child: Text(
               'Going back to change your residency will clear all the data you have filled so far. Are you sure?',
               style: TextStyle(fontSize: 15, height: 1.5),
@@ -246,7 +246,7 @@ class _MainLayoutState extends State<MainLayout>
     if (confirmReset == true) {
       await FormSessionService.clearDraft(
         isUpdateMode: isUpdate,
-      ); // 🎯 သက်ဆိုင်ရာ Tab ရဲ့ Data ကိုသာ ဖျက်မည်
+      ); //  သက်ဆိုင်ရာ Tab ရဲ့ Data ကိုသာ ဖျက်မည်
       setState(() {
         _selectedResidency = null;
         _formKey = UniqueKey();
@@ -255,7 +255,7 @@ class _MainLayoutState extends State<MainLayout>
     }
   }
 
-  // 🎯 Parameter ထည့်ပြီး သက်ဆိုင်ရာ Tab ရဲ့ Session ကို စစ်ဆေးအောင် ပြင်ဆင်ထားသည်
+  //  Parameter ထည့်ပြီး သက်ဆိုင်ရာ Tab ရဲ့ Session ကို စစ်ဆေးအောင် ပြင်ဆင်ထားသည်
   Future<void> _resumeOrStartNew(int targetTabIndex) async {
     final bool isUpdate = targetTabIndex == 2;
     final sessionData = await FormSessionService.loadDraft(
@@ -281,16 +281,19 @@ class _MainLayoutState extends State<MainLayout>
     super.dispose();
   }
 
-  Widget _buildCustomTab(String label) {
+  Widget _buildCustomTab(String label, bool isMobile) {
     return Tab(
       height: 38,
       child: Row(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          const SizedBox(width: 8),
+          isMobile ? const SizedBox() : const SizedBox(width: 8),
           Text(
             label,
-            style: const TextStyle(fontSize: 13, fontFamily: 'sans-serif'),
+            style: TextStyle(
+              fontSize: isMobile ? 8 : 14,
+              fontFamily: 'sans-serif',
+            ),
           ),
         ],
       ),
@@ -330,7 +333,7 @@ class _MainLayoutState extends State<MainLayout>
                   ),
                   child: Row(
                     mainAxisAlignment: isMobile
-                        ? MainAxisAlignment.spaceEvenly
+                        ? MainAxisAlignment.spaceBetween
                         : MainAxisAlignment.center,
                     children: [
                       Expanded(
@@ -357,11 +360,11 @@ class _MainLayoutState extends State<MainLayout>
                                 horizontal: 4,
                               ),
                               tabs: [
-                                _buildCustomTab("Home"),
-                                _buildCustomTab("New Application"),
-                                _buildCustomTab("Update Application"),
-                                _buildCustomTab("FAQs"),
-                                _buildCustomTab("QrScan"),
+                                _buildCustomTab("Home", isMobile),
+                                _buildCustomTab("New Application", isMobile),
+                                _buildCustomTab("Update Application", isMobile),
+                                _buildCustomTab("FAQs", isMobile),
+                                _buildCustomTab("QrScan", isMobile),
                               ],
                               onTap: (index) async {
                                 final prefs =
