@@ -1,3 +1,5 @@
+// lib/ui/views/pages/new_application/trip_form_layout.dart
+
 import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -37,34 +39,59 @@ class TripFormLayout extends ConsumerStatefulWidget {
 
 class _TripFormLayoutState extends ConsumerState<TripFormLayout>
     implements TripFormLayoutInterface {
+  // --- State Variables ---
   final GlobalKey<FormState> _formKey = GlobalKey<FormState>();
   bool _showDateErrors = false;
   List<String> _purposeList = [];
   List<String> _accommodationList = [];
-  // "Others" text controller
+
   final TextEditingController _otherPurposeController = TextEditingController();
   final TextEditingController _otherAccommodationController =
       TextEditingController();
+
+  // ---------------------------------------------------------------------------
+  // LIFECYCLE & INITIALIZATION
+  // ---------------------------------------------------------------------------
 
   @override
   void initState() {
     super.initState();
     widget.onReady(this);
 
+    _restoreCustomTextValues();
+
+    Future.microtask(() async {
+      if (!mounted) return;
+
+      await _loadPurposeFromJson();
+      await _loadAccommodationFromJson();
+      await _restoreWaterfallData();
+    });
+  }
+
+  @override
+  void dispose() {
+    _otherPurposeController.dispose();
+    _otherAccommodationController.dispose();
+    super.dispose();
+  }
+
+  // ---------------------------------------------------------------------------
+  // DATA RESTORATION & JSON LOADERS
+  // ---------------------------------------------------------------------------
+
+  void _restoreCustomTextValues() {
     // Purpose Session Restore
-    if (widget.values['purposeOfVisit'] != null &&
-        ![
-          "Visit",
-          "Business",
-          "Education",
-          "Health",
-        ].contains(widget.values['purposeOfVisit']) &&
-        widget.values['purposeOfVisit'].toString().isNotEmpty) {
-      _otherPurposeController.text = widget.values['purposeOfVisit'];
+    final purpose = widget.values['purposeOfVisit'];
+    if (purpose != null &&
+        !["Visit", "Business", "Education", "Health"].contains(purpose) &&
+        purpose.toString().isNotEmpty) {
+      _otherPurposeController.text = purpose;
     }
 
     // Accommodation Session Restore
-    if (widget.values['accommodation'] != null &&
+    final accommodation = widget.values['accommodation'];
+    if (accommodation != null &&
         ![
           "Hotel",
           "Motel / Inn",
@@ -73,126 +100,10 @@ class _TripFormLayoutState extends ConsumerState<TripFormLayout>
           "Apartment / Condo",
           "Monastery / Religious Center",
           "Embassy Housing",
-        ].contains(widget.values['accommodation']) &&
-        widget.values['accommodation'].toString().isNotEmpty) {
-      _otherAccommodationController.text = widget.values['accommodation'];
+        ].contains(accommodation) &&
+        accommodation.toString().isNotEmpty) {
+      _otherAccommodationController.text = accommodation;
     }
-
-    Future.microtask(() async {
-      if (!mounted) return;
-
-      // 1. Load basic dropdown data
-      await _loadPurposeFromJson();
-      await _loadAccommodationFromJson();
-
-      // 2. Trigger the cascading auto-population (Name-to-ID Reverse Lookup)
-      await _restoreWaterfallData();
-    });
-  }
-
-  // 🌊 THE NAME-TO-ID REVERSE LOOKUP WATERFALL
-  Future<void> _restoreWaterfallData() async {
-    // --- 1. RESTORE TRAVEL MODE & PORT ---
-    String? targetModeName = widget.values['modeOfTravel'];
-
-    if (targetModeName != null) {
-      final modeId = targetModeName == "Land"
-          ? 2
-          : targetModeName == "Sea"
-          ? 3
-          : 1;
-      widget.onValueChanged(
-        'modeOfTravelId',
-        modeId,
-      ); // 🎯 Secure the ID for final submission
-
-      await ref
-          .read(portOfArrivalProvider.notifier)
-          .loadPortOfArrrivalByModeId(modeId);
-
-      String? targetPortName = widget.values['portOfArrival'];
-      if (targetPortName != null) {
-        final portState = ref.read(portOfArrivalProvider).valueOrNull;
-        if (portState != null) {
-          try {
-            final p = portState.portOfArrivalList.firstWhere(
-              (port) => port.portOfArrivalName == targetPortName,
-            );
-            widget.onValueChanged(
-              'portOfArrivalId',
-              p.portOfArrivalId,
-            ); // 🎯 Secure the ID
-          } catch (_) {}
-        }
-      }
-    }
-
-    // --- 2. RESTORE LOCATIONS CASCADING ---
-    var locState = await ref.read(locationProvider.future);
-    if (locState.allStates.isEmpty) {
-      await ref.read(locationProvider.notifier).retry();
-      locState = await ref.read(locationProvider.future);
-    }
-    if (!mounted || locState.allStates.isEmpty) return;
-
-    // STEP A: Select State & Look up ID
-    String? targetStateName = widget.values['stateRegion'];
-    if (targetStateName != null) {
-      try {
-        final s = locState.allStates.firstWhere(
-          (st) => st.name == targetStateName,
-        );
-        widget.onValueChanged('stateRegionId', s.id); // 🎯 Secure the ID
-      } catch (_) {}
-
-      // Tell Riverpod to filter districts for this state
-      ref.read(locationProvider.notifier).selectState(targetStateName);
-
-      // STEP B: Select District & Look up ID
-      String? targetDistrictName = widget.values['district'];
-      if (targetDistrictName != null) {
-        try {
-          final s = locState.allStates.firstWhere(
-            (st) => st.name == targetStateName,
-          );
-          final d = s.districts.firstWhere(
-            (dst) => dst.name == targetDistrictName,
-          );
-          widget.onValueChanged('districtId', d.districtId); // 🎯 Secure the ID
-        } catch (_) {}
-
-        // Tell Riverpod to filter townships for this district
-        ref.read(locationProvider.notifier).selectDistrict(targetDistrictName);
-
-        // STEP C: Select Township & Look up ID
-        String? targetTownshipName = widget.values['township'];
-        if (targetTownshipName != null) {
-          try {
-            final s = locState.allStates.firstWhere(
-              (st) => st.name == targetStateName,
-            );
-            final d = s.districts.firstWhere(
-              (dst) => dst.name == targetDistrictName,
-            );
-            final t = d.townships.firstWhere(
-              (twn) => twn.name == targetTownshipName,
-            );
-            widget.onValueChanged('townshipId', t.id); // 🎯 Secure the ID
-          } catch (_) {}
-
-          ref
-              .read(locationProvider.notifier)
-              .selectTownship(targetTownshipName);
-        }
-      }
-    }
-  }
-
-  @override
-  void dispose() {
-    _otherPurposeController.dispose();
-    _otherAccommodationController.dispose();
-    super.dispose();
   }
 
   Future<void> _loadPurposeFromJson() async {
@@ -246,6 +157,95 @@ class _TripFormLayoutState extends ConsumerState<TripFormLayout>
     }
   }
 
+  // 🌊 THE NAME-TO-ID REVERSE LOOKUP WATERFALL
+  Future<void> _restoreWaterfallData() async {
+    // --- 1. RESTORE TRAVEL MODE & PORT ---
+    String? targetModeName = widget.values['modeOfTravel'];
+
+    if (targetModeName != null) {
+      final modeId = targetModeName == "Land"
+          ? 2
+          : (targetModeName == "Sea" ? 3 : 1);
+      widget.onValueChanged('modeOfTravelId', modeId);
+
+      await ref
+          .read(portOfArrivalProvider.notifier)
+          .loadPortOfArrrivalByModeId(modeId);
+
+      String? targetPortName = widget.values['portOfArrival'];
+      if (targetPortName != null) {
+        final portState = ref.read(portOfArrivalProvider).valueOrNull;
+        if (portState != null) {
+          try {
+            final p = portState.portOfArrivalList.firstWhere(
+              (port) => port.portOfArrivalName == targetPortName,
+            );
+            widget.onValueChanged('portOfArrivalId', p.portOfArrivalId);
+          } catch (_) {}
+        }
+      }
+    }
+
+    // --- 2. RESTORE LOCATIONS CASCADING ---
+    var locState = await ref.read(locationProvider.future);
+    if (locState.allStates.isEmpty) {
+      await ref.read(locationProvider.notifier).retry();
+      locState = await ref.read(locationProvider.future);
+    }
+    if (!mounted || locState.allStates.isEmpty) return;
+
+    // STEP A: Select State & Look up ID
+    String? targetStateName = widget.values['stateRegion'];
+    if (targetStateName != null) {
+      try {
+        final s = locState.allStates.firstWhere(
+          (st) => st.name == targetStateName,
+        );
+        widget.onValueChanged('stateRegionId', s.id);
+      } catch (_) {}
+
+      ref.read(locationProvider.notifier).selectState(targetStateName);
+
+      // STEP B: Select District & Look up ID
+      String? targetDistrictName = widget.values['district'];
+      if (targetDistrictName != null) {
+        try {
+          final s = locState.allStates.firstWhere(
+            (st) => st.name == targetStateName,
+          );
+          final d = s.districts.firstWhere(
+            (dst) => dst.name == targetDistrictName,
+          );
+          widget.onValueChanged('districtId', d.districtId);
+        } catch (_) {}
+
+        ref.read(locationProvider.notifier).selectDistrict(targetDistrictName);
+
+        // STEP C: Select Township & Look up ID
+        String? targetTownshipName = widget.values['township'];
+        if (targetTownshipName != null) {
+          try {
+            final s = locState.allStates.firstWhere(
+              (st) => st.name == targetStateName,
+            );
+            final d = s.districts.firstWhere(
+              (dst) => dst.name == targetDistrictName,
+            );
+            final t = d.townships.firstWhere(
+              (twn) => twn.name == targetTownshipName,
+            );
+            widget.onValueChanged('townshipId', t.id);
+          } catch (_) {}
+
+          ref
+              .read(locationProvider.notifier)
+              .selectTownship(targetTownshipName);
+        }
+      }
+    }
+  }
+
+  // VALIDATORS & GETTERS
   @override
   bool validate() {
     if (!mounted) {
@@ -294,17 +294,20 @@ class _TripFormLayoutState extends ConsumerState<TripFormLayout>
     return widget.controllers[key]!;
   }
 
-  Widget _row(Widget l, Widget r) => Row(
-    crossAxisAlignment: CrossAxisAlignment.start,
-    children: [
-      Expanded(child: l),
-      const SizedBox(width: 40),
-      Expanded(child: r),
-    ],
-  );
-
-  Widget _column(Widget t, Widget b) =>
-      Column(children: [t, const SizedBox(height: 16), b]);
+  // WIDGET BUILDERS (Extracted for Clean Code)
+  Widget _buildPair(Widget a, Widget b, bool isDesktop) {
+    if (isDesktop) {
+      return Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Expanded(child: a),
+          const SizedBox(width: 40),
+          Expanded(child: b),
+        ],
+      );
+    }
+    return Column(children: [a, const SizedBox(height: 16), b]);
+  }
 
   Widget _errorWidget(String message, VoidCallback onRetry) {
     return Container(
@@ -331,6 +334,86 @@ class _TripFormLayoutState extends ConsumerState<TripFormLayout>
           ),
         ],
       ),
+    );
+  }
+
+  Widget _buildArrivalDateField() {
+    return CustomDateField(
+      label: "Arrival Date",
+      value: widget.values['arrivalDate'],
+      firstDate: DateTime.now(),
+      readOnly: widget.isUpdateMode,
+      lastDate: DateTime.now().add(const Duration(days: 2)),
+      errorText: _showDateErrors && widget.values['arrivalDate'] == null
+          ? 'Arrival Date is required'
+          : null,
+      onPicked: (d) {
+        widget.onValueChanged('arrivalDate', d);
+        setState(() => _showDateErrors = false);
+      },
+    );
+  }
+
+  Widget _buildModeOfTravelField() {
+    return CustomDropdownField(
+      label: "Mode of Travel",
+      value: widget.values['modeOfTravel'],
+      dialogWidth: 100,
+      dialogHeight: 200,
+      hint: "Select Mode",
+      items: const ["Air", "Land", "Sea"],
+      validator: (v) => FormValidators.requiredDropdown(v, 'Mode of Travel'),
+      onChanged: (v) {
+        if (v != null && v != widget.values['modeOfTravel']) {
+          final modeId = v == "Land" ? 2 : (v == "Sea" ? 3 : 1);
+          widget.onValueChanged('modeOfTravel', v);
+          widget.onValueChanged('modeOfTravelId', modeId);
+          widget.onValueChanged('portOfArrival', null);
+          widget.onValueChanged('portOfArrivalId', null);
+          widget.onValueChanged('district', null);
+          widget.onValueChanged('districtId', null);
+          widget.onValueChanged('township', null);
+          widget.onValueChanged('townshipId', null);
+          ref
+              .read(portOfArrivalProvider.notifier)
+              .loadPortOfArrrivalByModeId(modeId);
+        }
+      },
+      spacing: 16,
+    );
+  }
+
+  Widget _buildPortOfArrivalField(dynamic portState) {
+    return CustomDropdownField(
+      label: "Port of Arrival",
+      value:
+          (portState.portOfArrivalList.any(
+            (p) => p.portOfArrivalName == widget.values['portOfArrival'],
+          ))
+          ? widget.values['portOfArrival'] as String?
+          : null,
+      hint: "Select Port",
+      items: portState.portOfArrivalList
+          .map<String>((p) => p.portOfArrivalName.toString())
+          .toList(),
+      dialogWidth: 250,
+      dialogHeight: 200,
+      validator: (v) => FormValidators.requiredDropdown(v, 'Port of Arrival'),
+      onChanged: (v) {
+        if (v != null) {
+          widget.onValueChanged('portOfArrival', v);
+          try {
+            final selected = portState.portOfArrivalList.firstWhere(
+              (p) => p.portOfArrivalName == v,
+            );
+            widget.onValueChanged('portOfArrivalId', selected.portOfArrivalId);
+            ref
+                .read(portOfArrivalProvider.notifier)
+                .selectPort(selected.portOfArrivalId);
+          } catch (_) {}
+        }
+      },
+      spacing: 16,
     );
   }
 
@@ -396,7 +479,169 @@ class _TripFormLayoutState extends ConsumerState<TripFormLayout>
     );
   }
 
-  // 🎯 Review Layout တွင် Data အပြည့်အစုံ ပြသနိုင်ရန် ပြင်ဆင်ပြီးသော Accommodation Field
+  Widget _buildVehicleNameField() {
+    return CustomTextField(
+      label: "Vehicle Name",
+      controller: _getSafeController('vehicleName'),
+      maxLength: 50,
+      filter: [FilteringTextInputFormatter.singleLineFormatter],
+      validator: (v) => FormValidators.required(v, 'Vehicle Name'),
+      onChanged: (v) => widget.onValueChanged('vehicleName', v),
+    );
+  }
+
+  Widget _buildVehicleNumberField() {
+    return CustomTextField(
+      label: "Vehicle Number",
+      controller: _getSafeController('vehicleNumber'),
+      maxLength: 20,
+      validator: (v) => FormValidators.required(v, 'Vehicle Number'),
+      onChanged: (v) => widget.onValueChanged('vehicleNumber', v),
+    );
+  }
+
+  Widget _buildStateRegionField(dynamic locationState) {
+    return CustomDropdownField(
+      label: "State/Region",
+      dialogWidth: 300,
+      dialogHeight: 250,
+      value:
+          (locationState.allStates.any(
+            (s) => s.name == widget.values['stateRegion'],
+          ))
+          ? widget.values['stateRegion'] as String?
+          : null,
+      hint: "Select State/Region",
+      items: locationState.allStates
+          .map<String>((s) => s.name.toString())
+          .toList(),
+      validator: (v) => FormValidators.requiredDropdown(v, 'State/Region'),
+      onChanged: (v) {
+        if (v != widget.values['stateRegion']) {
+          widget.onValueChanged('stateRegion', v);
+          widget.onValueChanged('district', null);
+          widget.onValueChanged('districtId', null);
+          widget.onValueChanged('township', null);
+          widget.onValueChanged('townshipId', null);
+
+          try {
+            final selectedState = locationState.allStates.firstWhere(
+              (s) => s.name == v,
+            );
+            widget.onValueChanged('stateRegionId', selectedState.id);
+          } catch (_) {}
+
+          ref.read(locationProvider.notifier).selectState(v);
+        }
+      },
+      spacing: 16,
+    );
+  }
+
+  Widget _buildDistrictField(dynamic locationState) {
+    return CustomDropdownField(
+      label: "District",
+      dialogWidth: 300,
+      dialogHeight: 250,
+      value:
+          (locationState.availableDistricts.contains(widget.values['district']))
+          ? widget.values['district'] as String?
+          : null,
+      hint: "Select District",
+      items: locationState.availableDistricts,
+      validator: (v) => FormValidators.requiredDropdown(v, 'District'),
+      onChanged: (v) {
+        if (v != widget.values['district']) {
+          widget.onValueChanged('district', v);
+          widget.onValueChanged('township', null);
+          widget.onValueChanged('townshipId', null);
+          try {
+            final selectedState = locationState.allStates.firstWhere(
+              (s) => s.name == widget.values['stateRegion'],
+            );
+            final selectedDist = selectedState.districts.firstWhere(
+              (d) => d.name == v,
+            );
+            widget.onValueChanged('districtId', selectedDist.districtId);
+          } catch (_) {}
+
+          ref.read(locationProvider.notifier).selectDistrict(v);
+        }
+      },
+      spacing: 16,
+    );
+  }
+
+  Widget _buildTownshipField(dynamic locationState) {
+    return CustomDropdownField(
+      label: "Township",
+      dialogWidth: 300,
+      dialogHeight: 250,
+      value:
+          (locationState.availableTownships.contains(widget.values['township']))
+          ? widget.values['township'] as String?
+          : null,
+      hint: "Select Township",
+      items: locationState.availableTownships,
+      validator: (v) => FormValidators.requiredDropdown(v, 'Township'),
+      onChanged: (v) {
+        if (v != widget.values['township']) {
+          widget.onValueChanged('township', v);
+          try {
+            final selectedState = locationState.allStates.firstWhere(
+              (s) => s.name == widget.values['stateRegion'],
+            );
+            final selectedDist = selectedState.districts.firstWhere(
+              (d) => d.name == widget.values['district'],
+            );
+            final selectedTown = selectedDist.townships.firstWhere(
+              (t) => t.name == v,
+            );
+            widget.onValueChanged('townshipId', selectedTown.id);
+          } catch (_) {}
+        }
+      },
+      spacing: 16,
+    );
+  }
+
+  Widget _buildAddressInMyanmarField() {
+    return CustomTextField(
+      label: "Address in Myanmar",
+      maxLength: 100,
+      controller: _getSafeController('addressInMyanmar'),
+      validator: (v) => FormValidators.required(v, 'Address in Myanmar'),
+      onChanged: (v) => widget.onValueChanged('addressInMyanmar', v),
+    );
+  }
+
+  Widget _buildPreviousCityField() {
+    return CustomTextField(
+      label: "Previous City",
+      controller: _getSafeController('previousCity'),
+      maxLength: 50,
+      filter: [
+        FilteringTextInputFormatter.singleLineFormatter,
+        LengthLimitingTextInputFormatter(50),
+      ],
+      validator: (v) => FormValidators.required(v, 'Previous City'),
+      onChanged: (v) => widget.onValueChanged('previousCity', v),
+    );
+  }
+
+  Widget _buildMobileNumberMMField() {
+    return CustomTextField(
+      label: "Mobile Number(MM)",
+      hintText: "09XXXXXXXXX",
+      keyboardtype: TextInputType.number,
+      filter: [FilteringTextInputFormatter.digitsOnly],
+      maxLength: 11,
+      controller: _getSafeController('mobileNumberMM'),
+      validator: (v) => FormValidators.mobileNumber(v),
+      onChanged: (v) => widget.onValueChanged('mobileNumberMM', v),
+    );
+  }
+
   Widget _buildAccommodationField() {
     if (_isOtherAccommodation) {
       return CustomTextField(
@@ -406,7 +651,6 @@ class _TripFormLayoutState extends ConsumerState<TripFormLayout>
         validator: (v) => FormValidators.required(v, 'Accommodation detail'),
         onChanged: (v) {
           widget.onValueChanged('accommodation', v);
-          // 🎯 Controller ထဲသို့ တန်ဖိုး တိုက်ရိုက်ထည့်ပေးခြင်းဖြင့် Review တွင် ဒေတာပေါ်လာမည်
           _getSafeController('accommodation').text = v;
         },
         suffixIcon: IconButton(
@@ -429,7 +673,6 @@ class _TripFormLayoutState extends ConsumerState<TripFormLayout>
       label: "Accommodation",
       dialogWidth: 300,
       dialogHeight: 250,
-      //  Dynamic ဖြစ်စေရန် JSON ကလာသော List ကို တိုက်ရိုက်သုံး၍ စစ်ဆေးခြင်း
       value:
           widget.values['selectedAccommodationDropdown'] ??
           (_accommodationList.contains(widget.values['accommodation'])
@@ -444,7 +687,6 @@ class _TripFormLayoutState extends ConsumerState<TripFormLayout>
           if (v != "Others") {
             _otherAccommodationController.clear();
             widget.onValueChanged('accommodation', v);
-            // 🎯 ရွေးချယ်လိုက်သော Dropdown တန်ဖိုးကို Controller ထဲ တိုက်ရိုက်သိမ်းဆည်းခြင်း
             _getSafeController('accommodation').text = v;
           } else {
             widget.onValueChanged('accommodation', '');
@@ -457,6 +699,7 @@ class _TripFormLayoutState extends ConsumerState<TripFormLayout>
     );
   }
 
+  // MAIN BUILD METHOD
   @override
   Widget build(BuildContext context) {
     final locationAsync = ref.watch(locationProvider);
@@ -482,307 +725,71 @@ class _TripFormLayoutState extends ConsumerState<TripFormLayout>
     return LayoutBuilder(
       builder: (context, constraints) {
         final bool isDesktop = constraints.maxWidth > 500;
-        Widget pair(Widget a, Widget b) =>
-            isDesktop ? _row(a, b) : _column(a, b);
         final bool isMyanmar =
             widget.values['country'] == 'Myanmar' ||
             widget.values['country'] == 'MMR';
+
         return Form(
           key: _formKey,
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              // 1️⃣ Row 1: Arrival Date | Mode of Travel
-              pair(
-                CustomDateField(
-                  label: "Arrival Date",
-                  value: widget.values['arrivalDate'],
-                  firstDate: DateTime.now(),
-                  readOnly: widget.isUpdateMode,
-                  lastDate: DateTime.now().add(const Duration(days: 2)),
-                  errorText:
-                      _showDateErrors && widget.values['arrivalDate'] == null
-                      ? 'Arrival Date is required'
-                      : null,
-                  onPicked: (d) {
-                    widget.onValueChanged('arrivalDate', d);
-                    setState(() => _showDateErrors = false);
-                  },
-                ),
-                CustomDropdownField(
-                  label: "Mode of Travel",
-                  value: widget.values['modeOfTravel'],
-                  dialogWidth: 100,
-                  dialogHeight: 200,
-                  hint: "Select Mode",
-                  items: const ["Air", "Land", "Sea"],
-                  validator: (v) =>
-                      FormValidators.requiredDropdown(v, 'Mode of Travel'),
-                  onChanged: (v) {
-                    if (v != null && v != widget.values['modeOfTravel']) {
-                      final modeId = v == "Land"
-                          ? 2
-                          : v == "Sea"
-                          ? 3
-                          : 1;
-                      widget.onValueChanged('modeOfTravel', v);
-                      widget.onValueChanged('modeOfTravelId', modeId);
-                      widget.onValueChanged('portOfArrival', null);
-                      widget.onValueChanged('portOfArrivalId', null);
-                      widget.onValueChanged('district', null);
-                      widget.onValueChanged('districtId', null);
-                      widget.onValueChanged('township', null);
-                      widget.onValueChanged('townshipId', null);
-                      ref
-                          .read(portOfArrivalProvider.notifier)
-                          .loadPortOfArrrivalByModeId(modeId);
-                    }
-                  },
-                  spacing: 16,
-                ),
+              //  Row 1: Arrival Date | Mode of Travel
+              _buildPair(
+                _buildArrivalDateField(),
+                _buildModeOfTravelField(),
+                isDesktop,
               ),
               const SizedBox(height: 16),
 
-              // 2️⃣ Row 2: Port of Arrival | Purpose of Visit
+              //  Row 2: Port of Arrival | Purpose of Visit
               if (portAsync.hasError)
                 _errorWidget('Port of arrival failed to load', () {
                   final mode = widget.values['modeOfTravel'];
-                  final modeId = mode == "Land"
-                      ? 2
-                      : mode == "Sea"
-                      ? 3
-                      : 1;
+                  final modeId = mode == "Land" ? 2 : (mode == "Sea" ? 3 : 1);
                   ref
                       .read(portOfArrivalProvider.notifier)
                       .loadPortOfArrrivalByModeId(modeId);
                 })
-              else ...[
-                pair(
-                  CustomDropdownField(
-                    label: "Port of Arrival",
-                    value:
-                        (portState!.portOfArrivalList.any(
-                          (p) =>
-                              p.portOfArrivalName ==
-                              widget.values['portOfArrival'],
-                        ))
-                        ? widget.values['portOfArrival'] as String?
-                        : null,
-                    hint: "Select Port",
-                    items: portState.portOfArrivalList
-                        .map((p) => p.portOfArrivalName.toString())
-                        .toList(),
-                    dialogWidth: 250,
-                    dialogHeight: 200,
-                    validator: (v) =>
-                        FormValidators.requiredDropdown(v, 'Port of Arrival'),
-                    onChanged: (v) {
-                      if (v != null) {
-                        widget.onValueChanged('portOfArrival', v);
-                        try {
-                          final selected = portState.portOfArrivalList
-                              .firstWhere((p) => p.portOfArrivalName == v);
-                          widget.onValueChanged(
-                            'portOfArrivalId',
-                            selected.portOfArrivalId,
-                          );
-                          ref
-                              .read(portOfArrivalProvider.notifier)
-                              .selectPort(selected.portOfArrivalId);
-                        } catch (_) {}
-                      }
-                    },
-                    spacing: 16,
-                  ),
+              else
+                _buildPair(
+                  _buildPortOfArrivalField(portState),
                   _buildPurposeField(),
+                  isDesktop,
                 ),
-              ],
               const SizedBox(height: 16),
 
-              // 3️⃣ Row 3: Vehicle Name | Vehicle Number
-              pair(
-                CustomTextField(
-                  label: "Vehicle Name",
-                  controller: _getSafeController('vehicleName'),
-                  maxLength: 50,
-                  filter: [FilteringTextInputFormatter.singleLineFormatter],
-                  validator: (v) => FormValidators.required(v, 'Vehicle Name'),
-                  onChanged: (v) {
-                    widget.onValueChanged('vehicleName', v);
-                  },
-                ),
-                CustomTextField(
-                  label: "Vehicle Number",
-                  controller: _getSafeController('vehicleNumber'),
-                  maxLength: 20,
-                  validator: (v) =>
-                      FormValidators.required(v, 'Vehicle Number'),
-                  onChanged: (v) {
-                    widget.onValueChanged('vehicleNumber', v);
-                  },
-                ),
+              //  Row 3: Vehicle Name | Vehicle Number
+              _buildPair(
+                _buildVehicleNameField(),
+                _buildVehicleNumberField(),
+                isDesktop,
               ),
               const SizedBox(height: 16),
 
-              // 4️⃣ Row 4: State/Region | District
-              pair(
-                CustomDropdownField(
-                  label: "State/Region",
-                  dialogWidth: 300,
-                  dialogHeight: 250,
-                  value:
-                      (locationState!.allStates.any(
-                        (s) => s.name == widget.values['stateRegion'],
-                      ))
-                      ? widget.values['stateRegion'] as String?
-                      : null,
-                  hint: "Select State/Region",
-                  items: locationState.allStates
-                      .map((s) => s.name.toString())
-                      .toList(),
-                  validator: (v) =>
-                      FormValidators.requiredDropdown(v, 'State/Region'),
-                  onChanged: (v) {
-                    if (v != widget.values['stateRegion']) {
-                      widget.onValueChanged('stateRegion', v);
-                      widget.onValueChanged('district', null);
-                      widget.onValueChanged('districtId', null);
-                      widget.onValueChanged('township', null);
-                      widget.onValueChanged('townshipId', null);
-
-                      try {
-                        final selectedState = locationState.allStates
-                            .firstWhere((s) => s.name == v);
-                        widget.onValueChanged(
-                          'stateRegionId',
-                          selectedState.id,
-                        );
-                      } catch (_) {}
-
-                      ref.read(locationProvider.notifier).selectState(v);
-                    }
-                  },
-                  spacing: 16,
-                ),
-                CustomDropdownField(
-                  label: "District",
-                  dialogWidth: 300,
-                  dialogHeight: 250,
-                  value:
-                      (locationState.availableDistricts.contains(
-                        widget.values['district'],
-                      ))
-                      ? widget.values['district'] as String?
-                      : null,
-                  hint: "Select District",
-                  items: locationState.availableDistricts,
-                  validator: (v) =>
-                      FormValidators.requiredDropdown(v, 'District'),
-                  onChanged: (v) {
-                    if (v != widget.values['district']) {
-                      widget.onValueChanged('district', v);
-                      widget.onValueChanged('township', null);
-                      widget.onValueChanged('townshipId', null);
-                      try {
-                        final selectedState = locationState.allStates
-                            .firstWhere(
-                              (s) => s.name == widget.values['stateRegion'],
-                            );
-                        final selectedDist = selectedState.districts.firstWhere(
-                          (d) => d.name == v,
-                        );
-                        widget.onValueChanged(
-                          'districtId',
-                          selectedDist.districtId,
-                        );
-                      } catch (_) {}
-
-                      ref.read(locationProvider.notifier).selectDistrict(v);
-                    }
-                  },
-                  spacing: 16,
-                ),
+              //  Row 4: State/Region | District
+              _buildPair(
+                _buildStateRegionField(locationState),
+                _buildDistrictField(locationState),
+                isDesktop,
               ),
               const SizedBox(height: 16),
 
-              // 5️⃣ Row 5: Township | Address in Myanmar
-              pair(
-                CustomDropdownField(
-                  label: "Township",
-                  dialogWidth: 300,
-                  dialogHeight: 250,
-                  value:
-                      (locationState.availableTownships.contains(
-                        widget.values['township'],
-                      ))
-                      ? widget.values['township'] as String?
-                      : null,
-                  hint: "Select Township",
-                  items: locationState.availableTownships,
-                  validator: (v) =>
-                      FormValidators.requiredDropdown(v, 'Township'),
-                  onChanged: (v) {
-                    if (v != widget.values['township']) {
-                      widget.onValueChanged('township', v);
-                      try {
-                        final selectedState = locationState.allStates
-                            .firstWhere(
-                              (s) => s.name == widget.values['stateRegion'],
-                            );
-                        final selectedDist = selectedState.districts.firstWhere(
-                          (d) => d.name == widget.values['district'],
-                        );
-                        final selectedTown = selectedDist.townships.firstWhere(
-                          (t) => t.name == v,
-                        );
-                        widget.onValueChanged('townshipId', selectedTown.id);
-                      } catch (_) {}
-                    }
-                  },
-                  spacing: 16,
-                ),
-                CustomTextField(
-                  label: "Address in Myanmar",
-                  maxLength: 100,
-                  controller: _getSafeController('addressInMyanmar'),
-                  validator: (v) =>
-                      FormValidators.required(v, 'Address in Myanmar'),
-                  onChanged: (v) {
-                    widget.onValueChanged('addressInMyanmar', v);
-                  },
-                ),
+              //  Row 5: Township | Address in Myanmar
+              _buildPair(
+                _buildTownshipField(locationState),
+                _buildAddressInMyanmarField(),
+                isDesktop,
               ),
               const SizedBox(height: 16),
 
-              // 6️⃣ Row 6: Previous City | Mobile Number (MM) သို့မဟုတ် Foreigner ဖြစ်ပါက Accommodation
-              pair(
-                CustomTextField(
-                  label: "Previous City",
-                  controller: _getSafeController('previousCity'),
-                  maxLength: 50,
-                  filter: [
-                    FilteringTextInputFormatter.singleLineFormatter,
-                    LengthLimitingTextInputFormatter(50),
-                  ],
-                  validator: (v) => FormValidators.required(v, 'Previous City'),
-                  onChanged: (v) {
-                    widget.onValueChanged('previousCity', v);
-                  },
-                ),
+              // Row 6: Previous City | Mobile/Accommodation
+              _buildPair(
+                _buildPreviousCityField(),
                 isMyanmar
-                    ? CustomTextField(
-                        label: "Mobile Number(MM)",
-                        hintText: "09XXXXXXXXX",
-                        keyboardtype: TextInputType.number,
-                        filter: [FilteringTextInputFormatter.digitsOnly],
-                        maxLength: 11,
-                        controller: _getSafeController('mobileNumberMM'),
-                        validator: (v) => FormValidators.mobileNumber(v),
-                        onChanged: (v) {
-                          widget.onValueChanged('mobileNumberMM', v);
-                        },
-                      )
+                    ? _buildMobileNumberMMField()
                     : _buildAccommodationField(),
+                isDesktop,
               ),
               const SizedBox(height: 30),
 

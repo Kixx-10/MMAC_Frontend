@@ -1,4 +1,6 @@
-// ignore_for_file: unused_element, unused_field, unnecessary_non_null_assertion, unnecessary_null_comparison, dead_code, dead_null_aware_expression, strict_top_level_inference, prefer_typing_uninitialized_variables
+// lib/ui/views/pages/new_application/new_application_page.dart
+
+// ignore_for_file: curly_braces_in_flow_control_structures
 
 import 'dart:convert';
 import 'dart:developer';
@@ -19,7 +21,7 @@ import '../../widgets/form_progress_bar.dart';
 class NewApplication extends ConsumerStatefulWidget {
   final String? initialCountry;
   final VoidCallback? onBackPressed;
-  final isUpdateMode;
+  final bool isUpdateMode; // 🎯 FIX: Strictly typed
   final SubmitRequestModel? initialData;
 
   const NewApplication({
@@ -30,8 +32,6 @@ class NewApplication extends ConsumerStatefulWidget {
     this.initialData,
   });
 
-  //const NewApplication({super.key, this.initialCountry, this.onBackPressed, required bool isUpdateMode});
-
   @override
   ConsumerState<NewApplication> createState() => _NewApplicationState();
 }
@@ -41,12 +41,12 @@ class _NewApplicationState extends ConsumerState<NewApplication>
   @override
   bool get wantKeepAlive => true;
 
+  // ---------------------------------------------------------------------------
+  // STATE VARIABLES
+  // ---------------------------------------------------------------------------
   int currentStep = 1;
   final int totalSteps = 4;
-  String _generatedApplicationNo = '';
   bool _isSessionLoading = true;
-
-  SubmitRequestModel? _submittedData;
 
   final GlobalKey<FormState> _step1FormKey = GlobalKey<FormState>();
   IdentificationFormLayoutInterface? _step1Interface;
@@ -105,26 +105,34 @@ class _NewApplicationState extends ConsumerState<NewApplication>
     'nrcRawNumber': null,
   };
 
+  // ---------------------------------------------------------------------------
+  // LIFECYCLE
+  // ---------------------------------------------------------------------------
   @override
   void initState() {
     super.initState();
-    if (widget.isUpdateMode) {
-      currentStep = 0;
-    }
-    if (widget.initialData != null) {
-      currentStep = 1;
-    }
+    if (widget.isUpdateMode) currentStep = 0;
+    if (widget.initialData != null) currentStep = 1;
     _loadSavedSession();
   }
 
+  @override
+  void dispose() {
+    _step1Controllers.forEach((_, controller) => controller.dispose());
+    _step2Controllers.forEach((_, controller) => controller.dispose());
+    super.dispose();
+  }
+
+  // ---------------------------------------------------------------------------
+  // DATA INJECTION & SESSION MANAGEMENT
+  // ---------------------------------------------------------------------------
   Future<void> _loadSavedSession() async {
     try {
       if (widget.initialData != null) {
-        setState(() {
-          _injectFetchedData(widget.initialData!);
-        });
+        setState(() => _injectFetchedData(widget.initialData!));
         return;
       }
+
       final sessionData = await FormSessionService.loadDraft(
         isUpdateMode: widget.isUpdateMode,
       );
@@ -132,7 +140,7 @@ class _NewApplicationState extends ConsumerState<NewApplication>
       if (sessionData != null && mounted) {
         setState(() {
           if (sessionData['currentStep'] != null) {
-            currentStep = sessionData['currentStep'];
+            currentStep = sessionData['currentStep'] as int;
           }
 
           if (sessionData['values'] != null) {
@@ -140,7 +148,6 @@ class _NewApplicationState extends ConsumerState<NewApplication>
               sessionData['values'],
             );
 
-            // DATE CRASH FIX: Json မှလာသော String ကို DateTime သို့ ပြန်ပြောင်းပေးခြင်း
             final dateFields = [
               'dateOfBirth',
               'issuedDate',
@@ -152,7 +159,7 @@ class _NewApplicationState extends ConsumerState<NewApplication>
                 try {
                   savedValues[field] = DateTime.parse(savedValues[field]);
                 } catch (e) {
-                  savedValues[field] = null; // Parse မရပါက ဖျက်ပစ်မည်
+                  savedValues[field] = null;
                 }
               }
             }
@@ -175,7 +182,6 @@ class _NewApplicationState extends ConsumerState<NewApplication>
       } else {
         if (widget.initialCountry != null) {
           _formValues['residencyType'] = widget.initialCountry;
-
           if (widget.initialCountry == 'Myanmar') {
             _formValues['country'] = 'Myanmar';
             _formValues['countryCode'] = 'MMR';
@@ -194,7 +200,6 @@ class _NewApplicationState extends ConsumerState<NewApplication>
   }
 
   void _saveCurrentSession() {
-    // 1. Grab latest text from controllers
     _step1Controllers.forEach(
       (key, controller) => _formValues[key] = controller.text,
     );
@@ -206,21 +211,18 @@ class _NewApplicationState extends ConsumerState<NewApplication>
       _formValues,
     );
 
-    // 3. 🎯 CRITICAL FIX: Convert DateTime objects to ISO Strings before saving
     final dateFields = [
       'dateOfBirth',
       'issuedDate',
       'expiryDate',
       'arrivalDate',
     ];
-
     for (var field in dateFields) {
       if (dataToSave[field] != null && dataToSave[field] is DateTime) {
         dataToSave[field] = (dataToSave[field] as DateTime).toIso8601String();
       }
     }
 
-    // 4. Save the sanitized map
     FormSessionService.saveDraft(
       dataToSave,
       currentStep,
@@ -228,17 +230,7 @@ class _NewApplicationState extends ConsumerState<NewApplication>
     );
   }
 
-  @override
-  void dispose() {
-    _step1Controllers.forEach((_, controller) => controller.dispose());
-    _step2Controllers.forEach((_, controller) => controller.dispose());
-    super.dispose();
-  }
-
   void _updateFormValue(String key, dynamic value) {
-    //  CRITICAL FIX: Wraps the update in a microtask.
-    // This tells Flutter: "Wait until the screen finishes drawing, THEN update the state."
-    // This permanently stops the Red Screen Flash error!
     Future.microtask(() {
       if (mounted) {
         setState(() => _formValues[key] = value);
@@ -254,84 +246,59 @@ class _NewApplicationState extends ConsumerState<NewApplication>
       ).convert(fetchedData.toJson());
       log("INJECTING FETCHED DATA:\n$prettyJson", name: "NewApplicationPage");
     } catch (e) {
-      log("Failed to log fetched data", name: "NewApplicationPage");
+      log("Failed to log fetched data: $e", name: "NewApplicationPage");
     }
 
     setState(() {
       _formValues['qrReference'] = fetchedData.qrReference;
-      _step1Controllers['fullName']?.text = fetchedData.fullName ?? '';
-      _step1Controllers['email']?.text = fetchedData.email ?? '';
-      _step1Controllers['mobile']?.text = fetchedData.mobileNumber ?? '';
+      _step1Controllers['fullName']?.text = fetchedData.fullName;
+      _step1Controllers['email']?.text = fetchedData.email;
+      _step1Controllers['mobile']?.text = fetchedData.mobileNumber;
       _step1Controllers['visaNumber']?.text = fetchedData.visaNo ?? '';
-      _step1Controllers['passportNumber']?.text = fetchedData.passportNo ?? '';
-      _step1Controllers['address']?.text = fetchedData.address ?? '';
+      _step1Controllers['passportNumber']?.text = fetchedData.passportNo;
+      _step1Controllers['address']?.text = fetchedData.address;
       _step1Controllers['fatherName']?.text = fetchedData.fatherName ?? '';
 
-      _step2Controllers['vehicleNumber']?.text =
-          fetchedData.vehicleNumber ?? '';
-      _step2Controllers['vehicleName']?.text = fetchedData.vehicleName ?? '';
+      _step2Controllers['vehicleNumber']?.text = fetchedData.vehicleNumber;
+      _step2Controllers['vehicleName']?.text = fetchedData.vehicleName;
       _step2Controllers['accommodation']?.text =
           fetchedData.accommodation ?? '';
       _step2Controllers['addressInMyanmar']?.text =
-          fetchedData.addressInMyanmar ?? '';
+          fetchedData.addressInMyanmar;
       _step2Controllers['mobileNumberMM']?.text =
           fetchedData.mobileNumberMM ?? '';
-      _step2Controllers['previousCity']?.text = fetchedData.previousCity ?? '';
+      _step2Controllers['previousCity']?.text = fetchedData.previousCity;
       _step2Controllers['purposeOfVisitDetail']?.text =
-          fetchedData.purposeOfVisit ?? '';
+          fetchedData.purposeOfVisit;
 
       _formValues['gender'] = fetchedData.gender == 'M' ? 'Male' : 'Female';
 
-      // 1. Parse and populate NRC fragments safely
       if (fetchedData.nrc != null && fetchedData.nrc!.isNotEmpty) {
         _step1Controllers['nrc']?.text = fetchedData.nrc!;
-        try {
-          final firstSplit = fetchedData.nrc!.split('/');
-          if (firstSplit.length == 2) {
-            _formValues['nrcStateCode'] = firstSplit[0]; // e.g. "12"
-
-            final secondSplit = firstSplit[1].split('(');
-            if (secondSplit.length == 2) {
-              _formValues['nrcTownshipCode'] = secondSplit[0]; // e.g. "LATHANA"
-
-              final thirdSplit = secondSplit[1].split(')');
-              if (thirdSplit.length == 2) {
-                _formValues['nrcTypeCode'] = thirdSplit[0]; // e.g. "နိုင်"
-                _formValues['nrcRawNumber'] = thirdSplit[1]; // e.g. "123456"
-              }
-            }
-          }
-        } catch (e) {
-          debugPrint("⚠️ Failed to parse NRC segments: $e");
-        }
+        _parseAndInjectNrc(fetchedData.nrc!);
       }
 
-      if (fetchedData.dob != null && fetchedData.dob!.isNotEmpty) {
-        _formValues['dateOfBirth'] = DateTime.parse(fetchedData.dob!);
+      if (fetchedData.dob.isNotEmpty) {
+        _formValues['dateOfBirth'] = DateTime.parse(fetchedData.dob);
       }
-      if (fetchedData.issuedDate != null &&
-          fetchedData.issuedDate!.isNotEmpty) {
-        _formValues['issuedDate'] = DateTime.parse(fetchedData.issuedDate!);
+      if (fetchedData.issuedDate.isNotEmpty) {
+        _formValues['issuedDate'] = DateTime.parse(fetchedData.issuedDate);
       }
-      if (fetchedData.expiryDate != null &&
-          fetchedData.expiryDate!.isNotEmpty) {
-        _formValues['expiryDate'] = DateTime.parse(fetchedData.expiryDate!);
+      if (fetchedData.expiryDate.isNotEmpty) {
+        _formValues['expiryDate'] = DateTime.parse(fetchedData.expiryDate);
       }
-      if (fetchedData.arrivalDate != null &&
-          fetchedData.arrivalDate!.isNotEmpty) {
-        _formValues['arrivalDate'] = DateTime.parse(fetchedData.arrivalDate!);
+      if (fetchedData.arrivalDate.isNotEmpty) {
+        _formValues['arrivalDate'] = DateTime.parse(fetchedData.arrivalDate);
       }
 
       _formValues['countryCode'] = fetchedData.countryOfBirthCode;
       _formValues['issuedCountryCode'] = fetchedData.issuedCountryCode;
-      // 🎯 INJECTING THE NAMES RECEIVED FROM THE BACKEND
       _formValues['modeOfTravel'] = fetchedData.modeOfTravelName;
       _formValues['portOfArrival'] = fetchedData.portOfArrivalName;
       _formValues['stateRegion'] = fetchedData.stateRegionName;
       _formValues['district'] = fetchedData.districtName;
       _formValues['township'] = fetchedData.townshipName;
 
-      // We also inject the raw IDs just in case they aren't 0 (safeguard)
       _formValues['modeOfTravelId'] = fetchedData.modeOfTravelId;
       _formValues['portOfArrivalId'] = fetchedData.portOfArrivalId;
       _formValues['stateRegionId'] = fetchedData.stateRegionId;
@@ -347,6 +314,32 @@ class _NewApplicationState extends ConsumerState<NewApplication>
     _saveCurrentSession();
   }
 
+  // 🎯 EXTRACTED: Pure function to parse NRC cleanly
+  void _parseAndInjectNrc(String nrc) {
+    try {
+      final firstSplit = nrc.split('/');
+      if (firstSplit.length == 2) {
+        _formValues['nrcStateCode'] = firstSplit[0];
+
+        final secondSplit = firstSplit[1].split('(');
+        if (secondSplit.length == 2) {
+          _formValues['nrcTownshipCode'] = secondSplit[0];
+
+          final thirdSplit = secondSplit[1].split(')');
+          if (thirdSplit.length == 2) {
+            _formValues['nrcTypeCode'] = thirdSplit[0];
+            _formValues['nrcRawNumber'] = thirdSplit[1];
+          }
+        }
+      }
+    } catch (e) {
+      debugPrint("⚠️ Failed to parse NRC segments: $e");
+    }
+  }
+
+  // ---------------------------------------------------------------------------
+  // HELPERS & VALIDATORS
+  // ---------------------------------------------------------------------------
   String _text(String key) =>
       _step1Controllers[key]?.text.trim() ??
       _step2Controllers[key]?.text.trim() ??
@@ -360,55 +353,79 @@ class _NewApplicationState extends ConsumerState<NewApplication>
   String _formatDate(dynamic date) {
     if (date == null) return '';
     if (date is DateTime) {
-      final String year = date.year.toString();
-      final String month = date.month.toString().padLeft(2, '0');
-      final String day = date.day.toString().padLeft(2, '0');
-      return '$year-$month-$day';
+      return '${date.year}-${date.month.toString().padLeft(2, '0')}-${date.day.toString().padLeft(2, '0')}';
     }
     return date.toString();
   }
 
-  String _genderCode(String? gender) {
-    switch (gender) {
-      case 'Male':
-        return 'M';
-      case 'Female':
-        return 'F';
-      default:
-        return '';
+  String _genderCode(String? gender) =>
+      gender == 'Male' ? 'M' : (gender == 'Female' ? 'F' : '');
+
+  bool _isStep1DataValid() =>
+      _text('fullName').isNotEmpty &&
+      _text('email').isNotEmpty &&
+      _formValues['gender'] != null &&
+      _formValues['dateOfBirth'] != null;
+
+  bool _isStep2DataValid() =>
+      _formValues['arrivalDate'] != null &&
+      _formValues['portOfArrivalId'] != null &&
+      _formValues['townshipId'] != null &&
+      _formValues['purposeOfVisit'] != null;
+
+  bool _isStep3DataValid() =>
+      _formValues['hasSymptoms'] != null &&
+      _formValues['carryingRestricted'] != null;
+
+  // ---------------------------------------------------------------------------
+  // NAVIGATION & SUBMISSION
+  // ---------------------------------------------------------------------------
+  void _nextStep() {
+    if (currentStep == 1) {
+      if (_step1Interface == null)
+        return _showError('Form not ready, please wait.');
+      if (_step1Interface!.validate()) {
+        setState(() => currentStep++);
+        _saveCurrentSession();
+      }
+    } else if (currentStep == 2) {
+      if (_step2Interface == null)
+        return _showError('Form not ready, please wait.');
+      if (_step2Interface!.validate()) {
+        setState(() => currentStep++);
+        _saveCurrentSession();
+      }
+    } else if (currentStep == 3) {
+      if (_step3Interface == null)
+        return _showError('Form not ready, please wait.');
+      if (_step3Interface!.validate()) {
+        setState(() => currentStep++);
+        _saveCurrentSession();
+      }
+    } else if (currentStep == 4) {
+      if (!_isStep1DataValid())
+        return _handleValidationError(1, 'Please check Section 1.');
+      if (!_isStep2DataValid())
+        return _handleValidationError(2, 'Please check Section 2.');
+      if (!_isStep3DataValid())
+        return _handleValidationError(3, 'Please check Section 3.');
+      _submitApplication();
     }
   }
 
-  bool _isStep1DataValid() {
-    return _text('fullName').isNotEmpty &&
-        _text('email').isNotEmpty &&
-        _formValues['gender'] != null &&
-        _formValues['dateOfBirth'] != null;
+  void _handleValidationError(int step, String message) {
+    setState(() => currentStep = step);
+    _showError(message);
   }
 
-  bool _isStep2DataValid() {
-    return _formValues['arrivalDate'] != null &&
-        _formValues['portOfArrivalId'] != null &&
-        _formValues['townshipId'] != null &&
-        _formValues['purposeOfVisit'] != null;
-  }
-
-  bool _isStep3DataValid() {
-    return _formValues['hasSymptoms'] != null &&
-        _formValues['carryingRestricted'] != null;
+  void _prevStep() {
+    if (currentStep > 1) {
+      setState(() => currentStep--);
+      _saveCurrentSession();
+    }
   }
 
   SubmitRequestModel _buildRequestModel() {
-    final String countryCode = _safeString(_formValues['countryCode']);
-    final String issuedCountryCode = _safeString(
-      _formValues['issuedCountryCode'],
-    );
-    final String finalNrc = _isMyanmar ? _text('nrc') : '';
-    final String finalFatherName = _isMyanmar ? _text('fatherName') : '';
-
-    // 🎯 CRITICAL FIX: Ironclad Reference Number Injection
-    // If we are updating, we forcefully extract the Reference Number straight from
-    // the verified API data so it NEVER gets lost by local drafts!
     final String? secureQrReference =
         (widget.isUpdateMode && widget.initialData != null)
         ? widget.initialData!.qrReference
@@ -419,15 +436,15 @@ class _NewApplicationState extends ConsumerState<NewApplication>
       fullName: _text('fullName'),
       gender: _genderCode(_formValues['gender']),
       dob: _formatDate(_formValues['dateOfBirth']),
-      countryOfBirthCode: countryCode,
+      countryOfBirthCode: _safeString(_formValues['countryCode']),
       email: _text('email'),
       mobileNumber: _text('mobile'),
       address: _text('address'),
       visaNo: _text('visaNumber'),
-      nrc: finalNrc,
-      fatherName: finalFatherName,
+      nrc: _isMyanmar ? _text('nrc') : '',
+      fatherName: _isMyanmar ? _text('fatherName') : '',
       passportNo: _text('passportNumber'),
-      issuedCountryCode: issuedCountryCode,
+      issuedCountryCode: _safeString(_formValues['issuedCountryCode']),
       issuedDate: _formatDate(_formValues['issuedDate']),
       expiryDate: _formatDate(_formValues['expiryDate']),
       arrivalDate: _formatDate(_formValues['arrivalDate']),
@@ -448,146 +465,45 @@ class _NewApplicationState extends ConsumerState<NewApplication>
     );
   }
 
-  void _nextStep() {
-    if (currentStep == 1) {
-      if (_step1Interface == null) {
-        _showError('Form not ready, please wait.');
-        return;
+  Future<void> _submitApplication() async {
+    _showLoadingDialog();
+
+    try {
+      final requestModel = _buildRequestModel();
+      final response = await ref
+          .read(submitControllerProvider.notifier)
+          .submitApplicationAction(requestModel);
+
+      if (mounted) Navigator.of(context).pop(); // Close loading
+
+      if (response != null) {
+        _handleSuccess(response, requestModel);
+      } else {
+        _showErrorDialog('The server could not process your application.');
       }
-      if (_step1Interface!.validate()) {
-        setState(() => currentStep++);
-        _saveCurrentSession();
-      }
-    } else if (currentStep == 2) {
-      if (_step2Interface == null) {
-        _showError('Form not ready, please wait.');
-        return;
-      }
-      if (_step2Interface!.validate()) {
-        setState(() => currentStep++);
-        _saveCurrentSession();
-      }
-    } else if (currentStep == 3) {
-      if (_step3Interface == null) {
-        _showError('Form not ready, please wait.');
-        return;
-      }
-      if (_step3Interface!.validate()) {
-        setState(() => currentStep++);
-        _saveCurrentSession();
-      }
-    } else if (currentStep == 4) {
-      if (!_isStep1DataValid()) {
-        setState(() => currentStep = 1);
-        _showError('Please check Section 1.');
-        return;
-      }
-      if (!_isStep2DataValid()) {
-        setState(() => currentStep = 2);
-        _showError('Please check Section 2.');
-        return;
-      }
-      if (!_isStep3DataValid()) {
-        setState(() => currentStep = 3);
-        _showError('Please check Section 3.');
-        return;
-      }
-      _submitApplication();
+    } catch (e) {
+      if (mounted) Navigator.of(context).pop(); // Close loading
+      _showErrorDialog(e.toString().replaceAll("Exception: ", ""));
     }
   }
 
-  void _prevStep() {
-    if (currentStep > 1) {
-      setState(() => currentStep--);
-      _saveCurrentSession();
-    }
-  }
-
-  void _resetForm() {
-    _step1Controllers.forEach((_, controller) => controller.clear());
-    _step2Controllers.forEach((_, controller) => controller.clear());
-    _formValues.updateAll((key, _) => null);
+  void _handleSuccess(dynamic response, SubmitRequestModel requestModel) {
     FormSessionService.clearDraft(isUpdateMode: widget.isUpdateMode);
     setState(() {
-      _generatedApplicationNo = '';
-      currentStep = 1;
+      currentStep = 5;
     });
   }
-Future<void> _submitApplication() async {
-  _showLoadingDialog();
 
-  try {
-    final requestModel = _buildRequestModel();
-    
-    final response = await ref
-        .read(submitControllerProvider.notifier)
-        .submitApplicationAction(requestModel);
-
-    if (mounted) Navigator.of(context).pop();
-
-    if (response != null) {
-      _handleSuccess(response, requestModel);
-    } else {
-  
-      _showErrorDialog('The server could not process your application.');
-    }
-  } catch (e) {
-    if (mounted) Navigator.of(context).pop();
-    _showErrorDialog(e.toString().replaceAll("Exception: ", ""));
+  // ---------------------------------------------------------------------------
+  // UI BUILDERS
+  // ---------------------------------------------------------------------------
+  void _showLoadingDialog() {
+    showDialog(
+      context: context,
+      barrierDismissible: false,
+      builder: (_) => const Center(child: CircularProgressIndicator()),
+    );
   }
-}
-
-void _showLoadingDialog() {
-  showDialog(
-    context: context,
-    barrierDismissible: false,
-    builder: (_) => const Center(child: CircularProgressIndicator()),
-  );
-}
-
-void _handleSuccess(var response, var requestModel) {
-  FormSessionService.clearDraft(isUpdateMode: widget.isUpdateMode);
-  setState(() {
-    _submittedData = requestModel;
-    _generatedApplicationNo = response.applicationNo;
-    currentStep = 5;
-  });
-}
-
-
-
-
-  // Future<void> _submitApplication() async {
-  //   final requestModel = _buildRequestModel();
-  //   showDialog(
-  //     context: context,
-  //     barrierDismissible: false,
-  //     builder: (_) => const Center(child: CircularProgressIndicator()),
-  //   );
-  //   try {
-  //     final response = await ref
-  //         .read(submitControllerProvider.notifier)
-  //         .submitApplicationAction(requestModel);
-  //     if (!mounted) return;
-  //     Navigator.of(context).pop();
-  //     if (response != null) {
-  //       FormSessionService.clearDraft(isUpdateMode: widget.isUpdateMode);
-  //       setState(() {
-  //         _submittedData = requestModel;
-  //         _generatedApplicationNo = response.applicationNo;
-  //         currentStep = 5;
-  //       });
-  //     } else {
-  //       _showErrorDialog(
-  //         'The server could not process your application. Please re-check your info.',
-  //       );
-  //     }
-  //   } catch (e) {
-  //     if (!mounted) return;
-  //     Navigator.of(context).pop();
-  //     _showErrorDialog('An unexpected error occurred. Please try again later.');
-  //   }
-  // }
 
   void _showError(String msg) {
     if (!mounted) return;
@@ -650,6 +566,7 @@ void _handleSuccess(var response, var requestModel) {
   Widget _buildActionButtons() {
     if (currentStep == 5) return const SizedBox.shrink();
     final isLoading = ref.watch(submitControllerProvider).isLoading;
+
     return Row(
       mainAxisAlignment: MainAxisAlignment.spaceBetween,
       children: [
@@ -664,10 +581,14 @@ void _handleSuccess(var response, var requestModel) {
                 borderRadius: BorderRadius.circular(8),
               ),
             ),
-            child: const Text('Back'),
+            child: const Text(
+              'Back',
+              style: TextStyle(fontWeight: FontWeight.bold),
+            ),
           )
         else
           const SizedBox.shrink(),
+
         ElevatedButton(
           onPressed: isLoading ? null : _nextStep,
           style: ElevatedButton.styleFrom(
@@ -691,6 +612,7 @@ void _handleSuccess(var response, var requestModel) {
                   currentStep == totalSteps
                       ? (widget.isUpdateMode ? 'Update' : 'Confirm & Submit')
                       : 'Next',
+                  style: const TextStyle(fontWeight: FontWeight.bold),
                 ),
         ),
       ],
@@ -702,10 +624,8 @@ void _handleSuccess(var response, var requestModel) {
       case 0:
         return UpdateApplication(
           onBackPressed: widget.onBackPressed ?? () {},
-          initialCountry: widget.initialCountry, 
-          onApplicationFetched: (SubmitRequestModel fetchedData) {
-            _injectFetchedData(fetchedData);
-          },
+          initialCountry: widget.initialCountry,
+          onApplicationFetched: _injectFetchedData,
         );
       case 1:
         return IdentificationFormLayout(
@@ -716,7 +636,7 @@ void _handleSuccess(var response, var requestModel) {
           isUpdateMode: widget.isUpdateMode,
           formKey: _step1FormKey,
           onReady: (interfaceLayout) => _step1Interface = interfaceLayout,
-          onBackPressed: widget.onBackPressed ?? () {}, 
+          onBackPressed: widget.onBackPressed ?? () {},
         );
       case 2:
         return TripFormLayout(
@@ -746,23 +666,19 @@ void _handleSuccess(var response, var requestModel) {
           },
         );
       case 5:
-        // Controller ၏ State တစ်ခုလုံး (Loading, Error, Data) ကို စောင့်ကြည့်ခြင်း
         final submitState = ref.watch(submitControllerProvider);
-
         return submitState.when(
           data: (submitResponse) {
             if (submitResponse != null) {
               return QrGenerateScreen(
-                responseData: submitResponse, // Backend မှလာသော ဒေတာအပြည့်အစုံ
+                responseData: submitResponse,
                 onFinish: () {
-                  // Finish လုပ်ဆောင်ချက်- Form ကို reset လုပ်ခြင်း သို့မဟုတ် Home သို့ ပြန်သွားခြင်း
                   setState(() {
                     currentStep = 1;
                     _formValues.clear();
                     _step1Controllers.forEach((_, c) => c.clear());
                     _step2Controllers.forEach((_, c) => c.clear());
                   });
-                  //_clearSession(); // Session သိမ်းထားသည်များကို ဖျက်ပစ်ရန်
                   FormSessionService.clearDraft(
                     isUpdateMode: widget.isUpdateMode,
                   );
@@ -808,9 +724,63 @@ void _handleSuccess(var response, var requestModel) {
     }
   }
 
+  Widget _buildFormHeader() {
+    if (currentStep <= 0) return const SizedBox.shrink();
+
+    return Column(
+      children: [
+        const Padding(
+          padding: EdgeInsets.symmetric(horizontal: 24),
+          child: Text(
+            'Please enter your information exactly as shown on official identity records.',
+            textAlign: TextAlign.center,
+            style: TextStyle(fontSize: 15, color: Colors.grey),
+          ),
+        ),
+        const SizedBox(height: 30),
+        FormProgressBar(currentStep: currentStep),
+        const SizedBox(height: 15),
+      ],
+    );
+  }
+
+  Widget _buildFormCard() {
+    return Container(
+      width: 950,
+      margin: const EdgeInsets.symmetric(horizontal: 24),
+      child: Material(
+        color: Colors.white,
+        clipBehavior: Clip.antiAlias,
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(16),
+          side: BorderSide(color: Colors.grey.shade200),
+        ),
+        child: Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 24),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                _sectionTitle,
+                style: const TextStyle(
+                  fontSize: 18,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+              const SizedBox(height: 20),
+              _buildCurrentStepForm(),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  // MAIN BUILD
   @override
   Widget build(BuildContext context) {
-    super.build(context);
+    super.build(context); // Required for AutomaticKeepAliveClientMixin
+
     if (_isSessionLoading) {
       return const Scaffold(body: Center(child: CircularProgressIndicator()));
     }
@@ -823,54 +793,9 @@ void _handleSuccess(var response, var requestModel) {
             child: Column(
               children: [
                 const SizedBox(height: 20),
-                //we will show form progress bar if current step is >1
-                if (currentStep > 0) ...[
-                  const Padding(
-                    padding: EdgeInsets.symmetric(horizontal: 24),
-                    child: Text(
-                      'Please enter your information exactly as shown on official identity records.',
-                      textAlign: TextAlign.center,
-                      style: TextStyle(fontSize: 15, color: Colors.grey),
-                    ),
-                  ),
-                  const SizedBox(height: 30),
-                  FormProgressBar(currentStep: currentStep),
-                  const SizedBox(height: 15),
-                ],
+                _buildFormHeader(),
                 const SizedBox(height: 15),
-                Container(
-                  width: 950,
-                  margin: const EdgeInsets.symmetric(horizontal: 24),
-                  child: Material(
-                    color: Colors.white,
-                    clipBehavior: Clip
-                        .antiAlias, // Ensures ink splashes don't bleed past rounded corners
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(16),
-                      side: BorderSide(color: Colors.grey.shade200),
-                    ),
-                    child: Padding(
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 24,
-                        vertical: 24,
-                      ),
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(
-                            _sectionTitle,
-                            style: const TextStyle(
-                              fontSize: 18,
-                              fontWeight: FontWeight.bold,
-                            ),
-                          ),
-                          const SizedBox(height: 20),
-                          _buildCurrentStepForm(),
-                        ],
-                      ),
-                    ),
-                  ),
-                ),
+                _buildFormCard(),
                 const SizedBox(height: 20),
                 const FormFooter(),
               ],

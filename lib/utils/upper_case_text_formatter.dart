@@ -1,5 +1,9 @@
+// lib/utils/formatters.dart
+
 import 'package:flutter/services.dart';
 
+/// A custom [TextInputFormatter] that automatically converts all typed
+/// characters to uppercase while preserving the user's cursor position.
 class UpperCaseTextFormatter extends TextInputFormatter {
   @override
   TextEditingValue formatEditUpdate(
@@ -7,10 +11,11 @@ class UpperCaseTextFormatter extends TextInputFormatter {
     TextEditingValue newValue,
   ) {
     return TextEditingValue(
-      text: newValue.text
-          .toUpperCase(), // စာသားကို အလိုအလျောက် အကုန် စာလုံးကြီးပြောင်းပစ်သည်
-      selection: newValue
-          .selection, // စာရိုက်ရလွယ်ကူအောင် Cursor အနေအထားကို မပြောင်းလဲဘဲ ထိန်းသိမ်းထားသည်
+      // 🎯 Automatically transforms the newly typed text to uppercase
+      text: newValue.text.toUpperCase(),
+
+      // 🎯 Preserves the cursor position so the user can easily edit the middle of a word
+      selection: newValue.selection,
     );
   }
 }
