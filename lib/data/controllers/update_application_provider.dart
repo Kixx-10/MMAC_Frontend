@@ -6,14 +6,9 @@ import 'package:mmac/data/models/search_request_model.dart';
 import 'package:mmac/data/models/submit_request_model.dart';
 import 'package:mmac/data/reposistories/submit_repository.dart';
 
-// 1. Dependency injection for our repository
 final submitRepositoryProvider = Provider<SubmitRepository>((ref) {
   return SubmitRepository();
 });
-
-// lib/data/controllers/update_application_provider.dart
-
-// ... (အပေါ်ပိုင်း import များနှင့် repository provider အပိုင်း မူလအတိုင်း)
 
 class UpdateApplicationNotifier extends AsyncNotifier<SubmitRequestModel?> {
   @override
@@ -21,7 +16,7 @@ class UpdateApplicationNotifier extends AsyncNotifier<SubmitRequestModel?> {
     return null;
   }
 
-  //မြန်မာနိုင်ငံသားများအတွက် ရှာဖွေခြင်း Function (ဤ Method တစ်ခုလုံးကို အစားထိုးပါ)
+  //မြန်မာနိုင်ငံသားများအတွက် ရှာဖွေခြင်း Function
   Future<void> findNativeApplication({
     required NativeSearchRequestModel searchRequest,
     required Function(String error) onError,
@@ -43,7 +38,7 @@ class UpdateApplicationNotifier extends AsyncNotifier<SubmitRequestModel?> {
     });
   }
 
-  //နိုင်ငံခြားသားများအတွက် ရှာဖွေခြင်း Function (ဤ Method တစ်ခုလုံးကို အစားထိုးပါ)
+  //နိုင်ငံခြားသားများအတွက် ရှာဖွေခြင်း Function
   Future<void> findForeignerApplication({
     required ForeignerSearchRequestModel searchRequest,
     required Function(String error) onError,
@@ -53,7 +48,6 @@ class UpdateApplicationNotifier extends AsyncNotifier<SubmitRequestModel?> {
     state = await AsyncValue.guard(() async {
       final repo = ref.read(submitRepositoryProvider);
 
-      // 🎯 ပြင်ဆင်ချက်: Parameter အဟောင်းတွေအစား Model ကို တိုက်ရိုက်ပစ်ထည့်လိုက်ပါပြီ
       final application = await repo.fetchForeignerApplication(searchRequest);
 
       if (application == null) {
@@ -65,8 +59,6 @@ class UpdateApplicationNotifier extends AsyncNotifier<SubmitRequestModel?> {
     });
   }
 }
-
-// ... (အောက်ဆုံးက final updateApplicationProvider မူလအတိုင်း)
 
 final updateApplicationProvider =
     AsyncNotifierProvider<UpdateApplicationNotifier, SubmitRequestModel?>(

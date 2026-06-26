@@ -1,16 +1,14 @@
 // lib/ui/views/pages/new_application/identification_form_layout.dart
 
-// ignore_for_file: empty_catches
-
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:mmac/data/controllers/country_provider.dart';
 import 'package:mmac/data/controllers/nrc_provider.dart';
 import 'package:mmac/ui/views/pages/new_application/widget/nrc_selector_widget.dart';
+import 'package:mmac/utils/form_validators.dart';
+import 'package:mmac/utils/country_codes.dart';
 import 'package:mmac/utils/upper_case_text_formatter.dart';
-import '../../../../utils/form_validators.dart';
-import '../../../../utils/country_codes.dart';
 import '../../widgets/custom_text_field.dart';
 import '../../widgets/custom_date_field.dart';
 import '../../widgets/custom_dropdown_field.dart';
@@ -50,6 +48,7 @@ class IdentificationFormLayout extends ConsumerStatefulWidget {
 class _IdentificationFormLayoutState
     extends ConsumerState<IdentificationFormLayout>
     implements IdentificationFormLayoutInterface {
+  // --- State Variables ---
   bool _showDateErrors = false;
   bool _showNrcError = false;
   bool _isLoading = true;
@@ -57,7 +56,7 @@ class _IdentificationFormLayoutState
   final List<dynamic> _rawCountryObjects = [];
   final List<String> _countryNameList = [];
 
-  // ─── NRC State Variables ───
+  // --- NRC State Variables ---
   String? _selectedNrcStateCode;
   String? _selectedTownshipCode;
   String? _selectedNrcType;
@@ -69,10 +68,11 @@ class _IdentificationFormLayoutState
     {"code": "ပြု", "label": "ပြု"},
   ];
 
-  // ─── Mobile Country Codes State ───
+  // --- Mobile Country Codes State ---
   List<Map<String, String>> _countryCodes = [];
   final TextEditingController _mobileNumberController = TextEditingController();
 
+  // LIFECYCLE & INITIALIZATION
   @override
   void initState() {
     super.initState();
@@ -84,6 +84,19 @@ class _IdentificationFormLayoutState
     _nrcNumberController.text = widget.values['nrcRawNumber'] ?? '';
 
     _countryCodes = CountryCodeData.codes;
+    _initializeMobileNumber();
+    _fetchAndResolveCountries();
+  }
+
+  @override
+  void dispose() {
+    _nrcNumberController.dispose();
+    _mobileNumberController.dispose();
+    super.dispose();
+  }
+
+  // DATA RESOLUTION & MUTATION METHODS
+  void _initializeMobileNumber() {
     final String existingMobile = widget.controllers['mobile']?.text ?? '';
     String? currentCode = widget.values['mobileCode'];
 
@@ -93,7 +106,6 @@ class _IdentificationFormLayoutState
         final code = codeObj['code'];
         if (code != null && existingMobile.startsWith(code)) {
           currentCode = code;
-          // 🎯 DELAYED CALL to prevent clashing with the parent's build phase
           Future.microtask(() {
             if (mounted) widget.onValueChanged('mobileCode', code);
           });
@@ -109,7 +121,9 @@ class _IdentificationFormLayoutState
         currentCode.length,
       );
     }
+  }
 
+  void _fetchAndResolveCountries() {
     Future.microtask(() async {
       try {
         final countryState = await ref.read(countryProvider.future);
@@ -122,28 +136,9 @@ class _IdentificationFormLayoutState
               countryState.countryList.map((c) => c.countryName).toList(),
             );
 
-            // 2. Resolve human-readable country text from incoming API codes
-            final existingCountryCode = widget.values['countryCode'];
-            if (existingCountryCode != null &&
-                widget.values['country'] == null) {
-              try {
-                final matched = _rawCountryObjects.firstWhere(
-                  (c) => c.countryCode == existingCountryCode,
-                );
-                widget.onValueChanged('country', matched.countryName);
-              } catch (_) {}
-            }
-
-            final existingIssuedCode = widget.values['issuedCountryCode'];
-            if (existingIssuedCode != null &&
-                widget.values['issuedCountry'] == null) {
-              try {
-                final matched = _rawCountryObjects.firstWhere(
-                  (c) => c.countryCode == existingIssuedCode,
-                );
-                widget.onValueChanged('issuedCountry', matched.countryName);
-              } catch (_) {}
-            }
+            // Resolve human-readable country text from incoming API codes
+            _resolveCountryCodeToName('countryCode', 'country');
+            _resolveCountryCodeToName('issuedCountryCode', 'issuedCountry');
 
             _isLoading = false;
           });
@@ -167,11 +162,18 @@ class _IdentificationFormLayoutState
     });
   }
 
-  @override
-  void dispose() {
-    _nrcNumberController.dispose();
-    _mobileNumberController.dispose();
-    super.dispose();
+  void _resolveCountryCodeToName(String codeKey, String nameKey) {
+    final existingCode = widget.values[codeKey];
+    if (existingCode != null && widget.values[nameKey] == null) {
+      try {
+        final matched = _rawCountryObjects.firstWhere(
+          (c) => c.countryCode == existingCode,
+        );
+        widget.onValueChanged(nameKey, matched.countryName);
+      } catch (_) {
+        // Safe fallback if mapping fails
+      }
+    }
   }
 
   void _updateMobileControllerValue() {
@@ -205,18 +207,16 @@ class _IdentificationFormLayoutState
       String townshipMM = _selectedTownshipCode!;
 
       try {
-        final matchedState = stateList.firstWhere(
-          (st) => st.idCode == _selectedNrcStateCode,
-        );
-        stateMM = matchedState.codeMM;
-      } catch (e) {}
+        stateMM = stateList
+            .firstWhere((st) => st.idCode == _selectedNrcStateCode)
+            .codeMM;
+      } catch (_) {}
 
       try {
-        final matchedTownship = townshipList.firstWhere(
-          (ts) => ts.idCode == _selectedTownshipCode,
-        );
-        townshipMM = matchedTownship.codeMM;
-      } catch (e) {}
+        townshipMM = townshipList
+            .firstWhere((ts) => ts.idCode == _selectedTownshipCode)
+            .codeMM;
+      } catch (_) {}
 
       final fullNrcMyanmar =
           "$stateMM/$townshipMM($_selectedNrcType)${_nrcNumberController.text.trim()}";
@@ -241,14 +241,11 @@ class _IdentificationFormLayoutState
       _showDateErrors = true;
 
       if (isMyanmar) {
-        if (_selectedNrcStateCode == null ||
+        _showNrcError =
+            (_selectedNrcStateCode == null ||
             _selectedTownshipCode == null ||
             _selectedNrcType == null ||
-            _nrcNumberController.text.trim().length != 6) {
-          _showNrcError = true;
-        } else {
-          _showNrcError = false;
-        }
+            _nrcNumberController.text.trim().length != 6);
       } else {
         _showNrcError = false;
       }
@@ -261,7 +258,6 @@ class _IdentificationFormLayoutState
     );
 
     bool isExpiryValid = passportExpiryError == null;
-
     final bool basicFormValid = widget.formKey.currentState!.validate();
 
     if (isMyanmar) {
@@ -278,77 +274,23 @@ class _IdentificationFormLayoutState
         widget.values['issuedDate'] != null;
   }
 
-  @override
-  Widget build(BuildContext context) {
-    if (_isLoading) {
-      return const Padding(
-        padding: EdgeInsets.symmetric(vertical: 60),
-        child: Center(
-          child: CircularProgressIndicator(
-            valueColor: AlwaysStoppedAnimation<Color>(Colors.blue),
-          ),
-        ),
+  // WIDGET BUILDERS
+  Widget _buildPair(Widget a, Widget b, bool isDesktop) {
+    if (isDesktop) {
+      return Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Expanded(child: a),
+          const SizedBox(width: 40),
+          Expanded(child: b),
+        ],
       );
     }
+    return Column(children: [a, const SizedBox(height: 16), b]);
+  }
 
-    final bool isDesktop = MediaQuery.of(context).size.width > 500;
-    final bool isMyanmar =
-        widget.values['country'] == 'Myanmar' ||
-        widget.values['country'] == 'MMR';
-
-    final List<String> availableCountry = isMyanmar
-        ? _countryNameList
-        : _countryNameList.where((c) => c != 'Myanmar' && c != 'MMR').toList();
-
-    const double lw = 140;
-
-    final nrcAsync = ref.watch(nrcProvider);
-    final nrcState = nrcAsync.valueOrNull;
-
-    Widget pair(Widget a, Widget b) {
-      if (isDesktop) {
-        return Row(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Expanded(child: a),
-            const SizedBox(width: 40),
-            Expanded(child: b),
-          ],
-        );
-      }
-      return Column(children: [a, const SizedBox(height: 16), b]);
-    }
-
-    String? getExpiryErrorText() {
-      if (!_showDateErrors) return null;
-
-      return FormValidators.passportExpiry(
-        expiryDate: widget.values['expiryDate'],
-        issuedDate: widget.values['issuedDate'],
-        isMyanmar: isMyanmar,
-      );
-    }
-
-    // ⏳ Passport Date Relationship Boundaries
-    final DateTime today = DateTime.now();
-    final DateTime? dob = widget.values['dateOfBirth'];
-    final DateTime? issued = widget.values['issuedDate'];
-    final DateTime? expiry = widget.values['expiryDate'];
-
-    // Issued Date cannot be in the future, and cannot be after the Expiry Date
-    DateTime maxIssuedDate = today;
-    if (expiry != null && expiry.isBefore(today)) {
-      maxIssuedDate = expiry;
-    }
-
-    DateTime minIssuedDate = dob ?? DateTime(1900);
-
-    // Expiry Date cannot be before the Issued Date
-    DateTime minExpiryDate = issued ?? DateTime(1900);
-
-    // ─── COMPONENT EXTRACTION BLOCK ───
-
-    final fullNameField = CustomTextField(
+  Widget _buildFullNameField(double lw) {
+    return CustomTextField(
       label: "Full Name",
       controller: widget.controllers['fullName']!,
       filter: [
@@ -360,12 +302,12 @@ class _IdentificationFormLayoutState
       labelWidth: lw,
       readonly: widget.isUpdateMode,
       validator: (v) => FormValidators.required(v, 'Full Name'),
-      onChanged: (value) {
-        widget.onValueChanged('fullName', value);
-      },
+      onChanged: (value) => widget.onValueChanged('fullName', value),
     );
+  }
 
-    final genderField = CustomDropdownField(
+  Widget _buildGenderField(double lw) {
+    return CustomDropdownField(
       label: "Gender",
       hint: "Select Gender",
       labelWidth: lw,
@@ -374,14 +316,14 @@ class _IdentificationFormLayoutState
       value: widget.values['gender'],
       items: const ["Male", "Female"],
       showSearch: false,
-      onChanged: (value) {
-        widget.onValueChanged('gender', value);
-      },
+      onChanged: (value) => widget.onValueChanged('gender', value),
       validator: (value) => value == null ? "Please select gender" : null,
       spacing: 8,
     );
+  }
 
-    final dateOfBirthField = CustomDateField(
+  Widget _buildDateOfBirthField(double lw) {
+    return CustomDateField(
       label: "Date of Birth",
       value: widget.values['dateOfBirth'],
       labelWidth: lw,
@@ -393,21 +335,22 @@ class _IdentificationFormLayoutState
           : null,
       onPicked: (d) {
         widget.onValueChanged('dateOfBirth', d);
-
-        // 🎯 Safety clear: If they change their DOB to a date AFTER their currently selected Issued Date, wipe the Issued Date!
+        final DateTime? issued = widget.values['issuedDate'];
         if (issued != null && d != null && d.isAfter(issued)) {
           widget.onValueChanged('issuedDate', null);
         }
-
-        if (!mounted) return;
-        setState(() => _showDateErrors = false);
+        if (mounted) setState(() => _showDateErrors = false);
       },
     );
+  }
 
-    final countryField = AbsorbPointer(
-      absorbing:
-          widget.values['country'] == 'Myanmar' ||
-          widget.values['country'] == 'MMR',
+  Widget _buildCountryField(
+    double lw,
+    bool isMyanmar,
+    List<String> availableCountry,
+  ) {
+    return AbsorbPointer(
+      absorbing: isMyanmar,
       child: CustomDropdownField(
         label: "Country",
         value: widget.values['country'],
@@ -426,41 +369,40 @@ class _IdentificationFormLayoutState
                 (c) => c.countryName == v,
               );
               widget.onValueChanged('countryCode', matched.countryCode);
-            } catch (e) {}
+            } catch (_) {}
           }
           if (v != 'Myanmar' && v != 'MMR') {
             widget.controllers['nrc']?.clear();
             widget.controllers['fatherName']?.clear();
-            if (!mounted) return;
-            setState(() {
-              _selectedNrcStateCode = null;
-              _selectedTownshipCode = null;
-              _selectedNrcType = null;
-              _nrcNumberController.clear();
-              _showNrcError = false;
-            });
+            if (mounted) {
+              setState(() {
+                _selectedNrcStateCode = null;
+                _selectedTownshipCode = null;
+                _selectedNrcType = null;
+                _nrcNumberController.clear();
+                _showNrcError = false;
+              });
+            }
           }
         },
         spacing: 8,
       ),
     );
+  }
 
-    final emailField = CustomTextField(
+  Widget _buildEmailField(double lw, bool isMyanmar) {
+    return CustomTextField(
       label: "Email",
       controller: widget.controllers['email']!,
       labelWidth: lw,
       maxLength: 30,
       readonly: widget.isUpdateMode && isMyanmar,
       validator: FormValidators.email,
-      onChanged: (value) {
-        widget.onValueChanged('email', value);
-      },
+      onChanged: (value) => widget.onValueChanged('email', value),
     );
+  }
 
-    // Grab screen width, NOT the parent container width
-    final bool isMobileWidth = MediaQuery.of(context).size.width < 500;
-
-    //Extract the Label
+  Widget _buildMobileField(double lw, bool isMobileWidth) {
     final mobileLabel = Padding(
       padding: EdgeInsets.only(
         top: isMobileWidth ? 0 : 14,
@@ -491,7 +433,6 @@ class _IdentificationFormLayoutState
       ),
     );
 
-    // 3. Extract the Inputs (Country Code + Text Field)
     final mobileInputs = Row(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -594,7 +535,7 @@ class _IdentificationFormLayoutState
               ),
               errorStyle: const TextStyle(color: Colors.red),
             ),
-            onChanged: (v) => _updateMobileControllerValue(),
+            onChanged: (_) => _updateMobileControllerValue(),
             validator: (v) {
               final String? code = widget.values['mobileCode'];
               final String number = _mobileNumberController.text;
@@ -607,22 +548,24 @@ class _IdentificationFormLayoutState
       ],
     );
 
-    // 4. Final Assembled Field
-    final mobileField = isMobileWidth
-        ? Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [mobileLabel, mobileInputs],
-          )
-        : Row(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              mobileLabel,
-              const SizedBox(width: 8),
-              Expanded(child: mobileInputs),
-            ],
-          );
+    if (isMobileWidth) {
+      return Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [mobileLabel, mobileInputs],
+      );
+    }
+    return Row(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        mobileLabel,
+        const SizedBox(width: 8),
+        Expanded(child: mobileInputs),
+      ],
+    );
+  }
 
-    final visaNumberField = CustomTextField(
+  Widget _buildVisaNumberField(double lw) {
+    return CustomTextField(
       label: "Visa Number",
       controller: widget.controllers['visaNumber']!,
       maxLength: 50,
@@ -634,15 +577,13 @@ class _IdentificationFormLayoutState
       isRequired: false,
       validator: (v) => null,
       onChanged: (v) {
-        if (v.trim().isEmpty) {
-          widget.onValueChanged('visaNumber', null);
-        } else {
-          widget.onValueChanged('visaNumber', v);
-        }
+        widget.onValueChanged('visaNumber', v.trim().isEmpty ? null : v);
       },
     );
+  }
 
-    final passportNumberField = CustomTextField(
+  Widget _buildPassportNumberField(double lw, bool isMyanmar) {
+    return CustomTextField(
       label: "Passport Number",
       controller: widget.controllers['passportNumber']!,
       maxLength: 20,
@@ -654,16 +595,25 @@ class _IdentificationFormLayoutState
       ],
       readonly: (widget.isUpdateMode && !isMyanmar),
       validator: (v) => FormValidators.required(v, 'Passport Number'),
-      onChanged: (value) {
-        widget.onValueChanged('passportNumber', value);
-      },
+      onChanged: (value) => widget.onValueChanged('passportNumber', value),
     );
+  }
 
-    final issuedDateField = CustomDateField(
+  Widget _buildIssuedDateField(double lw) {
+    final DateTime today = DateTime.now();
+    final DateTime? dob = widget.values['dateOfBirth'];
+    final DateTime? expiry = widget.values['expiryDate'];
+
+    DateTime maxIssuedDate = today;
+    if (expiry != null && expiry.isBefore(today)) {
+      maxIssuedDate = expiry;
+    }
+    DateTime minIssuedDate = dob ?? DateTime(1900);
+
+    return CustomDateField(
       label: "Issued Date",
       value: widget.values['issuedDate'],
       labelWidth: lw,
-      // 🎯 THE FIX: Force the calendar to disable dates before the DOB
       firstDate: minIssuedDate,
       lastDate: maxIssuedDate,
       errorText: _showDateErrors && widget.values['issuedDate'] == null
@@ -671,40 +621,47 @@ class _IdentificationFormLayoutState
           : null,
       onPicked: (d) {
         widget.onValueChanged('issuedDate', d);
-
-        // Safety clear: If they pick an Issued Date that is after the current Expiry Date, clear the expiry date
         if (expiry != null && d != null && expiry.isBefore(d)) {
           widget.onValueChanged('expiryDate', null);
         }
-
-        if (!mounted) return;
-        setState(() => _showDateErrors = false);
+        if (mounted) setState(() => _showDateErrors = false);
       },
     );
+  }
 
-    final expiryDateField = CustomDateField(
+  Widget _buildExpiryDateField(double lw, bool isMyanmar) {
+    final DateTime? issued = widget.values['issuedDate'];
+    DateTime minExpiryDate = issued ?? DateTime(1900);
+
+    String? getExpiryErrorText() {
+      if (!_showDateErrors) return null;
+      return FormValidators.passportExpiry(
+        expiryDate: widget.values['expiryDate'],
+        issuedDate: widget.values['issuedDate'],
+        isMyanmar: isMyanmar,
+      );
+    }
+
+    return CustomDateField(
       label: "Expiry Date",
       value: widget.values['expiryDate'],
       labelWidth: lw,
-      firstDate:
-          minExpiryDate, // 🔒 Restricts expiry date to be on or after the issue date
+      firstDate: minExpiryDate,
       lastDate: DateTime(2100),
       readOnly: (widget.isUpdateMode && !isMyanmar),
       errorText: getExpiryErrorText(),
       onPicked: (d) {
         widget.onValueChanged('expiryDate', d);
-
-        // 🎯 Safety clear: If they pick an Expiry Date that is before the current Issued Date, clear the issue date
         if (issued != null && d != null && d.isBefore(issued)) {
           widget.onValueChanged('issuedDate', null);
         }
-
-        if (!mounted) return;
-        setState(() => _showDateErrors = false);
+        if (mounted) setState(() => _showDateErrors = false);
       },
     );
+  }
 
-    final issuedCountryField = CustomDropdownField(
+  Widget _buildIssuedCountryField(double lw) {
+    return CustomDropdownField(
       label: "Issued Country",
       value: widget.values['issuedCountry'],
       hint: "Select Country",
@@ -721,42 +678,46 @@ class _IdentificationFormLayoutState
               (c) => c.countryName == v,
             );
             widget.onValueChanged('issuedCountryCode', matched.countryCode);
-          } catch (e) {}
+          } catch (_) {}
         }
       },
       spacing: 8,
     );
+  }
 
-    final addressField = CustomTextField(
+  Widget _buildAddressField(double lw) {
+    return CustomTextField(
       label: "Place of Residence",
       controller: widget.controllers['address']!,
       labelWidth: lw,
       filter: [
-        // FilteringTextInputFormatter.singleLineFormatter,
         LengthLimitingTextInputFormatter(100),
         FilteringTextInputFormatter.allow(RegExp(r'[a-zA-Z0-9]')),
       ],
       maxLength: 100,
       validator: (v) => FormValidators.required(v, 'Address'),
-      onChanged: (value) {
-        widget.onValueChanged('address', value);
-      },
+      onChanged: (value) => widget.onValueChanged('address', value),
     );
+  }
 
-    // Dynamic layout generator structured matching your handwritten sheets
-    final nrcAndFatherNameSection = LayoutBuilder(
+  Widget _buildNrcAndFatherNameSection(
+    double lw,
+    bool isDesktop,
+    bool isMyanmar,
+  ) {
+    final nrcAsync = ref.watch(nrcProvider);
+    final nrcState = nrcAsync.valueOrNull;
+
+    return LayoutBuilder(
       builder: (context, constraints) {
         final bool isNrcRowDesktop = constraints.maxWidth > 550;
 
         Widget nrcFields() {
           final List<dynamic> stateList = nrcState?.nrcStateList ?? [];
-
           final List<dynamic> townshipList = _selectedNrcStateCode != null
               ? (nrcState?.availableNrcTownships ?? [])
               : [];
-
           final int? currentProviderStateId = nrcState?.selectedNrcStateId;
-
           final int? activeStateId =
               (_selectedNrcStateCode != null &&
                   stateList.any((st) => st.id == currentProviderStateId))
@@ -804,9 +765,6 @@ class _IdentificationFormLayoutState
               NrcSelectorWidget(
                 isDesktop: isNrcRowDesktop,
                 readOnly: (widget.isUpdateMode && isMyanmar),
-
-                // 🎯 THE FIX: Safe Contain Checks!
-                // This prevents the dropdown crash while it waits for the waterfall to load.
                 selectedNrcStateCode:
                     stateList.any((s) => s.idCode == _selectedNrcStateCode)
                     ? _selectedNrcStateCode
@@ -815,7 +773,6 @@ class _IdentificationFormLayoutState
                     townshipList.any((t) => t.idCode == _selectedTownshipCode)
                     ? _selectedTownshipCode
                     : null,
-
                 selectedNrcType: _selectedNrcType,
                 numberField: numberField,
                 hasError: _showNrcError,
@@ -825,24 +782,23 @@ class _IdentificationFormLayoutState
                 activeStateId: activeStateId,
                 onStateChanged: (id, idCode) {
                   ref.read(nrcProvider.notifier).selectNrcState(id);
-                  if (!mounted) return;
-                  setState(() {
-                    _selectedNrcStateCode = idCode;
-                    _selectedTownshipCode = null;
-                  });
+                  if (mounted) {
+                    setState(() {
+                      _selectedNrcStateCode = idCode;
+                      _selectedTownshipCode = null;
+                    });
+                  }
                   widget.onValueChanged('nrcStateCode', idCode);
                   widget.onValueChanged('nrcTownshipCode', null);
                   _updateNrcControllerValue();
                 },
                 onTownshipChanged: (v) {
-                  if (!mounted) return;
-                  setState(() => _selectedTownshipCode = v);
+                  if (mounted) setState(() => _selectedTownshipCode = v);
                   widget.onValueChanged('nrcTownshipCode', v);
                   _updateNrcControllerValue();
                 },
                 onTypeChanged: (v) {
-                  if (!mounted) return;
-                  setState(() => _selectedNrcType = v);
+                  if (mounted) setState(() => _selectedNrcType = v);
                   widget.onValueChanged('nrcTypeCode', v);
                   _updateNrcControllerValue();
                 },
@@ -866,12 +822,9 @@ class _IdentificationFormLayoutState
           controller: widget.controllers['fatherName']!,
           labelWidth: lw,
           validator: (v) => FormValidators.fatherName(v, isMyanmar: isMyanmar),
-          onChanged: (value) {
-            widget.onValueChanged('fatherName', value);
-          },
+          onChanged: (value) => widget.onValueChanged('fatherName', value),
         );
 
-        // 1. Extract the NRC Label
         final nrcLabel = Padding(
           padding: EdgeInsets.only(
             top: isNrcRowDesktop ? 12 : 0,
@@ -898,7 +851,6 @@ class _IdentificationFormLayoutState
           ),
         );
 
-        // 2. Responsive Layout
         if (isDesktop) {
           return Row(
             crossAxisAlignment: CrossAxisAlignment.start,
@@ -921,122 +873,150 @@ class _IdentificationFormLayoutState
           return Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              // 🎯 Mobile layout for NRC: Stacks the label ON TOP of the complex input row!
               nrcLabel,
               nrcFields(),
               const SizedBox(height: 16),
-              fatherNameWidget, // CustomTextField handles its own mobile label natively now
+              fatherNameWidget,
             ],
           );
         }
       },
     );
+  }
 
+  Widget _buildActionButtonsRow() {
+    return Stack(
+      alignment: Alignment.centerLeft,
+      children: [
+        widget.actionButtons,
+        ElevatedButton(
+          onPressed: widget.onBackPressed,
+          style: ElevatedButton.styleFrom(
+            backgroundColor: Colors.white,
+            foregroundColor: Colors.black87,
+            padding: const EdgeInsets.symmetric(horizontal: 32, vertical: 12),
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(8),
+            ),
+          ),
+          child: const Text(
+            'Back',
+            style: TextStyle(fontWeight: FontWeight.bold),
+          ),
+        ),
+      ],
+    );
+  }
+
+  // MAIN BUILD METHOD
+  @override
+  Widget build(BuildContext context) {
+    if (_isLoading) {
+      return const Padding(
+        padding: EdgeInsets.symmetric(vertical: 60),
+        child: Center(
+          child: CircularProgressIndicator(
+            valueColor: AlwaysStoppedAnimation<Color>(Colors.blue),
+          ),
+        ),
+      );
+    }
+
+    final double screenWidth = MediaQuery.of(context).size.width;
+    final bool isDesktop = screenWidth > 500;
+    final bool isMobileWidth = screenWidth < 500;
+
+    final bool isMyanmar =
+        widget.values['country'] == 'Myanmar' ||
+        widget.values['country'] == 'MMR';
+
+    final List<String> availableCountry = isMyanmar
+        ? _countryNameList
+        : _countryNameList.where((c) => c != 'Myanmar' && c != 'MMR').toList();
+
+    const double lw = 140;
     List<Widget> formLayout;
 
     if (isMyanmar) {
-      // 1:1 Match with "For Native" Layout Checklist
       formLayout = [
-        pair(fullNameField, genderField),
+        _buildPair(_buildFullNameField(lw), _buildGenderField(lw), isDesktop),
         const SizedBox(height: 20),
-        pair(dateOfBirthField, countryField),
+        _buildPair(
+          _buildDateOfBirthField(lw),
+          _buildCountryField(lw, isMyanmar, availableCountry),
+          isDesktop,
+        ),
         const SizedBox(height: 20),
-        nrcAndFatherNameSection,
+        _buildNrcAndFatherNameSection(lw, isDesktop, isMyanmar),
         const SizedBox(height: 20),
-        pair(emailField, mobileField),
+        _buildPair(
+          _buildEmailField(lw, isMyanmar),
+          _buildMobileField(lw, isMobileWidth),
+          isDesktop,
+        ),
         const SizedBox(height: 20),
-        pair(passportNumberField, issuedCountryField),
+        _buildPair(
+          _buildPassportNumberField(lw, isMyanmar),
+          _buildIssuedCountryField(lw),
+          isDesktop,
+        ),
         const SizedBox(height: 20),
-        pair(issuedDateField, expiryDateField),
+        _buildPair(
+          _buildIssuedDateField(lw),
+          _buildExpiryDateField(lw, isMyanmar),
+          isDesktop,
+        ),
         const SizedBox(height: 20),
         isDesktop
             ? Row(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Expanded(child: addressField),
-                  const SizedBox(
-                    width: 40,
-                  ), // Matches the spacing inside your pair() method
+                  Expanded(child: _buildAddressField(lw)),
+                  const SizedBox(width: 40),
                   const Expanded(
                     child: SizedBox.shrink(),
-                  ), // Invisible right-column placeholder
+                  ), // Invisible placeholder
                 ],
               )
-            : addressField, // Keeps standard layout for mobile screens
-        const SizedBox(height: 28),
-        Stack(
-          alignment: Alignment.centerLeft,
-          children: [
-            // မူလ Next Button ပါဝင်သော Row
-            widget.actionButtons,
-
-            // 🎯 Identification Form အတွက် သီးသန့်ဆောက်ထားသော Back Button အသစ်
-            ElevatedButton(
-              onPressed: widget.onBackPressed,
-              style: ElevatedButton.styleFrom(
-                backgroundColor: Colors.white,
-                foregroundColor: Colors.black87,
-                padding: const EdgeInsets.symmetric(
-                  horizontal: 32,
-                  vertical: 12,
-                ),
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(8),
-                ),
-              ),
-              child: const Text(
-                'Back',
-                style: TextStyle(fontWeight: FontWeight.bold),
-              ),
-            ),
-          ],
-        ),
+            : _buildAddressField(lw),
       ];
     } else {
-      // 1:1 Match with "For Foreigner" Layout Checklist
       formLayout = [
-        pair(fullNameField, genderField),
+        _buildPair(_buildFullNameField(lw), _buildGenderField(lw), isDesktop),
         const SizedBox(height: 20),
-        pair(dateOfBirthField, countryField),
+        _buildPair(
+          _buildDateOfBirthField(lw),
+          _buildCountryField(lw, isMyanmar, availableCountry),
+          isDesktop,
+        ),
         const SizedBox(height: 20),
-        pair(emailField, mobileField),
+        _buildPair(
+          _buildEmailField(lw, isMyanmar),
+          _buildMobileField(lw, isMobileWidth),
+          isDesktop,
+        ),
         const SizedBox(height: 20),
-        pair(passportNumberField, issuedCountryField),
+        _buildPair(
+          _buildPassportNumberField(lw, isMyanmar),
+          _buildIssuedCountryField(lw),
+          isDesktop,
+        ),
         const SizedBox(height: 20),
-        pair(issuedDateField, expiryDateField),
+        _buildPair(
+          _buildIssuedDateField(lw),
+          _buildExpiryDateField(lw, isMyanmar),
+          isDesktop,
+        ),
         const SizedBox(height: 20),
-        pair(addressField, visaNumberField), // Paired bottom row layout
-        // 🟢 အောက်ပါ Code အသစ်ဖြင့် နေရာ (၂) ခုလုံးကို အစားထိုးလဲလှယ်လိုက်ပါ
-        const SizedBox(height: 28),
-        Stack(
-          alignment: Alignment.centerLeft,
-          children: [
-            // မူလ Next Button ပါဝင်သော Row
-            widget.actionButtons,
-
-            // 🎯 Identification Form အတွက် သီးသန့်ဆောက်ထားသော Back Button အသစ်
-            ElevatedButton(
-              onPressed: widget.onBackPressed,
-              style: ElevatedButton.styleFrom(
-                backgroundColor: Colors.white,
-                foregroundColor: Colors.black87,
-                padding: const EdgeInsets.symmetric(
-                  horizontal: 32,
-                  vertical: 12,
-                ),
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(8),
-                ),
-              ),
-              child: const Text(
-                'Back',
-                style: TextStyle(fontWeight: FontWeight.bold),
-              ),
-            ),
-          ],
+        _buildPair(
+          _buildAddressField(lw),
+          _buildVisaNumberField(lw),
+          isDesktop,
         ),
       ];
     }
+
+    formLayout.addAll([const SizedBox(height: 28), _buildActionButtonsRow()]);
 
     return Form(
       key: widget.formKey,
