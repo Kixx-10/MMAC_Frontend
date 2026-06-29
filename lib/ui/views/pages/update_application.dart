@@ -1,6 +1,6 @@
 // lib/ui/views/pages/update_application/update_application_page.dart
 
-// ignore_for_file: prefer_function_declarations_over_variables, deprecated_member_use, unused_field, empty_catches
+// ignore_for_file: curly_braces_in_flow_control_structures, prefer_function_declarations_over_variables, deprecated_member_use, unused_field, empty_catches
 
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';

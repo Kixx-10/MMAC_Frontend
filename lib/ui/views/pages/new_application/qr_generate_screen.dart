@@ -1,5 +1,5 @@
 // lib/ui/views/pages/new_application/qr_generate_screen.dart
-// ignore_for_file: unused_local_variable
+// ignore_for_file: use_super_parameters, library_private_types_in_public_api, unused_local_variable
 
 import 'dart:convert';
 import 'dart:io' show File;
@@ -127,7 +127,7 @@ class _QrGenerateScreenState extends State<QrGenerateScreen> {
             height: MediaQuery.of(context).size.height * 0.6,
             child: ClipRRect(
               borderRadius: BorderRadius.circular(8),
-              child: PdfViewer.data(_pdfBytes!,sourceName: fileName),
+              child: PdfViewer.data(_pdfBytes!, sourceName: fileName),
             ),
           ),
           actions: [
