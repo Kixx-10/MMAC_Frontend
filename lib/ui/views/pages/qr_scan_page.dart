@@ -171,7 +171,7 @@ class _QrScanPageState extends ConsumerState<QrScanPage> {
                               children: [
                                 _infoItem("Full Name", data.fullName),
                                 _infoItem("DE Number", data.referenceNo),
-                                _infoItem("AppStatus", data.appStatus),
+                               // _infoItem("AppStatus", data.appStatus),
                                 _infoItem("Gender", data.gender),
                                 _infoItem(
                                   "Date of Birth",
