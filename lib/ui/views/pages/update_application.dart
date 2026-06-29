@@ -161,7 +161,7 @@ class _UpdateApplicationState extends ConsumerState<UpdateApplication> {
       if (errorMessage.toLowerCase().contains("not found")) {
         displayTitle = "Application Uneditable";
         displayMessage =
-            "We could not find a pending application with these details. The application may have already been Approved or Rejected, or the details are incorrect. \n\nApproved applications cannot be modified.";
+            "We could not find any pending application with these details. The application may have already been Approved or Rejected, or the details are incorrect. \n\nApproved applications cannot be modified.";
       }
 
       _showInfoDialog(displayTitle, displayMessage, isError: true);
