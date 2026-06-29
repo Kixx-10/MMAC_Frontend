@@ -25,19 +25,16 @@ class _MainLayoutState extends State<MainLayout>
   String? _selectedResidency;
   Key _formKey = const ValueKey('form_start');
   SubmitRequestModel? _fetchedUpdateData;
-
   bool _isSessionLoading = true;
+
   @override
   void initState() {
     super.initState();
     _tabController = TabController(length: 5, vsync: this);
 
-    // 🎯 Tab ပြောင်းတိုင်း ဘယ် Tab ရောက်နေလဲဆိုတာကို မှတ်ထားမည် (Refresh လုပ်ရင် ပြန်သိအောင်)
     _tabController.addListener(() async {
       if (!_tabController.indexIsChanging) {
-        setState(() {
-          _fetchedUpdateData = null;
-        });
+        setState(() => _fetchedUpdateData = null);
         final prefs = await SharedPreferences.getInstance();
         await prefs.setInt('last_active_tab', _tabController.index);
       }
@@ -46,16 +43,23 @@ class _MainLayoutState extends State<MainLayout>
     _checkActiveSessionOnLoad();
   }
 
+  @override
+  void dispose() {
+    _tabController.dispose();
+    super.dispose();
+  }
+
   Future<void> _checkActiveSessionOnLoad() async {
     try {
       final prefs = await SharedPreferences.getInstance();
       final int savedTabIndex = prefs.getInt('last_active_tab') ?? 0;
 
       if (mounted) {
-        _tabController.index = savedTabIndex;
+        WidgetsBinding.instance.addPostFrameCallback((_) {
+          if (mounted) _tabController.index = savedTabIndex;
+        });
       }
 
-      // 🎯 လက်ရှိရောက်နေသော Tab အလိုက် မှန်ကန်သော Session Key ကို ခေါ်ယူမည်
       if (savedTabIndex == 1 || savedTabIndex == 2) {
         final bool isUpdate = savedTabIndex == 2;
         final sessionData = await FormSessionService.loadDraft(
@@ -72,94 +76,39 @@ class _MainLayoutState extends State<MainLayout>
     } catch (e) {
       debugPrint("Session check error on load: $e");
     } finally {
-      if (mounted) {
-        setState(() {
-          _isSessionLoading = false;
-        });
-      }
+      if (mounted) setState(() => _isSessionLoading = false);
     }
   }
 
+  Future<void> _resumeOrStartNew(int targetTabIndex) async {
+    final bool isUpdate = targetTabIndex == 2;
+    final sessionData = await FormSessionService.loadDraft(
+      isUpdateMode: isUpdate,
+    );
+
+    setState(() {
+      if (sessionData != null &&
+          sessionData['values']?['residencyType'] != null) {
+        _selectedResidency = sessionData['values']['residencyType'];
+      } else {
+        _selectedResidency = null;
+      }
+    });
+  }
+
   Future<void> _handleResidencySelection(String newResidency) async {
-    final bool isUpdate = _tabController.index == 2; // 🎯 လက်ရှိ Tab ကို စစ်မည်
+    final bool isUpdate = _tabController.index == 2;
 
     if (_selectedResidency != null && _selectedResidency != newResidency) {
-      final bool? confirmReset = await showDialog<bool>(
-        context: context,
-        builder: (BuildContext context) {
-          return AlertDialog(
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(12),
-            ),
-            contentPadding: const EdgeInsets.only(
-              top: 24,
-              left: 24,
-              right: 24,
-              bottom: 16,
-            ),
-            title: const Text(
-              'Change Residency Type?',
-              style: TextStyle(fontWeight: FontWeight.bold, fontSize: 18),
-            ),
-            content: const SizedBox(
-              width:
-                  320, //  Box ကို ရှည်မထွက်သွားစေရန် အကျယ်ထိန်းပေးခြင်း (Square-ish Shape)
-              child: Text(
-                'Changing your residency type will clear all the data you have filled so far. Are you sure you want to proceed?',
-                style: TextStyle(fontSize: 15, height: 1.5),
-              ),
-            ),
-            actionsPadding: const EdgeInsets.only(right: 20, bottom: 20),
-            actions: [
-              // Form ထဲက Back ခလုတ်ပုံစံအတိုင်း
-              ElevatedButton(
-                onPressed: () => Navigator.of(context).pop(false),
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: Colors.grey.shade200,
-                  foregroundColor: Colors.black87,
-                  elevation: 0,
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 24,
-                    vertical: 12,
-                  ),
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(8),
-                  ),
-                ),
-                child: const Text(
-                  'Cancel',
-                  style: TextStyle(fontWeight: FontWeight.bold),
-                ),
-              ),
-              // Form ထဲက Next ခလုတ်ပုံစံအတိုင်း (ဒေတာဖျက်မှာမို့ အရောင်ကို အနီရောင်သာ သုံးထားပါသည်)
-              ElevatedButton(
-                onPressed: () => Navigator.of(context).pop(true),
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: Colors.lightBlue.shade700,
-                  foregroundColor: Colors.white,
-                  elevation: 0,
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 24,
-                    vertical: 12,
-                  ),
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(8),
-                  ),
-                ),
-                child: const Text(
-                  'Yes, Clear Data',
-                  style: TextStyle(fontWeight: FontWeight.bold),
-                ),
-              ),
-            ],
-          );
-        },
+      final bool? confirmReset = await _showWarningDialog(
+        title: 'Change Residency Type?',
+        message:
+            'Changing your residency type will clear all the data you have filled so far. Are you sure you want to proceed?',
+        confirmText: 'Yes, Clear Data',
       );
 
       if (confirmReset != true) return;
-      await FormSessionService.clearDraft(
-        isUpdateMode: isUpdate,
-      ); //  သက်ဆိုင်ရာ Tab ရဲ့ Data ကိုသာ ဖျက်မည်
+      await FormSessionService.clearDraft(isUpdateMode: isUpdate);
     }
 
     setState(() {
@@ -170,9 +119,31 @@ class _MainLayoutState extends State<MainLayout>
   }
 
   Future<void> _goBackToResidency() async {
-    final bool isUpdate = _tabController.index == 2; //  လက်ရှိ Tab ကို စစ်မည်
+    final bool isUpdate = _tabController.index == 2;
 
-    final bool? confirmReset = await showDialog<bool>(
+    final bool? confirmReset = await _showWarningDialog(
+      title: 'Go Back & Clear Data?',
+      message:
+          'Going back to change your residency will clear all the data you have filled so far. Are you sure?',
+      confirmText: 'Yes, Go Back',
+    );
+
+    if (confirmReset == true) {
+      await FormSessionService.clearDraft(isUpdateMode: isUpdate);
+      setState(() {
+        _selectedResidency = null;
+        _formKey = UniqueKey();
+        _fetchedUpdateData = null;
+      });
+    }
+  }
+
+  Future<bool?> _showWarningDialog({
+    required String title,
+    required String message,
+    required String confirmText,
+  }) {
+    return showDialog<bool>(
       context: context,
       builder: (BuildContext context) {
         return AlertDialog(
@@ -185,20 +156,19 @@ class _MainLayoutState extends State<MainLayout>
             right: 24,
             bottom: 16,
           ),
-          title: const Text(
-            'Go Back & Clear Data?',
-            style: TextStyle(fontWeight: FontWeight.bold, fontSize: 18),
+          title: Text(
+            title,
+            style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 18),
           ),
-          content: const SizedBox(
-            width: 320, //  Box ကို ရှည်မထွက်သွားစေရန် အကျယ်ထိန်းပေးခြင်း
+          content: SizedBox(
+            width: 320,
             child: Text(
-              'Going back to change your residency will clear all the data you have filled so far. Are you sure?',
-              style: TextStyle(fontSize: 15, height: 1.5),
+              message,
+              style: const TextStyle(fontSize: 15, height: 1.5),
             ),
           ),
           actionsPadding: const EdgeInsets.only(right: 20, bottom: 20),
           actions: [
-            // Form ထဲက Back ခလုတ်ပုံစံအတိုင်း
             ElevatedButton(
               onPressed: () => Navigator.of(context).pop(false),
               style: ElevatedButton.styleFrom(
@@ -218,7 +188,6 @@ class _MainLayoutState extends State<MainLayout>
                 style: TextStyle(fontWeight: FontWeight.bold),
               ),
             ),
-            // Form ထဲက Next ခလုတ်ပုံစံအတိုင်း (ဒေတာဖျက်မှာမို့ အရောင်ကို အနီရောင်သာ သုံးထားပါသည်)
             ElevatedButton(
               onPressed: () => Navigator.of(context).pop(true),
               style: ElevatedButton.styleFrom(
@@ -233,65 +202,28 @@ class _MainLayoutState extends State<MainLayout>
                   borderRadius: BorderRadius.circular(8),
                 ),
               ),
-              child: const Text(
-                'Yes, Go Back',
-                style: TextStyle(fontWeight: FontWeight.bold),
+              child: Text(
+                confirmText,
+                style: const TextStyle(fontWeight: FontWeight.bold),
               ),
             ),
           ],
         );
       },
     );
-
-    if (confirmReset == true) {
-      await FormSessionService.clearDraft(
-        isUpdateMode: isUpdate,
-      ); //  သက်ဆိုင်ရာ Tab ရဲ့ Data ကိုသာ ဖျက်မည်
-      setState(() {
-        _selectedResidency = null;
-        _formKey = UniqueKey();
-        _fetchedUpdateData = null;
-      });
-    }
   }
 
-  //  Parameter ထည့်ပြီး သက်ဆိုင်ရာ Tab ရဲ့ Session ကို စစ်ဆေးအောင် ပြင်ဆင်ထားသည်
-  Future<void> _resumeOrStartNew(int targetTabIndex) async {
-    final bool isUpdate = targetTabIndex == 2;
-    final sessionData = await FormSessionService.loadDraft(
-      isUpdateMode: isUpdate,
-    );
-
-    if (sessionData != null &&
-        sessionData['values'] != null &&
-        sessionData['values']['residencyType'] != null) {
-      setState(() {
-        _selectedResidency = sessionData['values']['residencyType'];
-      });
-    } else {
-      setState(() {
-        _selectedResidency = null;
-      });
-    }
-  }
-
-  @override
-  void dispose() {
-    _tabController.dispose();
-    super.dispose();
-  }
-
-  Widget _buildCustomTab(String label) {
-    final bool isMobile = MediaQuery.of(context).size.width < 900;
+  Widget _buildCustomTab(String label, bool isMobile) {
     return Tab(
       height: 38,
       child: Row(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          isMobile ? const SizedBox() : const SizedBox(width: 8),
+          const SizedBox(width: 8),
           Text(
             label,
             style: TextStyle(
+              fontWeight: FontWeight.bold,
               fontSize: isMobile ? 12 : 14,
               fontFamily: 'sans-serif',
             ),
@@ -301,10 +233,53 @@ class _MainLayoutState extends State<MainLayout>
     );
   }
 
+  Widget _buildNewApplicationTab() {
+    if (_selectedResidency == null) {
+      return ResidencyLayout(onResidencySelected: _handleResidencySelection);
+    }
+    return NewApplication(
+      key: _formKey,
+      initialCountry: _selectedResidency,
+      onBackPressed: _goBackToResidency,
+    );
+  }
+
+  Widget _buildUpdateApplicationTab() {
+    if (_selectedResidency == null) {
+      return ResidencyLayout(onResidencySelected: _handleResidencySelection);
+    }
+
+    if (_fetchedUpdateData == null) {
+      return UpdateApplication(
+        onBackPressed: () {
+          setState(() {
+            _selectedResidency = null;
+            _formKey = UniqueKey();
+            _fetchedUpdateData = null;
+          });
+        },
+        initialCountry: _selectedResidency,
+        onApplicationFetched: (SubmitRequestModel data) {
+          setState(() => _fetchedUpdateData = data);
+        },
+      );
+    }
+
+    return NewApplication(
+      key: ValueKey('update_form_${_fetchedUpdateData.hashCode}'),
+      initialCountry: _selectedResidency,
+      isUpdateMode: true,
+      initialData: _fetchedUpdateData,
+      onBackPressed: () {
+        setState(() => _fetchedUpdateData = null);
+      },
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     final double screenWidth = MediaQuery.of(context).size.width;
-    final bool isMobile = screenWidth < 500;
+    final bool isMobile = screenWidth < 900;
 
     return Scaffold(
       backgroundColor: const Color(0xFFF8F9FA),
@@ -333,9 +308,7 @@ class _MainLayoutState extends State<MainLayout>
                     bottom: 10,
                   ),
                   child: Row(
-                    mainAxisAlignment: isMobile
-                        ? MainAxisAlignment.spaceBetween
-                        : MainAxisAlignment.center,
+                    mainAxisAlignment: MainAxisAlignment.center,
                     children: [
                       Expanded(
                         child: Align(
@@ -345,7 +318,6 @@ class _MainLayoutState extends State<MainLayout>
                             child: TabBar(
                               controller: _tabController,
                               isScrollable: isMobile,
-
                               dividerColor: Colors.transparent,
                               labelColor: Colors.blue.shade800,
                               unselectedLabelColor: Colors.black87,
@@ -361,11 +333,11 @@ class _MainLayoutState extends State<MainLayout>
                                 horizontal: 4,
                               ),
                               tabs: [
-                                _buildCustomTab("Home"),
-                                _buildCustomTab("New Application"),
-                                _buildCustomTab("Update Application"),
-                                _buildCustomTab("FAQs"),
-                                _buildCustomTab("QrScan"),
+                                _buildCustomTab("Home", isMobile),
+                                _buildCustomTab("New Application", isMobile),
+                                _buildCustomTab("Update Application", isMobile),
+                                _buildCustomTab("FAQs", isMobile),
+                                _buildCustomTab("QrScan", isMobile),
                               ],
                               onTap: (index) async {
                                 final prefs =
@@ -373,19 +345,16 @@ class _MainLayoutState extends State<MainLayout>
                                 await prefs.setInt('last_active_tab', index);
 
                                 if (index == 1 || index == 2) {
-                                  await _resumeOrStartNew(
-                                    index,
-                                  ); //  သက်ဆိုင်ရာ Session ကို ပြန်စစ်မည်
+                                  await _resumeOrStartNew(index);
                                 } else {
-                                  setState(() {
-                                    _selectedResidency = null;
-                                  });
+                                  setState(() => _selectedResidency = null);
                                 }
                               },
                             ),
                           ),
                         ),
                       ),
+                      if (isMobile) const SizedBox(width: 50),
                     ],
                   ),
                 ),
@@ -394,13 +363,12 @@ class _MainLayoutState extends State<MainLayout>
           ),
         ),
       ),
-      // 🎯 Session ရှာနေတုန်း Body ကို အလွတ် (သို့ Loading) ပြထားမည်
       body: _isSessionLoading
           ? const Center(child: CircularProgressIndicator())
           : TabBarView(
               controller: _tabController,
               children: [
-                // ၁။ HOME PAGE
+                // 1. HOME PAGE
                 Home(
                   onStartNewApplication: () async {
                     final prefs = await SharedPreferences.getInstance();
@@ -411,71 +379,21 @@ class _MainLayoutState extends State<MainLayout>
                   onStartUpdateWorkflow: () async {
                     final prefs = await SharedPreferences.getInstance();
                     await prefs.setInt('last_active_tab', 2);
-                    await _resumeOrStartNew(
-                      2,
-                    ); // 🎯 Update အတွက် Session မှန်ကန်စွာ စစ်မည်
+                    await _resumeOrStartNew(2);
                     _tabController.animateTo(2);
                   },
                 ),
 
-                // ၂။ NEW APPLICATION OR RESIDENCY
-                _selectedResidency == null
-                    ? ResidencyLayout(
-                        onResidencySelected: _handleResidencySelection,
-                      )
-                    : NewApplication(
-                        key: _formKey,
-                        initialCountry: _selectedResidency,
-                        //Back လုပ်မယ့် Function ကို NewApplication ဆီ ထည့်မယ်
-                        onBackPressed: _goBackToResidency,
-                      ),
+                // 2. NEW APPLICATION OR RESIDENCY
+                _buildNewApplicationTab(),
 
-                // ၃။ UPDATE APPLICATION PAGE
-                _selectedResidency == null
-                    ? ResidencyLayout(
-                        onResidencySelected: _handleResidencySelection,
-                      )
-                    : (_fetchedUpdateData == null
-                          // အခြေအနေ (က) - ဒေတာမရှိသေးရင် Verification (ရှာဖွေရေးဖောင်) ကို ပြထားမည်
-                          ? UpdateApplication(
-                              onBackPressed: () {
-                                setState(() {
-                                  _selectedResidency = null;
-                                  _formKey = UniqueKey();
-                                  _fetchedUpdateData = null;
-                                });
-                              },
+                // 3. UPDATE APPLICATION PAGE
+                _buildUpdateApplicationTab(),
 
-                              initialCountry: _selectedResidency,
-                              onApplicationFetched: (SubmitRequestModel data) {
-                                // ဒေတာရှာတွေ့တာနဲ့ ၎င်းဒေတာကို သိမ်းပြီး UI ကို Update ဖြစ်စေမည်
-                                setState(() {
-                                  _fetchedUpdateData = data;
-                                });
-                              },
-                            )
-                          //
-                          : NewApplication(
-                              key: ValueKey(
-                                'update_form_${_fetchedUpdateData.hashCode}',
-                              ),
-                              initialCountry: _selectedResidency,
-                              onBackPressed: () {
-                                // Form ထဲကနေ နောက်ပြန်ဆုတ်ရင် ရှာဖွေရေးစာမျက်နှာဆီ ပြန်ပို့မည်
-                                setState(() {
-                                  _fetchedUpdateData = null;
-                                });
-                              },
-                              isUpdateMode: true,
-                              initialData: _fetchedUpdateData,
-                            )),
+                // 4. FAQS PAGE
+                FAQS(onReturnHome: () => _tabController.animateTo(0)),
 
-                // ၄။ FAQS PAGE
-                FAQS(
-                  onReturnHome: () {
-                    _tabController.animateTo(0);
-                  },
-                ),
+                // 5. QR SCAN PAGE
                 const QrScanPage(),
               ],
             ),

@@ -1,10 +1,9 @@
 // lib/ui/views/pages/home.dart
-// ignore_for_file: deprecated_member_use
 
 import 'package:flutter/material.dart';
 import 'package:mmac/ui/views/widgets/footer.dart';
 
-class Home extends StatefulWidget {
+class Home extends StatelessWidget {
   final VoidCallback? onStartNewApplication;
   final VoidCallback? onStartUpdateWorkflow;
 
@@ -15,47 +14,15 @@ class Home extends StatefulWidget {
   });
 
   @override
-  State<Home> createState() => _HomeState();
-}
-
-class _HomeState extends State<Home> {
-  @override
-  void initState() {
-    super.initState();
-  }
-
-  // Future<void> _checkActiveSession() async {
-  //   final sessionData = await FormSessionService.loadDraft();
-
-  //   if (sessionData != null && mounted) {
-  //     // 🎯 ဖြည့်လက်စ Draft ရှိနေရင် Home Page ကို ဆက်မပြတော့ဘဲ Form ဆီ တန်းပို့လိုက်မည်
-  //     Navigator.pushReplacement(
-  //       context,
-  //       MaterialPageRoute(builder: (context) => const NewApplication()),
-  //     );
-  //   }
-  // }
-
-  @override
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: const Color(0xFFF8F9FA),
-      // Wrapped in a scroll view to prevent overflow on smaller screens
       body: SingleChildScrollView(
         child: Column(
           children: [
             LandingPage(
-              // Visual design only: Empty callbacks for now
-              onStartNewApplication: () {
-                if (widget.onStartNewApplication != null) {
-                  widget.onStartNewApplication!();
-                }
-              },
-              onStartUpdateWorkflow: () {
-                if (widget.onStartUpdateWorkflow != null) {
-                  widget.onStartUpdateWorkflow!();
-                }
-              },
+              onStartNewApplication: onStartNewApplication,
+              onStartUpdateWorkflow: onStartUpdateWorkflow,
             ),
             const FormFooter(),
           ],
@@ -65,19 +32,144 @@ class _HomeState extends State<Home> {
   }
 }
 
-// ---------------------------------------------------------------------------
-// VISUAL DESIGN COMPONENTS BELOW
-// ---------------------------------------------------------------------------
+// VISUAL DESIGN COMPONENTS
 
 class LandingPage extends StatelessWidget {
-  final VoidCallback onStartNewApplication;
-  final VoidCallback onStartUpdateWorkflow;
+  final VoidCallback? onStartNewApplication;
+  final VoidCallback? onStartUpdateWorkflow;
 
   const LandingPage({
     super.key,
-    required this.onStartNewApplication,
-    required this.onStartUpdateWorkflow,
+    this.onStartNewApplication,
+    this.onStartUpdateWorkflow,
   });
+
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+      children: [
+        _HeroBanner(
+          onStartNewApplication: onStartNewApplication,
+          onStartUpdateWorkflow: onStartUpdateWorkflow,
+        ),
+
+        const _ProcessTimeline(),
+      ],
+    );
+  }
+}
+
+// PRIVATE SUB-WIDGETS FOR MODULARITY
+
+class _HeroBanner extends StatelessWidget {
+  final VoidCallback? onStartNewApplication;
+  final VoidCallback? onStartUpdateWorkflow;
+
+  const _HeroBanner({this.onStartNewApplication, this.onStartUpdateWorkflow});
+
+  @override
+  Widget build(BuildContext context) {
+    final double screenWidth = MediaQuery.of(context).size.width;
+    final bool isMobile = screenWidth < 650;
+
+    return Container(
+      width: double.infinity,
+      decoration: const BoxDecoration(
+        gradient: LinearGradient(
+          colors: [Color(0xff004578), Color(0xff0078D4), Color(0xff2B88D8)],
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+        ),
+      ),
+      padding: EdgeInsets.symmetric(
+        vertical: isMobile ? 40.0 : 60.0,
+        horizontal: 20.0,
+      ),
+      child: Column(
+        children: [
+          Text(
+            'Myanmar eArrival Information System',
+            style: TextStyle(
+              fontSize: isMobile ? 26 : 36,
+              fontWeight: FontWeight.bold,
+              color: Colors.white,
+              letterSpacing: -0.5,
+            ),
+            textAlign: TextAlign.center,
+          ),
+          const SizedBox(height: 12),
+          Container(
+            constraints: const BoxConstraints(maxWidth: 600),
+            child: Text(
+              'Welcome to the official electronic declaration clearance system. Register your incoming trip vectors or pull existing records for operational adjustments before arrival barriers.',
+              style: TextStyle(
+                color: Colors.white.withOpacity(0.85),
+                fontSize: isMobile ? 13 : 15,
+                height: 1.5,
+              ),
+              textAlign: TextAlign.center,
+            ),
+          ),
+          const SizedBox(height: 36),
+
+          Wrap(
+            spacing: 16,
+            runSpacing: 12,
+            alignment: WrapAlignment.center,
+            children: [
+              ElevatedButton.icon(
+                onPressed: () => onStartNewApplication?.call(),
+                icon: const Icon(Icons.add_circle_outline, size: 18),
+                label: const Text('New Application'),
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: Colors.white,
+                  foregroundColor: const Color(0xff0078D4),
+                  elevation: 0,
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 24,
+                    vertical: 16,
+                  ),
+                  textStyle: const TextStyle(
+                    fontWeight: FontWeight.bold,
+                    fontSize: 14,
+                  ),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                ),
+              ),
+              ElevatedButton.icon(
+                onPressed: () => onStartUpdateWorkflow?.call(),
+                icon: const Icon(Icons.edit_note, size: 18),
+                label: const Text('Update Application'),
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: Colors.white.withOpacity(0.15),
+                  foregroundColor: Colors.white,
+                  elevation: 0,
+                  side: const BorderSide(color: Colors.white30),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 24,
+                    vertical: 16,
+                  ),
+                  textStyle: const TextStyle(
+                    fontWeight: FontWeight.bold,
+                    fontSize: 14,
+                  ),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _ProcessTimeline extends StatelessWidget {
+  const _ProcessTimeline();
 
   static const List<Map<String, String>> _stepData = [
     {
@@ -109,232 +201,128 @@ class LandingPage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final double screenWidth = MediaQuery.of(context).size.width;
-    final bool isMobile = screenWidth < 650;
-
-    return Column(
-      children: [
-        // Top Hero Banner Area
-        Container(
-          width: double.infinity,
-          decoration: const BoxDecoration(
-            gradient: LinearGradient(
-              colors: [Color(0xff004578), Color(0xff0078D4), Color(0xff2B88D8)],
-              begin: Alignment.topLeft,
-              end: Alignment.bottomRight,
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.symmetric(vertical: 50.0, horizontal: 24.0),
+      constraints: const BoxConstraints(maxWidth: 1100),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.center,
+        children: [
+          const Text(
+            'Application Process Timeline',
+            style: TextStyle(
+              fontSize: 20,
+              fontWeight: FontWeight.bold,
+              color: Color(0xff1A1A1A),
             ),
           ),
-          padding: EdgeInsets.symmetric(
-            vertical: isMobile ? 40.0 : 60.0,
-            horizontal: 20.0,
+          const SizedBox(height: 6),
+          const Text(
+            'Review the core procedural checklist segments required to secure your compliance tokens.',
+            style: TextStyle(color: Color(0xff6B7280), fontSize: 14),
+            textAlign: TextAlign.center,
           ),
-          child: Column(
-            children: [
-              Text(
-                'Myanmar eArrival Information System',
-                style: TextStyle(
-                  fontSize: isMobile ? 26 : 36,
-                  fontWeight: FontWeight.bold,
-                  color: Colors.white,
-                  letterSpacing: -0.5,
-                ),
-                textAlign: TextAlign.center,
-              ),
-              const SizedBox(height: 12),
-              Container(
-                constraints: const BoxConstraints(maxWidth: 600),
-                child: Text(
-                  'Welcome to the official electronic declaration clearance system. Register your incoming trip vectors or pull existing records for operational adjustments before arrival barriers.',
-                  style: TextStyle(
-                    color: Colors.white.withOpacity(0.85),
-                    fontSize: isMobile ? 13 : 15,
-                    height: 1.5,
-                  ),
-                  textAlign: TextAlign.center,
-                ),
-              ),
-              const SizedBox(height: 36),
+          const SizedBox(height: 32),
 
-              Wrap(
-                spacing: 16,
-                runSpacing: 12,
-                alignment: WrapAlignment.center,
-                children: [
-                  ElevatedButton.icon(
-                    onPressed: onStartNewApplication,
-                    icon: const Icon(Icons.add_circle_outline, size: 18),
-                    label: const Text('New Application'),
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: Colors.white,
-                      foregroundColor: const Color(0xff0078D4),
-                      elevation: 0,
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 24,
-                        vertical: 16,
-                      ),
-                      textStyle: const TextStyle(
-                        fontWeight: FontWeight.bold,
-                        fontSize: 14,
-                      ),
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(8),
-                      ),
-                    ),
-                  ),
-                  ElevatedButton.icon(
-                    onPressed: onStartUpdateWorkflow,
-                    icon: const Icon(Icons.edit_note, size: 18),
-                    label: const Text('Update Application'),
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: Colors.white.withOpacity(0.15),
-                      foregroundColor: Colors.white,
-                      elevation: 0,
-                      side: const BorderSide(color: Colors.white30),
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 24,
-                        vertical: 16,
-                      ),
-                      textStyle: const TextStyle(
-                        fontWeight: FontWeight.bold,
-                        fontSize: 14,
-                      ),
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(8),
-                      ),
-                    ),
-                  ),
-                ],
-              ),
-            ],
-          ),
-        ),
+          LayoutBuilder(
+            builder: (context, constraints) {
+              final double width = constraints.maxWidth;
 
-        // Instructions Step Grid Area
-        Container(
-          width: double.infinity,
-          padding: EdgeInsets.symmetric(
-            vertical: 50.0,
-            horizontal: isMobile ? 16.0 : 24.0,
-          ),
-          constraints: const BoxConstraints(maxWidth: 1100),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.center,
-            children: [
-              const Text(
-                'Application Process Timeline',
-                style: TextStyle(
-                  fontSize: 20,
-                  fontWeight: FontWeight.bold,
-                  color: Color(0xff1A1A1A),
-                ),
-              ),
-              const SizedBox(height: 6),
-              const Text(
-                'Review the core procedural checklist segments required to secure your compliance tokens.',
-                style: TextStyle(color: Color(0xff6B7280), fontSize: 14),
-              ),
-              const SizedBox(height: 32),
-
-              LayoutBuilder(
-                builder: (context, constraints) {
-                  final double width = constraints.maxWidth;
-
-                  if (width < 600) {
-                    return Column(
-                      children: List.generate(_stepData.length, (index) {
-                        return Padding(
-                          padding: const EdgeInsets.only(bottom: 16.0),
-                          child: _StepCard(
-                            stepNumber: '${index + 1}',
-                            title: _stepData[index]['title']!,
-                            description: _stepData[index]['desc']!,
-                          ),
-                        );
-                      }),
+              if (width < 600) {
+                // Mobile layout
+                return Column(
+                  children: List.generate(_stepData.length, (index) {
+                    return Padding(
+                      padding: const EdgeInsets.only(bottom: 16.0),
+                      child: _StepCard(
+                        stepNumber: '${index + 1}',
+                        title: _stepData[index]['title']!,
+                        description: _stepData[index]['desc']!,
+                      ),
                     );
-                  } else if (width < 1000) {
-                    return Column(
+                  }),
+                );
+              } else if (width < 1000) {
+                // Tablet layout
+                return Column(
+                  children: [
+                    Row(
+                      crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        Row(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Expanded(
-                              child: _StepCard(
-                                stepNumber: '1',
-                                title: _stepData[0]['title']!,
-                                description: _stepData[0]['desc']!,
-                              ),
-                            ),
-                            const SizedBox(width: 16),
-                            Expanded(
-                              child: _StepCard(
-                                stepNumber: '2',
-                                title: _stepData[1]['title']!,
-                                description: _stepData[1]['desc']!,
-                              ),
-                            ),
-                            const SizedBox(width: 16),
-                            Expanded(
-                              child: _StepCard(
-                                stepNumber: '3',
-                                title: _stepData[2]['title']!,
-                                description: _stepData[2]['desc']!,
-                              ),
-                            ),
-                          ],
+                        Expanded(
+                          child: _StepCard(
+                            stepNumber: '1',
+                            title: _stepData[0]['title']!,
+                            description: _stepData[0]['desc']!,
+                          ),
                         ),
-                        const SizedBox(height: 16),
-                        Row(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            const Spacer(flex: 1),
-                            Expanded(
-                              flex: 2,
-                              child: _StepCard(
-                                stepNumber: '4',
-                                title: _stepData[3]['title']!,
-                                description: _stepData[3]['desc']!,
-                              ),
-                            ),
-                            const SizedBox(width: 16),
-                            Expanded(
-                              flex: 2,
-                              child: _StepCard(
-                                stepNumber: '5',
-                                title: _stepData[4]['title']!,
-                                description: _stepData[4]['desc']!,
-                              ),
-                            ),
-                            const Spacer(flex: 1),
-                          ],
+                        const SizedBox(width: 16),
+                        Expanded(
+                          child: _StepCard(
+                            stepNumber: '2',
+                            title: _stepData[1]['title']!,
+                            description: _stepData[1]['desc']!,
+                          ),
+                        ),
+                        const SizedBox(width: 16),
+                        Expanded(
+                          child: _StepCard(
+                            stepNumber: '3',
+                            title: _stepData[2]['title']!,
+                            description: _stepData[2]['desc']!,
+                          ),
                         ),
                       ],
-                    );
-                  } else {
-                    return Row(
+                    ),
+                    const SizedBox(height: 16),
+                    Row(
                       crossAxisAlignment: CrossAxisAlignment.start,
-                      children: List.generate(_stepData.length, (index) {
-                        return Expanded(
-                          child: Padding(
-                            padding: EdgeInsets.only(
-                              right: index == 4 ? 0 : 16.0,
-                            ),
-                            child: _StepCard(
-                              stepNumber: '${index + 1}',
-                              title: _stepData[index]['title']!,
-                              description: _stepData[index]['desc']!,
-                            ),
+                      children: [
+                        const Spacer(flex: 1),
+                        Expanded(
+                          flex: 2,
+                          child: _StepCard(
+                            stepNumber: '4',
+                            title: _stepData[3]['title']!,
+                            description: _stepData[3]['desc']!,
                           ),
-                        );
-                      }),
+                        ),
+                        const SizedBox(width: 16),
+                        Expanded(
+                          flex: 2,
+                          child: _StepCard(
+                            stepNumber: '5',
+                            title: _stepData[4]['title']!,
+                            description: _stepData[4]['desc']!,
+                          ),
+                        ),
+                        const Spacer(flex: 1),
+                      ],
+                    ),
+                  ],
+                );
+              } else {
+                // Desktop layout
+                return Row(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: List.generate(_stepData.length, (index) {
+                    return Expanded(
+                      child: Padding(
+                        padding: EdgeInsets.only(right: index == 4 ? 0 : 16.0),
+                        child: _StepCard(
+                          stepNumber: '${index + 1}',
+                          title: _stepData[index]['title']!,
+                          description: _stepData[index]['desc']!,
+                        ),
+                      ),
                     );
-                  }
-                },
-              ),
-            ],
+                  }),
+                );
+              }
+            },
           ),
-        ),
-      ],
+        ],
+      ),
     );
   }
 }

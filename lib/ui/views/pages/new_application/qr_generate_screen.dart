@@ -31,7 +31,6 @@ class _QrGenerateScreenState extends State<QrGenerateScreen> {
   String? localFilePath;
   Uint8List? _pdfBytes;
 
-  // ✅ FIX: PdfController အစား PdfControllerPinch သို့ ပြောင်းလဲသတ်မှတ်လိုက်သည်
   PdfControllerPinch? _pdfController;
 
   @override

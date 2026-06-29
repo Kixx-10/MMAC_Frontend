@@ -1,5 +1,3 @@
-// lib/ui/views/pages/new_application/review_layout.dart
-
 import 'package:flutter/material.dart';
 
 class ReviewLayout extends StatelessWidget {
@@ -18,6 +16,9 @@ class ReviewLayout extends StatelessWidget {
     required this.isUpdateMode,
   });
 
+  bool get _isMyanmar =>
+      values['country'] == 'Myanmar' || values['country'] == 'MMR';
+
   String _formatDate(dynamic date) {
     if (date == null) return '—';
     if (date is DateTime) {
@@ -28,9 +29,201 @@ class ReviewLayout extends StatelessWidget {
     return date.toString();
   }
 
-  // ── Modern Information Grid Block
-  // ── Modern Information Grid Block
-  Widget _reviewTile(String label, String value) {
+  // SECTION BUILDERS
+  Widget _buildWarningBanner() {
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: const Color(0xFFF0F7FF),
+        borderRadius: BorderRadius.circular(14),
+        border: Border.all(color: const Color(0xFFD0E7FF)),
+      ),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Icon(
+            Icons.verified_user_outlined,
+            color: Colors.blue.shade800,
+            size: 20,
+          ),
+          const SizedBox(width: 12),
+          const Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  'Review Application Details',
+                  style: TextStyle(
+                    fontSize: 14,
+                    fontWeight: FontWeight.bold,
+                    color: Color(0xFF003366),
+                  ),
+                ),
+                SizedBox(height: 2),
+                Text(
+                  'Please double-check all fields below. You can update any step before final submission.',
+                  style: TextStyle(
+                    fontSize: 12,
+                    color: Color(0xFF335577),
+                    height: 1.3,
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildPersonalInfoSection() {
+    return _ReviewSectionCard(
+      title: 'Personal Information',
+      icon: Icons.person_outline_rounded,
+      step: 1,
+      onEditRequested: onEditRequested,
+      iconColor: Colors.blue.shade700,
+      iconBgColor: Colors.blue.shade50,
+      children: [
+        _ReviewTile(label: 'Full Name', value: controllers['fullName']?.text),
+        _ReviewTile(label: 'Gender', value: values['gender']),
+        _ReviewTile(
+          label: 'Date of Birth',
+          value: _formatDate(values['dateOfBirth']),
+        ),
+        _ReviewTile(label: 'Country', value: values['country']),
+        _ReviewTile(label: 'Email', value: controllers['email']?.text),
+        _ReviewTile(label: 'Mobile Number', value: controllers['mobile']?.text),
+        if (!_isMyanmar)
+          _ReviewTile(
+            label: 'Visa Number',
+            value: controllers['visaNumber']?.text,
+          ),
+        if (_isMyanmar) ...[
+          _ReviewTile(label: 'NRC', value: controllers['nrc']?.text),
+          _ReviewTile(
+            label: 'Father Name',
+            value: controllers['fatherName']?.text,
+          ),
+        ],
+        _ReviewTile(
+          label: 'Passport Number',
+          value: controllers['passportNumber']?.text,
+        ),
+        _ReviewTile(
+          label: 'Issued Date',
+          value: _formatDate(values['issuedDate']),
+        ),
+        _ReviewTile(
+          label: 'Expiry Date',
+          value: _formatDate(values['expiryDate']),
+        ),
+        _ReviewTile(label: 'Issued Country', value: values['issuedCountry']),
+        _ReviewTile(label: 'Address', value: controllers['address']?.text),
+      ],
+    );
+  }
+
+  Widget _buildTripDetailsSection() {
+    return _ReviewSectionCard(
+      title: 'Trip Details',
+      icon: Icons.local_airport_outlined,
+      step: 2,
+      onEditRequested: onEditRequested,
+      iconColor: Colors.blue.shade700,
+      iconBgColor: Colors.blue.shade50,
+      children: [
+        _ReviewTile(
+          label: 'Arrival Date',
+          value: _formatDate(values['arrivalDate']),
+        ),
+        _ReviewTile(label: 'Mode of Travel', value: values['modeOfTravel']),
+        _ReviewTile(label: 'Port of Arrival', value: values['portOfArrival']),
+        _ReviewTile(
+          label: 'Vehicle Number',
+          value: controllers['vehicleNumber']?.text,
+        ),
+        _ReviewTile(
+          label: 'Vehicle Name',
+          value: controllers['vehicleName']?.text,
+        ),
+        if (!_isMyanmar)
+          _ReviewTile(label: 'Accommodation', value: values['accommodation']),
+        _ReviewTile(
+          label: 'Address in Myanmar',
+          value: controllers['addressInMyanmar']?.text,
+        ),
+        _ReviewTile(label: 'State/Region', value: values['stateRegion']),
+        _ReviewTile(label: 'District', value: values['district']),
+        _ReviewTile(label: 'Township', value: values['township']),
+        if (_isMyanmar)
+          _ReviewTile(
+            label: 'Mobile (MM)',
+            value: controllers['mobileNumberMM']?.text,
+          ),
+        _ReviewTile(label: 'Purpose of Visit', value: values['purposeOfVisit']),
+        _ReviewTile(
+          label: 'Previous City',
+          value: controllers['previousCity']?.text,
+        ),
+      ],
+    );
+  }
+
+  Widget _buildHealthDeclarationsSection() {
+    return _ReviewSectionCard(
+      title: 'Health & Declarations',
+      icon: Icons.health_and_safety_outlined,
+      step: 3,
+      onEditRequested: onEditRequested,
+      iconColor: Colors.green.shade700,
+      iconBgColor: Colors.green.shade50,
+      isGrid: false, // Declarations use a vertical list, not a grid
+      children: [
+        _DeclarationCard(
+          label:
+              'Fever, cough, sore throat or shortness of breath in past 14 days?',
+          value: values['hasSymptoms'],
+        ),
+        _DeclarationCard(
+          label: 'Carrying prohibited or restricted items?',
+          value: values['carryingRestricted'],
+        ),
+      ],
+    );
+  }
+
+  // MAIN BUILD METHOD
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        _buildWarningBanner(),
+        const SizedBox(height: 24),
+        _buildPersonalInfoSection(),
+        _buildTripDetailsSection(),
+        _buildHealthDeclarationsSection(),
+        actionButtons,
+      ],
+    );
+  }
+}
+
+// PRIVATE SUB-WIDGETS
+class _ReviewTile extends StatelessWidget {
+  final String label;
+  final String? value;
+
+  const _ReviewTile({required this.label, this.value});
+
+  @override
+  Widget build(BuildContext context) {
+    final displayValue = (value == null || value!.trim().isEmpty)
+        ? '—'
+        : value!;
+
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       mainAxisAlignment: MainAxisAlignment.center,
@@ -44,11 +237,11 @@ class ReviewLayout extends StatelessWidget {
             letterSpacing: 0.5,
           ),
         ),
-        const SizedBox(height: 2), // 🎯 Made gap tighter
+        const SizedBox(height: 2),
         Text(
-          value.isEmpty ? '—' : value,
+          displayValue,
           style: const TextStyle(
-            fontSize: 13, // 🎯 Dropped from 14 to 13 so long ports fit cleaner
+            fontSize: 13,
             fontWeight: FontWeight.w600,
             color: Colors.black87,
           ),
@@ -58,22 +251,38 @@ class ReviewLayout extends StatelessWidget {
       ],
     );
   }
+}
 
-  // ── Premium Card Section Header
-  Widget _sectionBlock({
-    required String title,
-    required IconData icon,
-    required int step,
-    required List<Widget> children,
-  }) {
+class _ReviewSectionCard extends StatelessWidget {
+  final String title;
+  final IconData icon;
+  final int step;
+  final Function(int) onEditRequested;
+  final List<Widget> children;
+  final Color iconColor;
+  final Color iconBgColor;
+  final bool isGrid;
+
+  const _ReviewSectionCard({
+    required this.title,
+    required this.icon,
+    required this.step,
+    required this.onEditRequested,
+    required this.children,
+    required this.iconColor,
+    required this.iconBgColor,
+    this.isGrid = true,
+  });
+
+  @override
+  Widget build(BuildContext context) {
     return Container(
-      margin: const EdgeInsets.only(bottom: 20),
+      margin: const EdgeInsets.only(bottom: 24),
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(16),
         boxShadow: [
           BoxShadow(
-            // ignore: deprecated_member_use
             color: Colors.black.withOpacity(0.03),
             blurRadius: 15,
             offset: const Offset(0, 4),
@@ -84,7 +293,7 @@ class ReviewLayout extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          // Header Row inside Card
+          // Header Row
           Padding(
             padding: const EdgeInsets.fromLTRB(16, 12, 8, 4),
             child: Row(
@@ -92,10 +301,10 @@ class ReviewLayout extends StatelessWidget {
                 Container(
                   padding: const EdgeInsets.all(8),
                   decoration: BoxDecoration(
-                    color: Colors.blue.shade50,
+                    color: iconBgColor,
                     borderRadius: BorderRadius.circular(10),
                   ),
-                  child: Icon(icon, color: Colors.blue.shade700, size: 18),
+                  child: Icon(icon, color: iconColor, size: 18),
                 ),
                 const SizedBox(width: 12),
                 Text(
@@ -126,33 +335,44 @@ class ReviewLayout extends StatelessWidget {
             ),
           ),
           const Divider(height: 1, thickness: 1, color: Color(0xFFF5F5F7)),
-          // Grid content
+
+          // Body Content (Grid for details, Column for declarations)
           Padding(
             padding: const EdgeInsets.all(16),
-            child: GridView.builder(
-              shrinkWrap: true,
-              physics: const NeverScrollableScrollPhysics(),
-              itemCount: children.length,
-              gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-                crossAxisCount: 2,
-                crossAxisSpacing: 16,
-                mainAxisSpacing: 16,
-                mainAxisExtent: 58, // Fix height overflow
-              ),
-              itemBuilder: (context, index) => children[index],
-            ),
+            child: isGrid
+                ? GridView.builder(
+                    shrinkWrap: true,
+                    physics: const NeverScrollableScrollPhysics(),
+                    itemCount: children.length,
+                    gridDelegate:
+                        const SliverGridDelegateWithFixedCrossAxisCount(
+                          crossAxisCount: 2,
+                          crossAxisSpacing: 16,
+                          mainAxisSpacing: 16,
+                          mainAxisExtent: 58,
+                        ),
+                    itemBuilder: (context, index) => children[index],
+                  )
+                : Column(children: children),
           ),
         ],
       ),
     );
   }
+}
 
-  // ── Modern Declaration Block
-  Widget _declarationCard(String label, String? value) {
+class _DeclarationCard extends StatelessWidget {
+  final String label;
+  final String? value;
+
+  const _DeclarationCard({required this.label, this.value});
+
+  @override
+  Widget build(BuildContext context) {
     final bool isYes = value == 'Yes';
-    final color = isYes ? Colors.red.shade700 : Colors.green.shade700;
-    final bg = isYes ? Colors.red.shade50 : Colors.green.shade50;
-    final text = value ?? '—';
+    final Color color = isYes ? Colors.red.shade700 : Colors.green.shade700;
+    final Color bg = isYes ? Colors.red.shade50 : Colors.green.shade50;
+    final String text = value ?? '—';
 
     return Container(
       margin: const EdgeInsets.only(bottom: 12),
@@ -182,7 +402,6 @@ class ReviewLayout extends StatelessWidget {
             decoration: BoxDecoration(
               color: bg,
               borderRadius: BorderRadius.circular(8),
-              // ignore: deprecated_member_use
               border: Border.all(color: color.withOpacity(0.1)),
             ),
             child: Text(
@@ -197,209 +416,6 @@ class ReviewLayout extends StatelessWidget {
           ),
         ],
       ),
-    );
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    final bool isMyanmar =
-        values['country'] == 'Myanmar' || values['country'] == 'MMR';
-
-    // 🎯 Dynamically generate Trip Details widgets list to avoid empty slots or broken UI grids
-    final List<Widget> tripDetailsTiles = [
-      _reviewTile('Arrival Date', _formatDate(values['arrivalDate'])),
-      _reviewTile('Mode of Travel', values['modeOfTravel'] ?? ''),
-      _reviewTile('Port of Arrival', values['portOfArrival'] ?? ''),
-      _reviewTile('Vehicle Number', controllers['vehicleNumber']?.text ?? ''),
-      _reviewTile('Vehicle Name', controllers['vehicleName']?.text ?? ''),
-      if (!isMyanmar)
-        _reviewTile('Accommodation', values['accommodation'] ?? '—'),
-      _reviewTile(
-        'Address in Myanmar',
-        controllers['addressInMyanmar']?.text ?? '',
-      ),
-      _reviewTile('State/Region', values['stateRegion'] ?? ''),
-      _reviewTile('District', values['district'] ?? ''),
-      _reviewTile('Township', values['township'] ?? ''),
-      if (isMyanmar)
-        _reviewTile('Mobile (MM)', controllers['mobileNumberMM']?.text ?? ''),
-      _reviewTile('Purpose of Visit', values['purposeOfVisit'] ?? ''),
-      _reviewTile('Previous City', controllers['previousCity']?.text ?? ''),
-    ];
-
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        // Top Premium Warning Alert Banner
-        Container(
-          width: double.infinity,
-          padding: const EdgeInsets.all(16),
-          decoration: BoxDecoration(
-            color: const Color(0xFFF0F7FF),
-            borderRadius: BorderRadius.circular(14),
-            border: Border.all(color: const Color(0xFFD0E7FF)),
-          ),
-          child: Row(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Icon(
-                Icons.verified_user_outlined,
-                color: Colors.blue.shade800,
-                size: 20,
-              ),
-              const SizedBox(width: 12),
-              const Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      'Review Application Details',
-                      style: TextStyle(
-                        fontSize: 14,
-                        fontWeight: FontWeight.bold,
-                        color: Color(0xFF003366),
-                      ),
-                    ),
-                    SizedBox(height: 2),
-                    Text(
-                      'Please double-check all fields below. You can update any step before final submission.',
-                      style: TextStyle(
-                        fontSize: 12,
-                        color: Color(0xFF335577),
-                        height: 1.3,
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-            ],
-          ),
-        ),
-        const SizedBox(height: 24),
-
-        // ══ STEP 1: Personal Information
-        _sectionBlock(
-          title: 'Personal Information',
-          icon: Icons.person_outline_rounded,
-          step: 1,
-          children: [
-            _reviewTile('Full Name', controllers['fullName']?.text ?? ''),
-            _reviewTile('Gender', values['gender'] ?? ''),
-            _reviewTile('Date of Birth', _formatDate(values['dateOfBirth'])),
-            _reviewTile('Country', values['country'] ?? ''),
-            _reviewTile('Email', controllers['email']?.text ?? ''),
-            _reviewTile('Mobile Number', controllers['mobile']?.text ?? ''),
-            if (values['country'] != 'Myanmar') ...[
-              _reviewTile('Visa Number', controllers['visaNumber']?.text ?? ''),
-            ],
-            if (values['country'] == 'Myanmar') ...[
-              _reviewTile('NRC', controllers['nrc']?.text ?? ''),
-              _reviewTile('Father Name', controllers['fatherName']?.text ?? ''),
-            ],
-            _reviewTile(
-              'Passport Number',
-              controllers['passportNumber']?.text ?? '',
-            ),
-            _reviewTile('Issued Date', _formatDate(values['issuedDate'])),
-            _reviewTile('Expiry Date', _formatDate(values['expiryDate'])),
-            _reviewTile('Issued Country', values['issuedCountry'] ?? ''),
-            _reviewTile('Address', controllers['address']?.text ?? ''),
-          ],
-        ),
-
-        // ══ STEP 2: Trip Details ═════════════════════════════════════════════
-        _sectionBlock(
-          title: 'Trip Details',
-          icon: Icons.local_airport_outlined,
-          step: 2,
-          children:
-              tripDetailsTiles, // 🎯 Clean list without conditional index bugs
-        ),
-
-        // ══ STEP 3: Health & Declarations ════════════════════════════════════
-        Container(
-          margin: const EdgeInsets.only(bottom: 24),
-          decoration: BoxDecoration(
-            color: Colors.white,
-            borderRadius: BorderRadius.circular(16),
-            boxShadow: [
-              BoxShadow(
-                // ignore: deprecated_member_use
-                color: Colors.black.withOpacity(0.03),
-                blurRadius: 15,
-                offset: const Offset(0, 4),
-              ),
-            ],
-            border: Border.all(color: Colors.grey.shade100),
-          ),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Padding(
-                padding: const EdgeInsets.fromLTRB(16, 12, 8, 4),
-                child: Row(
-                  children: [
-                    Container(
-                      padding: const EdgeInsets.all(8),
-                      decoration: BoxDecoration(
-                        color: Colors.green.shade50,
-                        borderRadius: BorderRadius.circular(10),
-                      ),
-                      child: Icon(
-                        Icons.health_and_safety_outlined,
-                        color: Colors.green.shade700,
-                        size: 18,
-                      ),
-                    ),
-                    const SizedBox(width: 12),
-                    const Text(
-                      'Health & Declarations',
-                      style: TextStyle(
-                        fontSize: 15,
-                        fontWeight: FontWeight.bold,
-                        color: Colors.black87,
-                      ),
-                    ),
-                    const Spacer(),
-                    TextButton.icon(
-                      onPressed: () => onEditRequested(3),
-                      style: TextButton.styleFrom(
-                        foregroundColor: Colors.blue.shade700,
-                      ),
-                      icon: const Icon(Icons.edit_outlined, size: 14),
-                      label: const Text(
-                        "Edit",
-                        style: TextStyle(
-                          fontSize: 13,
-                          fontWeight: FontWeight.w600,
-                        ),
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-              const Divider(height: 1, thickness: 1, color: Color(0xFFF5F5F7)),
-              Padding(
-                padding: const EdgeInsets.all(16),
-                child: Column(
-                  children: [
-                    _declarationCard(
-                      'Fever, cough, sore throat or shortness of breath in past 14 days?',
-                      values['hasSymptoms'],
-                    ),
-                    _declarationCard(
-                      'Carrying prohibited or restricted items?',
-                      values['carryingRestricted'],
-                    ),
-                  ],
-                ),
-              ),
-            ],
-          ),
-        ),
-
-        actionButtons,
-      ],
     );
   }
 }
