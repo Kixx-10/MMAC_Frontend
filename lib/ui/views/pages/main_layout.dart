@@ -314,7 +314,7 @@ class _MainLayoutState extends State<MainLayout>
                         child: Align(
                           alignment: Alignment.center,
                           child: SizedBox(
-                            width: isMobile ? null : 700,
+                            width: isMobile ? 500 : 700,
                             child: TabBar(
                               controller: _tabController,
                               isScrollable: isMobile,
@@ -354,7 +354,6 @@ class _MainLayoutState extends State<MainLayout>
                           ),
                         ),
                       ),
-                      if (isMobile) const SizedBox(width: 50),
                     ],
                   ),
                 ),
