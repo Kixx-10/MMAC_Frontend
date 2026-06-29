@@ -165,7 +165,7 @@ class _IdentificationFormLayoutState
           });
         }
       } catch (e) {
-        debugPrint("âŒ Failed to load countries from API: $e");
+        debugPrint("Failed to load countries from API: $e");
         if (mounted) setState(() => _isLoading = false);
       }
 
@@ -177,7 +177,7 @@ class _IdentificationFormLayoutState
           );
           ref.read(nrcProvider.notifier).selectNrcState(matchedState.id);
         } catch (e) {
-          debugPrint("âŒ Failed to restore NRC provider state: $e");
+          debugPrint("Failed to restore NRC provider state: $e");
         }
       }
     });
