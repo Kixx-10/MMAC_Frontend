@@ -1,6 +1,6 @@
 // lib/ui/views/pages/update_application/update_application_page.dart
 
-// ignore_for_file: prefer_function_declarations_over_variables, deprecated_member_use, unused_field, empty_catches
+// ignore_for_file: curly_braces_in_flow_control_structures, prefer_function_declarations_over_variables, deprecated_member_use, unused_field, empty_catches
 
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -161,7 +161,7 @@ class _UpdateApplicationState extends ConsumerState<UpdateApplication> {
       if (errorMessage.toLowerCase().contains("not found")) {
         displayTitle = "Application Uneditable";
         displayMessage =
-            "We could not find a pending application with these details. The application may have already been Approved or Rejected, or the details are incorrect. \n\nApproved applications cannot be modified.";
+            "We could not find any pending application with these details. The application may have already been Approved or Rejected, or the details are incorrect. \n\nApproved applications cannot be modified.";
       }
 
       _showInfoDialog(displayTitle, displayMessage, isError: true);

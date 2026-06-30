@@ -114,6 +114,27 @@ class _IdentificationFormLayoutState
       }
     }
 
+    // 2. Waterfall Step: Auto-assign dial code if Country is pre-selected (e.g. Myanmar Residency)
+    if (currentCode == null && widget.values['country'] != null) {
+      try {
+        final matchedPhone = _countryCodes.firstWhere(
+          (c) =>
+              c['country']?.toLowerCase() ==
+              widget.values['country'].toString().toLowerCase(),
+        );
+        final String? code = matchedPhone['code'];
+        if (code != null) {
+          currentCode = code;
+          Future.microtask(() {
+            if (mounted) {
+              widget.onValueChanged('mobileCode', code);
+              _updateMobileControllerValue();
+            }
+          });
+        }
+      } catch (_) {}
+    }
+
     if (existingMobile.isNotEmpty &&
         currentCode != null &&
         existingMobile.startsWith(currentCode)) {
@@ -144,7 +165,7 @@ class _IdentificationFormLayoutState
           });
         }
       } catch (e) {
-        debugPrint("❌ Failed to load countries from API: $e");
+        debugPrint("Failed to load countries from API: $e");
         if (mounted) setState(() => _isLoading = false);
       }
 
@@ -156,7 +177,7 @@ class _IdentificationFormLayoutState
           );
           ref.read(nrcProvider.notifier).selectNrcState(matchedState.id);
         } catch (e) {
-          debugPrint("❌ Failed to restore NRC provider state: $e");
+          debugPrint("Failed to restore NRC provider state: $e");
         }
       }
     });
@@ -369,6 +390,18 @@ class _IdentificationFormLayoutState
                 (c) => c.countryName == v,
               );
               widget.onValueChanged('countryCode', matched.countryCode);
+            } catch (_) {}
+
+            try {
+              final matchedPhone = _countryCodes.firstWhere(
+                (c) => c['country']?.toLowerCase() == v.toLowerCase(),
+              );
+              final String? code = matchedPhone['code'];
+              if (code != null) {
+                widget.onValueChanged('mobileCode', code);
+                _updateMobileControllerValue();
+                if (mounted) setState(() {});
+              }
             } catch (_) {}
           }
           if (v != 'Myanmar' && v != 'MMR') {
@@ -703,6 +736,7 @@ class _IdentificationFormLayoutState
   Widget _buildNrcAndFatherNameSection(
     double lw,
     bool isDesktop,
+    bool isMobileWidth,
     bool isMyanmar,
   ) {
     final nrcAsync = ref.watch(nrcProvider);
@@ -710,7 +744,7 @@ class _IdentificationFormLayoutState
 
     return LayoutBuilder(
       builder: (context, constraints) {
-        final bool isNrcRowDesktop = constraints.maxWidth > 550;
+        final bool isNrcRowDesktop = MediaQuery.of(context).size.width > 499;
 
         Widget nrcFields() {
           final List<dynamic> stateList = nrcState?.nrcStateList ?? [];
@@ -873,8 +907,19 @@ class _IdentificationFormLayoutState
           return Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              nrcLabel,
-              nrcFields(),
+              isNrcRowDesktop
+                  ? Row(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        nrcLabel,
+                        const SizedBox(width: 8),
+                        Expanded(child: nrcFields()),
+                      ],
+                    )
+                  : Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [nrcLabel, nrcFields()],
+                    ),
               const SizedBox(height: 16),
               fatherNameWidget,
             ],
@@ -923,7 +968,7 @@ class _IdentificationFormLayoutState
     }
 
     final double screenWidth = MediaQuery.of(context).size.width;
-    final bool isDesktop = screenWidth > 500;
+    final bool isDesktop = screenWidth > 850;
     final bool isMobileWidth = screenWidth < 500;
 
     final bool isMyanmar =
@@ -947,7 +992,7 @@ class _IdentificationFormLayoutState
           isDesktop,
         ),
         const SizedBox(height: 20),
-        _buildNrcAndFatherNameSection(lw, isDesktop, isMyanmar),
+        _buildNrcAndFatherNameSection(lw, isDesktop, isMobileWidth, isMyanmar),
         const SizedBox(height: 20),
         _buildPair(
           _buildEmailField(lw, isMyanmar),

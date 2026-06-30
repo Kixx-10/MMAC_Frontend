@@ -27,9 +27,7 @@ class DeclarationLayout extends StatefulWidget {
 
 class _DeclarationLayoutState extends State<DeclarationLayout>
     implements DeclarationLayoutInterface {
-  // ---------------------------------------------------------------------------
   // STATE & LIFECYCLE
-  // ---------------------------------------------------------------------------
   bool _showErrors = false;
 
   @override
@@ -38,9 +36,7 @@ class _DeclarationLayoutState extends State<DeclarationLayout>
     widget.onReady(this);
   }
 
-  // ---------------------------------------------------------------------------
   // VALIDATION
-  // ---------------------------------------------------------------------------
   @override
   bool validate() {
     final bool symptomValid =
@@ -124,10 +120,7 @@ class _DeclarationLayoutState extends State<DeclarationLayout>
   }
 }
 
-// ---------------------------------------------------------------------------
 // PRIVATE SUB-WIDGETS (Extracted for Clean Code)
-// ---------------------------------------------------------------------------
-
 class _WarningBanner extends StatelessWidget {
   const _WarningBanner();
 

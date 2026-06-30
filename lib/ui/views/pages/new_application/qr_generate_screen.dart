@@ -1,5 +1,5 @@
 // lib/ui/views/pages/new_application/qr_generate_screen.dart
-// ignore_for_file: unused_local_variable
+// ignore_for_file: use_super_parameters, library_private_types_in_public_api, unused_local_variable
 
 import 'dart:convert';
 import 'dart:io' show File;

@@ -157,7 +157,7 @@ class _TripFormLayoutState extends ConsumerState<TripFormLayout>
     }
   }
 
-  // 🌊 THE NAME-TO-ID REVERSE LOOKUP WATERFALL
+  //  THE NAME-TO-ID REVERSE LOOKUP WATERFALL
   Future<void> _restoreWaterfallData() async {
     // --- 1. RESTORE TRAVEL MODE & PORT ---
     String? targetModeName = widget.values['modeOfTravel'];
