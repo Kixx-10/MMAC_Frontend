@@ -19,8 +19,7 @@ class MainLayout extends StatefulWidget {
   State<MainLayout> createState() => _MainLayoutState();
 }
 
-class _MainLayoutState extends State<MainLayout>
-    with SingleTickerProviderStateMixin {
+class _MainLayoutState extends State<MainLayout>with SingleTickerProviderStateMixin {
   late TabController _tabController;
   String? _selectedResidency;
   Key _formKey = const ValueKey('form_start');
