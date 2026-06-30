@@ -50,13 +50,29 @@ class FormSessionService {
       if (jsonString != null && jsonString.isNotEmpty) {
         final dynamic decodedData = jsonDecode(jsonString);
 
-        // 🎯 Type safety check before returning
+        // Type safety check before returning
         if (decodedData is Map<String, dynamic>) {
+          //  Expiry Check: Ensure the draft is not older than 30 minutes (per SRS)
+          if (decodedData.containsKey('lastUpdated')) {
+            final DateTime lastUpdated = DateTime.parse(
+              decodedData['lastUpdated'],
+            );
+            final Duration difference = DateTime.now().difference(lastUpdated);
+
+            if (difference.inMinutes >= 30) {
+              debugPrint(
+                "⏳ Draft expired (older than 30 mins). Clearing old session.",
+              );
+              await clearDraft(isUpdateMode: isUpdateMode);
+              return null; // Return null to force the app to start a fresh form
+            }
+          }
+
           return decodedData;
         }
       }
     } catch (e) {
-      debugPrint("❌ Error loading draft session: $e");
+      debugPrint(" Error loading draft session: $e");
     }
 
     return null;
