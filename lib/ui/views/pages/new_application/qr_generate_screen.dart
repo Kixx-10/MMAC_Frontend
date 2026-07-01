@@ -1,49 +1,46 @@
-// lib/ui/views/pages/new_application/qr_generate_screen.dart
-// ignore_for_file: use_super_parameters, library_private_types_in_public_api, unused_local_variable
-
 import 'dart:convert';
 import 'dart:io' show File;
 import 'dart:typed_data';
 import 'package:flutter/material.dart';
 import 'package:flutter/foundation.dart' show kIsWeb;
+import 'package:flutter_riverpod/flutter_riverpod.dart'; 
+import 'package:mmac/data/models/send_email_model.dart';
+import 'package:mmac/data/models/submit_request_model.dart';
+import 'package:mmac/service/sendEmail_service.dart';
 import 'package:path_provider/path_provider.dart';
-import 'package:pdfx/pdfx.dart'; // 📄 pdfx package
+import 'package:pdfrx/pdfrx.dart'; 
 import 'package:mmac/data/models/submit_response_model.dart';
 import 'package:universal_html/html.dart' as html;
 
-class QrGenerateScreen extends StatefulWidget {
+class QrGenerateScreen extends ConsumerStatefulWidget {
   final SubmitResponseModel responseData;
+  final SubmitRequestModel requestData; 
   final VoidCallback onFinish;
+  final String email;
 
   const QrGenerateScreen({
-    Key? key,
+    super.key,
     required this.responseData,
+    required this.requestData, 
     required this.onFinish,
-  }) : super(key: key);
+    required this.email,
+  });
 
   @override
-  _QrGenerateScreenState createState() => _QrGenerateScreenState();
+  ConsumerState<QrGenerateScreen> createState() => _QrGenerateScreenState();
 }
 
-class _QrGenerateScreenState extends State<QrGenerateScreen> {
+class _QrGenerateScreenState extends ConsumerState<QrGenerateScreen> {
   bool isProcessing = false;
   String fileName = "";
   String? localFilePath;
   Uint8List? _pdfBytes;
 
-  PdfControllerPinch? _pdfController;
-
   @override
   void initState() {
     super.initState();
-    fileName = "ArrivalForm_${widget.responseData.applicationNo}.pdf";
+    fileName = "ArrivalForm_${widget.responseData.referenceNo}.pdf";
     _convertBase64ToPdfFile();
-  }
-
-  @override
-  void dispose() {
-    _pdfController?.dispose();
-    super.dispose();
   }
 
   Future<void> _convertBase64ToPdfFile() async {
@@ -61,11 +58,6 @@ class _QrGenerateScreenState extends State<QrGenerateScreen> {
       }
 
       _pdfBytes = base64Decode(base64String.trim());
-
-      // ✅ FIX: PdfControllerPinch ကို အသုံးပြု၍ openData ဖြင့် ဆောက်လုပ်သည်
-      _pdfController = PdfControllerPinch(
-        document: PdfDocument.openData(_pdfBytes!),
-      );
 
       if (kIsWeb) {
         final blob = html.Blob([_pdfBytes], 'application/pdf');
@@ -95,9 +87,8 @@ class _QrGenerateScreenState extends State<QrGenerateScreen> {
     }
   }
 
-  // 📄 FILE NAME BOX ကို နှိပ်လျှင် Dialog Box ဖြင့် PDF Preview ပြသမည့် လုပ်ဆောင်ချက်
-  void _showPdfPreviewDialog() {
-    if (_pdfController == null) {
+ void _showPdfPreviewDialog() {
+    if (_pdfBytes == null) {
       _showSnackBar("PDF preview is not ready yet.");
       return;
     }
@@ -105,12 +96,15 @@ class _QrGenerateScreenState extends State<QrGenerateScreen> {
     showDialog(
       context: context,
       builder: (BuildContext context) {
+        final double dialogWidth = MediaQuery.of(context).size.width * 0.9;
+        final double dialogHeight = MediaQuery.of(context).size.height * 0.65;
+
         return AlertDialog(
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(16),
           ),
           titlePadding: const EdgeInsets.all(16),
-          contentPadding: const EdgeInsets.symmetric(horizontal: 10),
+          contentPadding: EdgeInsets.zero, 
           title: Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
@@ -131,29 +125,42 @@ class _QrGenerateScreenState extends State<QrGenerateScreen> {
             ],
           ),
           content: SizedBox(
-            width: MediaQuery.of(context).size.width * 0.85,
-            height: MediaQuery.of(context).size.height * 0.6,
+            width: dialogWidth,
+            height: dialogHeight,
             child: ClipRRect(
-              borderRadius: BorderRadius.circular(8),
-              // ✅ ဤနေရာတွင် Type တူညီသွားပြီဖြစ်၍ error လုံးဝမတက်တော့ပါ
-              child: PdfViewPinch(controller: _pdfController!),
-            ),
-          ),
-          actions: [
-            TextButton(
-              onPressed: () => Navigator.pop(context),
-              child: const Text(
-                "Close",
-                style: TextStyle(fontWeight: FontWeight.bold),
+              borderRadius: const BorderRadius.vertical(bottom: Radius.circular(16)),
+              child: Container(
+                color: Colors.grey.shade100,
+                child: PdfViewer.data(
+                  _pdfBytes!,
+                  sourceName: fileName,
+                  params: PdfViewerParams(
+                    layoutPages: (pages, params) {
+                      final pageLayouts = <Rect>[];
+                      double y = 0.0;
+                      
+                      for (int i = 0; i < pages.length; i++) {
+                        final page = pages[i];
+                        final double h = dialogWidth * (page.height / page.width);
+                        pageLayouts.add(Rect.fromLTWH(0, y, dialogWidth, h));
+                        y += h + 8; 
+                      }
+                      
+                      return PdfPageLayout(
+                        pageLayouts: pageLayouts,
+                        documentSize: Size(dialogWidth, y),
+                      );
+                    },
+                  ),
+                ),
               ),
             ),
-          ],
+          ),
         );
       },
     );
   }
-
-  // 💾 SAVE BUTTON ကို နှိပ်လျှင် Dialog ဖြင့် အမည်ပြောင်းပြီး သိမ်းဆည်းမည့် လုပ်ဆောင်ချက်
+  
   Future<void> _savePdfFile() async {
     if (_pdfBytes == null) {
       _showSnackBar("No PDF data available to save.");
@@ -207,8 +214,7 @@ class _QrGenerateScreenState extends State<QrGenerateScreen> {
                 elevation: 0,
               ),
               child: const Text("Save"),
-              onPressed: () =>
-                  Navigator.pop(context, fileNameController.text.trim()),
+              onPressed: () => Navigator.pop(context, fileNameController.text.trim()),
             ),
           ],
         );
@@ -240,6 +246,118 @@ class _QrGenerateScreenState extends State<QrGenerateScreen> {
     }
   }
 
+  void _showShareEmailDialog() {
+    final String initialEmail = widget.email; 
+    final TextEditingController emailController = TextEditingController(text: initialEmail);
+    final GlobalKey<FormState> formKey = GlobalKey<FormState>();
+
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(16),
+          ),
+          title: const Row(
+            children: [
+              Icon(Icons.mail_rounded, color: Colors.blueAccent),
+              SizedBox(width: 8),
+              Text(
+                "Share via Email",
+                style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+              ),
+            ],
+          ),
+          content: Form(
+            key: formKey,
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                const Text(
+                  "Send PDF document to this email address:",
+                  style: TextStyle(fontSize: 13, color: Colors.black54),
+                ),
+                const SizedBox(height: 12),
+                TextFormField(
+                  controller: emailController,
+                  autofocus: true,
+                  keyboardType: TextInputType.emailAddress,
+                  decoration: const InputDecoration(
+                    labelText: "Email Address",
+                    hintText: "example@gmail.com",
+                    border: OutlineInputBorder(),
+                    prefixIcon: Icon(Icons.alternate_email_rounded, size: 20),
+                    isDense: true,
+                  ),
+                  validator: (value) {
+                    if (value == null || value.trim().isEmpty) {
+                      return "Please enter an email address";
+                    }
+                    final bool isValid = RegExp(
+                      r"^[a-zA-Z0-9.a-zA-Z0-9.!#$%&'*+-/=?^_`{|}~]+@[a-zA-Z0-9]+\.[a-zA-Z]+",
+                    ).hasMatch(value.trim());
+                    if (!isValid) {
+                      return "Please enter a valid email address";
+                    }
+                    return null;
+                  },
+                ),
+              ],
+            ),
+          ),
+          actions: [
+            TextButton(
+              child: const Text("Cancel", style: TextStyle(color: Colors.grey)),
+              onPressed: () => Navigator.pop(context),
+            ),
+            ElevatedButton.icon(
+              icon: const Icon(Icons.send_rounded, size: 16),
+              label: const Text("Send"),
+              style: ElevatedButton.styleFrom(
+                backgroundColor: Colors.blue.shade600,
+                foregroundColor: Colors.white,
+                elevation: 0,
+              ),
+              onPressed: () {
+                if (formKey.currentState!.validate()) {
+                  final String recipientEmail = emailController.text.trim();
+                  Navigator.pop(context);
+                  _sendPdfToEmail(recipientEmail);
+                }
+              },
+            ),
+          ],
+        );
+      },
+    );
+  }
+
+ Future<void> _sendPdfToEmail(String email) async {
+    setState(() => isProcessing = true);
+    try {
+      // 💡 ပြင်ဆင်ရန် - ပြဿနာဖြစ်နေသော Field များအားလုံးကို widget.requestData ဆီမှ တိုက်ရိုက်ယူသုံးလိုက်ခြင်းဖြင့် Error ကင်းစင်သွားပါမည်
+      final emailPayload = SendEmailModel(
+        arrivalModel: widget.requestData, // Form တင်စဉ်က ဒေတာအပြည့်အစုံ ပါဝင်ပြီးသားဖြစ်သည်
+        applicationNo: widget.responseData.applicationNo,
+        referenceNo: widget.responseData.referenceNo ?? "N/A",
+        targetEmail: email,
+      );
+
+      final isSuccess = await ref.read(sendEmailServiceProvider.notifier).sendEmail(emailPayload);
+
+      if (isSuccess) {
+        _showSnackBar("PDF has been successfully sent to $email");
+      } else {
+        _showSnackBar("Failed to send email. Please try again.");
+      }
+    } catch (e) {
+      _showSnackBar("Failed to send email: $e");
+    } finally {
+      setState(() => isProcessing = false);
+    }
+  }
+
   void _showSnackBar(String message) {
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(content: Text(message), duration: const Duration(seconds: 3)),
@@ -248,9 +366,12 @@ class _QrGenerateScreenState extends State<QrGenerateScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final emailState = ref.watch(sendEmailServiceProvider);
+    final bool showLoading = isProcessing || emailState.isLoading;
+
     return Container(
       padding: const EdgeInsets.symmetric(vertical: 24, horizontal: 20),
-      child: isProcessing
+      child: showLoading
           ? const Center(
               child: Column(
                 mainAxisAlignment: MainAxisAlignment.center,
@@ -258,7 +379,7 @@ class _QrGenerateScreenState extends State<QrGenerateScreen> {
                   CircularProgressIndicator(),
                   SizedBox(height: 15),
                   Text(
-                    "Preparing Document...",
+                    "Sending Email, Please wait...",
                     style: TextStyle(color: Colors.grey),
                   ),
                 ],
@@ -268,7 +389,7 @@ class _QrGenerateScreenState extends State<QrGenerateScreen> {
               mainAxisAlignment: MainAxisAlignment.center,
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
-                // 📄 ၁။ FILE NAME BOX (နှိပ်လျှင် Web/Mobile နှစ်ခုလုံး Dialog ဖြင့် Preview ပွင့်မည်)
+                // 📄 ၁။ FILE NAME BOX
                 InkWell(
                   onTap: _showPdfPreviewDialog,
                   borderRadius: BorderRadius.circular(12),
@@ -327,24 +448,53 @@ class _QrGenerateScreenState extends State<QrGenerateScreen> {
                 ),
                 const SizedBox(height: 30),
 
-                // 💾 ၂။ SAVE PDF BUTTON
-                ElevatedButton.icon(
-                  icon: const Icon(Icons.save_alt_rounded),
-                  label: const Text(
-                    "Save PDF Document",
-                    style: TextStyle(fontSize: 15, fontWeight: FontWeight.bold),
-                  ),
-                  onPressed: _pdfBytes == null ? null : _savePdfFile,
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: Colors.blue.shade600,
-                    foregroundColor: Colors.white,
-                    padding: const EdgeInsets.symmetric(vertical: 16),
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(8),
+                // 💾 ✉️ ၂။ SAVE & SHARE BUTTONS (In a Row)
+                Row(
+                  children: [
+                    Expanded(
+                      child: ElevatedButton.icon(
+                        icon: const Icon(Icons.save_alt_rounded, size: 20),
+                        label: const Text(
+                          "Save PDF",
+                          style: TextStyle(fontSize: 14, fontWeight: FontWeight.bold),
+                        ),
+                        onPressed: _pdfBytes == null ? null : _savePdfFile,
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: Colors.blue.shade600,
+                          foregroundColor: Colors.white,
+                          padding: const EdgeInsets.symmetric(vertical: 16),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(8),
+                          ),
+                          elevation: 0,
+                        ),
+                      ),
                     ),
-                    elevation: 0,
-                  ),
+                    const SizedBox(width: 12),
+                    Expanded(
+                      child: ElevatedButton.icon(
+                        icon: const Icon(Icons.share_rounded, size: 20),
+                        label: const Text(
+                          "Share Email",
+                          style: TextStyle(fontSize: 14, fontWeight: FontWeight.bold),
+                        ),
+                        onPressed: _pdfBytes == null ? null : _showShareEmailDialog,
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: Colors.green.shade600,
+                          foregroundColor: Colors.white,
+                          padding: const EdgeInsets.symmetric(vertical: 16),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(8),
+                          ),
+                          elevation: 0,
+                        ),
+                      ),
+                    ),
+                  ],
                 ),
+                const SizedBox(height: 24),
+
+                const Divider(),
                 const SizedBox(height: 16),
 
                 // 🏁 ၃။ FINISH PROCESS BUTTON

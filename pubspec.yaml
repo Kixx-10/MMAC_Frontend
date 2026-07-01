@@ -13,7 +13,6 @@ dependencies:
   cupertino_icons: ^1.0.8
   dio: ^5.9.2
   flutter_riverpod: ^2.5.1
-  pdfx: ^2.9.2 
   universal_html: ^2.3.0
   shared_preferences: ^2.5.5
   open_filex: 
@@ -30,6 +29,9 @@ dependencies:
 dev_dependencies:
   flutter_test:
     sdk: flutter
+  build_runner:
+  riverpod_generator: ^2.6.5
+  riverpod_lint: ^2.6.5
 
   flutter_lints: ^6.0.0
   

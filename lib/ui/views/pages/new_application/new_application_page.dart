@@ -1,7 +1,3 @@
-// lib/ui/views/pages/new_application/new_application_page.dart
-
-// ignore_for_file: curly_braces_in_flow_control_structures
-
 import 'dart:convert';
 import 'dart:developer';
 import 'package:flutter/material.dart';
@@ -16,12 +12,13 @@ import 'package:mmac/ui/views/pages/new_application/trip_form_layout.dart';
 import 'package:mmac/ui/views/pages/update_application.dart';
 import 'package:mmac/ui/views/widgets/footer.dart';
 import 'package:mmac/utils/form_session_service.dart';
+import 'package:mobile_scanner/mobile_scanner.dart';
 import '../../widgets/form_progress_bar.dart';
 
 class NewApplication extends ConsumerStatefulWidget {
   final String? initialCountry;
   final VoidCallback? onBackPressed;
-  final bool isUpdateMode; // 🎯 FIX: Strictly typed
+  final bool isUpdateMode; 
   final SubmitRequestModel? initialData;
 
   const NewApplication({
@@ -672,6 +669,8 @@ class _NewApplicationState extends ConsumerState<NewApplication>
             if (submitResponse != null) {
               return QrGenerateScreen(
                 responseData: submitResponse,
+                requestData:_buildRequestModel(), 
+
                 onFinish: () {
                   setState(() {
                     currentStep = 1;
@@ -683,6 +682,7 @@ class _NewApplicationState extends ConsumerState<NewApplication>
                     isUpdateMode: widget.isUpdateMode,
                   );
                 },
+            email: _text('email'),
               );
             }
             return const Center(child: Text("No response data found."));
@@ -776,7 +776,6 @@ class _NewApplicationState extends ConsumerState<NewApplication>
     );
   }
 
-  // MAIN BUILD
   @override
   Widget build(BuildContext context) {
     super.build(context); // Required for AutomaticKeepAliveClientMixin
