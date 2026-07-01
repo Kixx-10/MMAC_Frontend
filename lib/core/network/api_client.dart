@@ -1,5 +1,4 @@
 import 'package:dio/dio.dart';
-//import 'package:flutter_dotenv/flutter_dotenv.dart';
 
 class ApiClient {
   static final ApiClient _instance = ApiClient._internal();
