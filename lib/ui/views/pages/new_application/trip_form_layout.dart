@@ -645,7 +645,7 @@ class _TripFormLayoutState extends ConsumerState<TripFormLayout>
   Widget _buildAccommodationField() {
     if (_isOtherAccommodation) {
       return CustomTextField(
-        label: "Accommodation",
+        label: "Accommodation Type",
         hintText: "Please specify your accommodation...",
         controller: _otherAccommodationController,
         validator: (v) => FormValidators.required(v, 'Accommodation detail'),
