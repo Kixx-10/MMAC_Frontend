@@ -1,4 +1,5 @@
 import 'package:dio/dio.dart';
+//import 'package:flutter_dotenv/flutter_dotenv.dart';
 
 class ApiClient {
   static final ApiClient _instance = ApiClient._internal();
@@ -14,15 +15,20 @@ class ApiClient {
         receiveTimeout: const Duration(seconds: 15),
       ),
     );
-  dio.interceptors.add(InterceptorsWrapper(
-  onRequest: ((options, handler) {
-  options.headers["ApiKey"] = "SecretKey1234!@#HelloMyanmar&!@#";
-  return handler.next(options);
-})
-    ));
+    dio.interceptors.add(
+      InterceptorsWrapper(
+        onRequest: ((options, handler) {
+          options.headers["ApiKey"] = "SecretKey1234!@#HelloMyanmar&!@#";
+          return handler.next(options);
+        }),
+      ),
+    );
   }
 
-  Future<Response> get(String path, {Map<String, dynamic>? queryParameters,}) async {
+  Future<Response> get(
+    String path, {
+    Map<String, dynamic>? queryParameters,
+  }) async {
     try {
       return await dio.get(path, queryParameters: queryParameters);
     } on DioException {
