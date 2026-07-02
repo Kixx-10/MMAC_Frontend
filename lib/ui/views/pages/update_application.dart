@@ -556,7 +556,7 @@ class _UpdateApplicationState extends ConsumerState<UpdateApplication> {
                         : _searchControllers['nationalityCode']?.text,
                     isExpanded: true,
                     hint: Text(
-                      "Select Nationality",
+                      "Select Country",
                       style: TextStyle(fontSize: isMobile ? 10 : 12),
                     ),
                     items: _rawCountryObjects.map<DropdownMenuItem<String>>((
@@ -790,7 +790,7 @@ class _UpdateApplicationState extends ConsumerState<UpdateApplication> {
             ),
           ),
           const Text(
-            '4. Date of Passport Expiry\n5. Date of Birth\n6. Nationality / Citizenship',
+            '4. Date of Passport Expiry\n5. Date of Birth\n6. Country / Citizenship',
             style: TextStyle(fontSize: 15, color: Colors.black87, height: 1.4),
           ),
           const SizedBox(height: 16),
