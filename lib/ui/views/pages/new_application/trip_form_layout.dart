@@ -670,7 +670,7 @@ class _TripFormLayoutState extends ConsumerState<TripFormLayout>
       );
     }
     return CustomDropdownField(
-      label: "Accommodation",
+      label: "Accommodation Type",
       dialogWidth: 300,
       dialogHeight: 250,
       value:
