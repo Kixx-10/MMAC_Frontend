@@ -37,18 +37,11 @@ class CustomTextField extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final isMobile = MediaQuery.of(context).size.width < 500;
-
     // 🎯 1. Define the Label once
     final Widget labelWidget = Padding(
-      // Adjust padding: no top padding needed on mobile since it sits above the box
-      padding: EdgeInsets.only(
-        top: isMobile ? 0 : 14,
-        bottom: isMobile ? 8 : 0,
-      ),
+      padding: const EdgeInsets.only(bottom: 8),
       child: SizedBox(
-        // Let it stretch full width on mobile so it aligns nicely
-        width: isMobile ? double.infinity : labelWidth,
+        width: double.infinity,
         child: RichText(
           text: TextSpan(
             text: label,
@@ -127,23 +120,12 @@ class CustomTextField extends StatelessWidget {
     );
 
     //  3. The Responsive Switcher
-    return isMobile
-        ? Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              labelWidget,
-              //  NO EXPANDED HERE! The Column natively wraps the height of the input.
-              inputWidget,
-            ],
-          )
-        : Row(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              labelWidget,
-              SizedBox(width: spacing),
-              //  EXPANDED IS REQUIRED HERE! To fill horizontal space in the Row.
-              Expanded(child: inputWidget),
-            ],
-          );
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        labelWidget,
+        inputWidget,
+      ],
+    );
   }
 }

@@ -126,15 +126,10 @@ class _CustomDropdownFieldState extends State<CustomDropdownField> {
 
   @override
   Widget build(BuildContext context) {
-    final bool isMobile = MediaQuery.of(context).size.width < 500;
-
     final Widget lableWidget = Padding(
-      padding: EdgeInsets.only(
-        top: isMobile ? 0 : 14,
-        bottom: isMobile ? 8 : 0,
-      ),
+      padding: const EdgeInsets.only(bottom: 8),
       child: SizedBox(
-        width: isMobile ? double.infinity : widget.labelWidth,
+        width: double.infinity,
         child: RichText(
           text: TextSpan(
             text: widget.label,
@@ -246,23 +241,14 @@ class _CustomDropdownFieldState extends State<CustomDropdownField> {
       },
     );
 
-    return isMobile
-        ? Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              lableWidget,
-              SizedBox(height: widget.spacing),
-              dropDownField,
-            ],
-          )
-        : Row(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              lableWidget,
-              SizedBox(width: widget.spacing),
-              Expanded(child: dropDownField),
-            ],
-          );
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        lableWidget,
+        SizedBox(height: widget.spacing),
+        dropDownField,
+      ],
+    );
   }
 }
 

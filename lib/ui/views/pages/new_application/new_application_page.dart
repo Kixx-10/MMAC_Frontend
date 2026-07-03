@@ -12,13 +12,12 @@ import 'package:mmac/ui/views/pages/new_application/trip_form_layout.dart';
 import 'package:mmac/ui/views/pages/update_application.dart';
 import 'package:mmac/ui/views/widgets/footer.dart';
 import 'package:mmac/utils/form_session_service.dart';
-import 'package:mobile_scanner/mobile_scanner.dart';
 import '../../widgets/form_progress_bar.dart';
 
 class NewApplication extends ConsumerStatefulWidget {
   final String? initialCountry;
   final VoidCallback? onBackPressed;
-  final bool isUpdateMode; 
+  final bool isUpdateMode;
   final SubmitRequestModel? initialData;
 
   const NewApplication({
@@ -59,6 +58,9 @@ class _NewApplicationState extends ConsumerState<NewApplication>
     'address': TextEditingController(),
     'nrc': TextEditingController(),
     'fatherName': TextEditingController(),
+    'uid': TextEditingController(),
+    'occupation': TextEditingController(),
+    'placeOfBirth': TextEditingController(),
   };
 
   final Map<String, TextEditingController> _step2Controllers = {
@@ -459,6 +461,9 @@ class _NewApplicationState extends ConsumerState<NewApplication>
       previousCity: _text('previousCity'),
       healthDeclaration: _safeString(_formValues['hasSymptoms']),
       digitalDeclarations: _safeString(_formValues['carryingRestricted']),
+      uid: _text('uid'),
+      occupation: _text('occupation'),
+      placeOfBirth: _text('placeOfBirth'),
     );
   }
 
@@ -467,6 +472,8 @@ class _NewApplicationState extends ConsumerState<NewApplication>
 
     try {
       final requestModel = _buildRequestModel();
+      log("PAYLOAD: ${jsonEncode(requestModel.toJson())}", name: "Submit");
+      
       final response = await ref
           .read(submitControllerProvider.notifier)
           .submitApplicationAction(requestModel);
@@ -546,7 +553,7 @@ class _NewApplicationState extends ConsumerState<NewApplication>
   String get _sectionTitle {
     switch (currentStep) {
       case 1:
-        return "Personal Informations";
+        return _isMyanmar ? "" : "Personal Information";
       case 2:
         return "Itinerary";
       case 3:
@@ -669,7 +676,7 @@ class _NewApplicationState extends ConsumerState<NewApplication>
             if (submitResponse != null) {
               return QrGenerateScreen(
                 responseData: submitResponse,
-                requestData:_buildRequestModel(), 
+                requestData: _buildRequestModel(),
 
                 onFinish: () {
                   setState(() {
@@ -682,7 +689,7 @@ class _NewApplicationState extends ConsumerState<NewApplication>
                     isUpdateMode: widget.isUpdateMode,
                   );
                 },
-            email: _text('email'),
+                email: _text('email'),
               );
             }
             return const Center(child: Text("No response data found."));
@@ -760,14 +767,16 @@ class _NewApplicationState extends ConsumerState<NewApplication>
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Text(
-                _sectionTitle,
-                style: const TextStyle(
-                  fontSize: 18,
-                  fontWeight: FontWeight.bold,
+              if (_sectionTitle.isNotEmpty) ...[
+                Text(
+                  _sectionTitle,
+                  style: const TextStyle(
+                    fontSize: 18,
+                    fontWeight: FontWeight.bold,
+                  ),
                 ),
-              ),
-              const SizedBox(height: 20),
+                const SizedBox(height: 20),
+              ],
               _buildCurrentStepForm(),
             ],
           ),

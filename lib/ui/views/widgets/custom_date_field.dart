@@ -243,16 +243,12 @@ class _CustomDateFieldState extends State<CustomDateField> {
         ? _formatDate(widget.value!)
         : "Select Date";
 
-    // 🎯 2. Check current screen dimensions inside build loop
     final bool isMobile = MediaQuery.of(context).size.width < 500;
 
     final Widget lableWidget = Padding(
-      padding: EdgeInsets.only(
-        top: isMobile ? 0 : 14,
-        bottom: isMobile ? 8 : 0,
-      ),
+      padding: const EdgeInsets.only(bottom: 8),
       child: SizedBox(
-        width: isMobile ? double.infinity : widget.labelWidth,
+        width: double.infinity,
         child: RichText(
           text: TextSpan(
             text: widget.label,
@@ -338,19 +334,9 @@ class _CustomDateFieldState extends State<CustomDateField> {
       ],
     );
 
-    return isMobile
-        ? Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [lableWidget, const SizedBox(height: 8), dateField],
-          )
-        : Row(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              lableWidget,
-              const SizedBox(width: 8),
-
-              Expanded(child: dateField),
-            ],
-          );
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [lableWidget, const SizedBox(height: 8), dateField],
+    );
   }
 }
