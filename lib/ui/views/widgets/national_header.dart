@@ -8,14 +8,15 @@ class NationalHeader extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final double screenWidth = MediaQuery.of(context).size.width;
-    final bool isMobile = screenWidth < 950; // Mobile/Tablet breakpoint
+    final bool isTablet = screenWidth > 551;
+    // Mobile/Tablet breakpoint
 
     return Container(
       padding: EdgeInsets.only(
-        left: isMobile ? 16.0 : 150.0,
-        right: isMobile ? 16.0 : 150.0,
+        left: isTablet ? 50.0 : 0,
+        right: isTablet ? 50.0 : 0,
       ),
-      height: 130,
+      height: 145,
       decoration: BoxDecoration(
         color: Colors.white,
         boxShadow: [
@@ -29,10 +30,10 @@ class NationalHeader extends StatelessWidget {
       child: Transform.translate(
         offset: const Offset(0, -12),
         child: Row(
-          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          mainAxisAlignment: MainAxisAlignment.spaceEvenly,
           children: [
             // Left Coat of Arms Logo Container
-            if (!isMobile)
+            if (isTablet)
               Container(
                 margin: const EdgeInsets.only(left: 20, top: 10),
                 height: 90,
@@ -54,7 +55,7 @@ class NationalHeader extends StatelessWidget {
                 crossAxisAlignment: CrossAxisAlignment.center,
                 children: [
                   Container(
-                    height: isMobile
+                    height: isTablet
                         ? 50
                         : 70, // FIXED: Corrected mobile scaling typo
                     width: 70,
@@ -70,17 +71,17 @@ class NationalHeader extends StatelessWidget {
                   Text(
                     "The Republic of the Union of Myanmar",
                     style: TextStyle(
-                      fontSize: isMobile ? 12 : 16,
+                      fontSize: isTablet ? 16 : 12,
                       fontWeight: FontWeight.bold,
-                      color: const Color(0xff6B7280),
+                      color: const Color.fromRGBO(119, 119, 119, 1),
                     ),
                     textAlign: TextAlign.center,
                   ),
                   const SizedBox(height: 2),
                   Text(
-                    "Department of Immigration and Population",
+                    "MINISTRY OF IMMIGRATION AND POPULATION",
                     style: TextStyle(
-                      fontSize: isMobile ? 13 : 20,
+                      fontSize: isTablet ? 10 : 16,
                       fontWeight: FontWeight.bold,
                       color: Colors.black,
                     ),
@@ -91,7 +92,7 @@ class NationalHeader extends StatelessWidget {
             ),
 
             // Right Flag Element
-            if (!isMobile)
+            if (isTablet)
               Container(
                 margin: const EdgeInsets.only(right: 20, top: 10),
                 height: 60,

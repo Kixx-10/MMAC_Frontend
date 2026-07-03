@@ -9,7 +9,7 @@ class FormFooter extends StatelessWidget {
   Widget build(BuildContext context) {
     return Container(
       width: double.infinity,
-      color: const Color(0xff004578), // Deep official blue
+      color: const Color.fromRGBO(33, 37, 41, 1), // Deep official blue
       padding: const EdgeInsets.symmetric(vertical: 40, horizontal: 24),
       child: Center(
         child: Container(
