@@ -19,12 +19,14 @@ class MainLayout extends StatefulWidget {
   State<MainLayout> createState() => _MainLayoutState();
 }
 
-class _MainLayoutState extends State<MainLayout>with SingleTickerProviderStateMixin {
+class _MainLayoutState extends State<MainLayout>
+    with SingleTickerProviderStateMixin {
   late TabController _tabController;
   String? _selectedResidency;
   Key _formKey = const ValueKey('form_start');
   SubmitRequestModel? _fetchedUpdateData;
   bool _isSessionLoading = true;
+  bool _isMenuExpanded = false;
 
   @override
   void initState() {
@@ -32,8 +34,10 @@ class _MainLayoutState extends State<MainLayout>with SingleTickerProviderStateMi
     _tabController = TabController(length: 5, vsync: this);
 
     _tabController.addListener(() async {
+      if (mounted) setState(() {});
+
       if (!_tabController.indexIsChanging) {
-        setState(() => _fetchedUpdateData = null);
+        if (mounted) setState(() => _fetchedUpdateData = null);
         final prefs = await SharedPreferences.getInstance();
         await prefs.setInt('last_active_tab', _tabController.index);
       }
@@ -212,26 +216,6 @@ class _MainLayoutState extends State<MainLayout>with SingleTickerProviderStateMi
     );
   }
 
-  Widget _buildCustomTab(String label, bool isMobile) {
-    return Tab(
-      height: 38,
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          const SizedBox(width: 8),
-          Text(
-            label,
-            style: TextStyle(
-              fontWeight: FontWeight.bold,
-              fontSize: isMobile ? 12 : 14,
-              fontFamily: 'sans-serif',
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
   Widget _buildNewApplicationTab() {
     if (_selectedResidency == null) {
       return ResidencyLayout(onResidencySelected: _handleResidencySelection);
@@ -275,126 +259,309 @@ class _MainLayoutState extends State<MainLayout>with SingleTickerProviderStateMi
     );
   }
 
+  Future<void> _handleTabTap(int index) async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setInt('last_active_tab', index);
+    if (index == 1 || index == 2) {
+      await _resumeOrStartNew(index);
+    } else {
+      setState(() => _selectedResidency = null);
+    }
+    _tabController.animateTo(index);
+    if (mounted) setState(() {});
+  }
+
+  Widget _buildExpandableMenuItem(String title, int index) {
+    final isActive = _tabController.index == index;
+    return InkWell(
+      onTap: () {
+        _handleTabTap(index);
+        setState(() {
+          _isMenuExpanded = false;
+        });
+      },
+      child: Container(
+        height: 48,
+        padding: const EdgeInsets.symmetric(horizontal: 16),
+        color: isActive ? const Color.fromRGBO(9, 156, 244, 1) : Colors.white,
+        alignment: Alignment.centerLeft,
+        child: Text(
+          title,
+          style: TextStyle(
+            fontWeight: FontWeight.bold,
+            color: isActive ? Colors.white : Colors.black87,
+            fontFamily: 'sans-serif',
+          ),
+        ),
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     final double screenWidth = MediaQuery.of(context).size.width;
     final bool isMobile = screenWidth < 900;
 
+    // Auto-close menu if we resize back to desktop
+    if (!isMobile && _isMenuExpanded) {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (mounted) setState(() => _isMenuExpanded = false);
+      });
+    }
+
     return Scaffold(
       backgroundColor: const Color(0xFFF8F9FA),
-      appBar: AppBar(
-        elevation: 0,
-        backgroundColor: Colors.white,
-        toolbarHeight: 0,
-        bottom: PreferredSize(
-          preferredSize: const Size.fromHeight(210),
-          child: Container(
-            color: Colors.white,
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                const NationalHeader(),
-                const Divider(
-                  height: 1,
-                  thickness: 1,
-                  color: Color(0xFFE5E7EB),
-                ),
-                const SizedBox(height: 10),
-                Padding(
-                  padding: EdgeInsets.only(
-                    right: isMobile ? 12 : 60,
-                    left: isMobile ? 12 : 60,
-                    bottom: 10,
-                  ),
-                  child: Row(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      Expanded(
-                        child: Align(
-                          alignment: Alignment.center,
-                          child: SizedBox(
-                            width: isMobile ? 500 : 700,
-                            child: TabBar(
-                              controller: _tabController,
-                              isScrollable: isMobile,
-                              dividerColor: Colors.transparent,
-                              labelColor: Colors.blue.shade800,
-                              unselectedLabelColor: Colors.black87,
-                              labelStyle: const TextStyle(
-                                fontWeight: FontWeight.bold,
-                                fontFamily: 'sans-serif',
-                              ),
-                              unselectedLabelStyle: const TextStyle(
-                                fontWeight: FontWeight.w500,
-                              ),
-                              indicatorColor: Colors.blue.shade800,
-                              labelPadding: const EdgeInsets.symmetric(
-                                horizontal: 4,
-                              ),
-                              tabs: [
-                                _buildCustomTab("Home", isMobile),
-                                _buildCustomTab("New Application", isMobile),
-                                _buildCustomTab("Update Application", isMobile),
-                                _buildCustomTab("FAQs", isMobile),
-                                _buildCustomTab("QrScan", isMobile),
-                              ],
-                              onTap: (index) async {
-                                final prefs =
-                                    await SharedPreferences.getInstance();
-                                await prefs.setInt('last_active_tab', index);
-
-                                if (index == 1 || index == 2) {
-                                  await _resumeOrStartNew(index);
-                                } else {
-                                  setState(() => _selectedResidency = null);
-                                }
-                              },
-                            ),
+      body: _isSessionLoading
+          ? const Center(child: CircularProgressIndicator())
+          : NestedScrollView(
+              headerSliverBuilder: (context, innerBoxIsScrolled) {
+                return [
+                  SliverToBoxAdapter(
+                    child: Column(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Container(
+                          height: 44,
+                          width: double.infinity,
+                          decoration: const BoxDecoration(
+                            color: Color.fromRGBO(9, 156, 244, 1),
                           ),
                         ),
-                      ),
-                    ],
+                        const NationalHeader(),
+                        const Divider(
+                          height: 1,
+                          thickness: 1,
+                          color: Color(0xFFE5E7EB),
+                        ),
+                      ],
+                    ),
                   ),
-                ),
-              ],
+                  SliverPersistentHeader(
+                    pinned: true,
+                    delegate: _StickyNavBarDelegate(
+                      currentHeight: isMobile
+                          ? (_isMenuExpanded ? 50.0 + (5 * 48.0) : 50.0)
+                          : 50.0,
+
+                      child: Column(
+                        children: [
+                          Container(
+                            color: Colors.white,
+                            height: 50.0,
+                            padding: EdgeInsets.only(
+                              right: isMobile ? 16 : 70,
+                              left: isMobile ? 16 : 70,
+                              top: 5,
+                              bottom: 5,
+                            ),
+                            child: Row(
+                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                              children: [
+                                if (isMobile)
+                                  IconButton(
+                                    padding: EdgeInsets.zero,
+                                    alignment: Alignment.centerLeft,
+                                    icon: Icon(
+                                      _isMenuExpanded
+                                          ? Icons.close
+                                          : Icons.menu,
+                                      color: Colors.black87,
+                                    ),
+                                    onPressed: () {
+                                      setState(() {
+                                        _isMenuExpanded = !_isMenuExpanded;
+                                      });
+                                    },
+                                  )
+                                else
+                                  Row(
+                                    children: [
+                                      _CustomTabItem(
+                                        label: "Home",
+                                        isActive: _tabController.index == 0,
+                                        onTap: () => _handleTabTap(0),
+                                      ),
+                                      const SizedBox(width: 5),
+                                      _CustomTabItem(
+                                        label: "New Application",
+                                        isActive: _tabController.index == 1,
+                                        onTap: () => _handleTabTap(1),
+                                      ),
+                                      const SizedBox(width: 5),
+                                      _CustomTabItem(
+                                        label: "Update Application",
+                                        isActive: _tabController.index == 2,
+                                        onTap: () => _handleTabTap(2),
+                                      ),
+                                      const SizedBox(width: 5),
+                                      _CustomTabItem(
+                                        label: "FAQs",
+                                        isActive: _tabController.index == 3,
+                                        onTap: () => _handleTabTap(3),
+                                      ),
+                                      const SizedBox(width: 5),
+                                      _CustomTabItem(
+                                        label: "QrScan",
+                                        isActive: _tabController.index == 4,
+                                        onTap: () => _handleTabTap(4),
+                                      ),
+                                    ],
+                                  ),
+                                const Text(
+                                  "Official Myanmar eArrival Card",
+                                  style: TextStyle(
+                                    fontSize: 16,
+                                    fontWeight: FontWeight.bold,
+                                    color: Color.fromRGBO(9, 156, 244, 1),
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                          if (isMobile && _isMenuExpanded)
+                            Expanded(
+                              child: Container(
+                                color: Colors.white,
+                                child: Column(
+                                  mainAxisSize: MainAxisSize.min,
+                                  children: [
+                                    _buildExpandableMenuItem("Home", 0),
+                                    _buildExpandableMenuItem(
+                                      "New Application",
+                                      1,
+                                    ),
+                                    _buildExpandableMenuItem(
+                                      "Update Application",
+                                      2,
+                                    ),
+                                    _buildExpandableMenuItem("FAQs", 3),
+                                    _buildExpandableMenuItem("QrScan", 4),
+                                  ],
+                                ),
+                              ),
+                            ),
+                        ],
+                      ),
+                    ),
+                  ),
+                ];
+              },
+              body: TabBarView(
+                controller: _tabController,
+                children: [
+                  // 1. HOME PAGE
+                  Home(
+                    onStartNewApplication: () async {
+                      final prefs = await SharedPreferences.getInstance();
+                      await prefs.setInt('last_active_tab', 1);
+                      await _resumeOrStartNew(1);
+                      _tabController.animateTo(1);
+                    },
+                    onStartUpdateWorkflow: () async {
+                      final prefs = await SharedPreferences.getInstance();
+                      await prefs.setInt('last_active_tab', 2);
+                      await _resumeOrStartNew(2);
+                      _tabController.animateTo(2);
+                    },
+                  ),
+                  // 2. NEW APPLICATION OR RESIDENCY
+                  _buildNewApplicationTab(),
+                  // 3. UPDATE APPLICATION PAGE
+                  _buildUpdateApplicationTab(),
+                  // 4. FAQS PAGE
+                  FAQS(onReturnHome: () => _tabController.animateTo(0)),
+                  // 5. QR SCAN PAGE
+                  const QrScanPage(),
+                ],
+              ),
+            ),
+    );
+  }
+}
+
+class _StickyNavBarDelegate extends SliverPersistentHeaderDelegate {
+  final Widget child;
+  final double currentHeight;
+
+  _StickyNavBarDelegate({required this.child, required this.currentHeight});
+
+  @override
+  Widget build(
+    BuildContext context,
+    double shrinkOffset,
+    bool overlapsContent,
+  ) {
+    return Container(color: Colors.white, height: currentHeight, child: child);
+  }
+
+  @override
+  double get maxExtent => currentHeight;
+
+  @override
+  double get minExtent => currentHeight;
+
+  @override
+  bool shouldRebuild(covariant SliverPersistentHeaderDelegate oldDelegate) =>
+      true;
+}
+
+class _CustomTabItem extends StatefulWidget {
+  final String label;
+  final bool isActive;
+  final VoidCallback onTap;
+
+  const _CustomTabItem({
+    required this.label,
+    required this.isActive,
+    required this.onTap,
+  });
+
+  @override
+  State<_CustomTabItem> createState() => _CustomTabItemState();
+}
+
+class _CustomTabItemState extends State<_CustomTabItem> {
+  bool _isHovered = false;
+
+  @override
+  Widget build(BuildContext context) {
+    return MouseRegion(
+      onEnter: (_) => setState(() => _isHovered = true),
+      onExit: (_) => setState(() => _isHovered = false),
+      cursor: SystemMouseCursors.click,
+      child: GestureDetector(
+        onTap: widget.onTap,
+        child: Container(
+          height: double.infinity,
+          padding: const EdgeInsets.symmetric(horizontal: 16),
+          alignment: Alignment.center,
+          decoration: BoxDecoration(
+            color: widget.isActive
+                ? const Color.fromRGBO(9, 156, 244, 1)
+                : Colors.transparent,
+            border: Border(
+              bottom: BorderSide(
+                color: _isHovered && !widget.isActive
+                    ? const Color.fromRGBO(1, 156, 244, 1)
+                    : Colors.transparent,
+                width: 3.0,
+              ),
+            ),
+            borderRadius: BorderRadius.circular(3),
+          ),
+          child: Text(
+            widget.label,
+            style: TextStyle(
+              fontWeight: FontWeight.bold,
+              fontSize: 14,
+              fontFamily: 'sans-serif',
+              color: widget.isActive
+                  ? Colors.white
+                  : (_isHovered ? const Color(0xFFB4CEF5) : Colors.black87),
             ),
           ),
         ),
       ),
-      body: _isSessionLoading
-          ? const Center(child: CircularProgressIndicator())
-          : TabBarView(
-              controller: _tabController,
-              children: [
-                // 1. HOME PAGE
-                Home(
-                  onStartNewApplication: () async {
-                    final prefs = await SharedPreferences.getInstance();
-                    await prefs.setInt('last_active_tab', 1);
-                    await _resumeOrStartNew(1);
-                    _tabController.animateTo(1);
-                  },
-                  onStartUpdateWorkflow: () async {
-                    final prefs = await SharedPreferences.getInstance();
-                    await prefs.setInt('last_active_tab', 2);
-                    await _resumeOrStartNew(2);
-                    _tabController.animateTo(2);
-                  },
-                ),
-
-                // 2. NEW APPLICATION OR RESIDENCY
-                _buildNewApplicationTab(),
-
-                // 3. UPDATE APPLICATION PAGE
-                _buildUpdateApplicationTab(),
-
-                // 4. FAQS PAGE
-                FAQS(onReturnHome: () => _tabController.animateTo(0)),
-
-                // 5. QR SCAN PAGE
-                const QrScanPage(),
-              ],
-            ),
     );
   }
 }

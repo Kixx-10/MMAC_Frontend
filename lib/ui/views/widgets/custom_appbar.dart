@@ -25,7 +25,7 @@ PreferredSizeWidget customAppBar({
     backgroundColor: const Color.fromARGB(255, 255, 255, 255),
     elevation: 1,
     automaticallyImplyLeading: false, //no back arrow
-    leading: const SizedBox(width: 20), //left padding
+    leading: const SizedBox(width: 10), //left padding
     title: const Text(
       "eArrival",
       style: TextStyle(color: Color(0xFF0B355B), fontWeight: FontWeight.bold),

@@ -77,11 +77,12 @@ class _HeroBanner extends StatelessWidget {
     return Container(
       width: double.infinity,
       decoration: const BoxDecoration(
-        gradient: LinearGradient(
-          colors: [Color(0xff004578), Color(0xff0078D4), Color(0xff2B88D8)],
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-        ),
+        // gradient: LinearGradient(
+        //   colors: [Color(0xff004578), Color(0xff0078D4), Color(0xff2B88D8)],
+        //   begin: Alignment.topLeft,
+        //   end: Alignment.bottomRight,
+        // ),
+        color: Color.fromRGBO(9, 156, 244, 1),
       ),
       padding: EdgeInsets.symmetric(
         vertical: isMobile ? 40.0 : 60.0,
@@ -344,7 +345,6 @@ class _StepCard extends StatelessWidget {
   Widget build(BuildContext context) {
     return Container(
       width: double.infinity,
-      padding: const EdgeInsets.all(24),
       decoration: BoxDecoration(
         color: Colors.white,
         border: Border.all(color: const Color(0xffE5E7EB)),
@@ -361,37 +361,52 @@ class _StepCard extends StatelessWidget {
         mainAxisAlignment: MainAxisAlignment.center,
         crossAxisAlignment: CrossAxisAlignment.center,
         children: [
-          CircleAvatar(
-            radius: 22,
-            backgroundColor: const Color(0xffE1F0FA),
-            child: Text(
-              stepNumber,
-              style: const TextStyle(
-                color: Color(0xff0078D4),
-                fontWeight: FontWeight.bold,
-                fontSize: 16,
-              ),
+          Container(
+            width: double.infinity,
+            height: 5,
+            decoration: BoxDecoration(
+              color: const Color.fromRGBO(9, 156, 244, 1),
+              borderRadius: BorderRadius.circular(12),
             ),
           ),
-          const SizedBox(height: 16),
-          Text(
-            title,
-            style: const TextStyle(
-              fontWeight: FontWeight.bold,
-              fontSize: 15,
-              color: Color(0xff1A1A1A),
+          Container(
+            padding: const EdgeInsets.all(24),
+            child: Column(
+              children: [
+                CircleAvatar(
+                  radius: 22,
+                  backgroundColor: const Color(0xffE1F0FA),
+                  child: Text(
+                    stepNumber,
+                    style: const TextStyle(
+                      color: Color(0xff0078D4),
+                      fontWeight: FontWeight.bold,
+                      fontSize: 16,
+                    ),
+                  ),
+                ),
+                const SizedBox(height: 16),
+                Text(
+                  title,
+                  style: const TextStyle(
+                    fontWeight: FontWeight.bold,
+                    fontSize: 15,
+                    color: Color(0xff1A1A1A),
+                  ),
+                  textAlign: TextAlign.center,
+                ),
+                const SizedBox(height: 10),
+                Text(
+                  description,
+                  style: const TextStyle(
+                    color: Color(0xff6B7280),
+                    fontSize: 13,
+                    height: 1.4,
+                  ),
+                  textAlign: TextAlign.center,
+                ),
+              ],
             ),
-            textAlign: TextAlign.center,
-          ),
-          const SizedBox(height: 10),
-          Text(
-            description,
-            style: const TextStyle(
-              color: Color(0xff6B7280),
-              fontSize: 13,
-              height: 1.4,
-            ),
-            textAlign: TextAlign.center,
           ),
         ],
       ),
