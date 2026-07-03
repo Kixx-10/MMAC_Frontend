@@ -36,6 +36,9 @@ class SubmitRequestModel {
   final String? stateRegionName;
   final String? districtName;
   final String? townshipName;
+  final String? uid;
+  final String? occupation;
+  final String? placeOfBirth;
 
   SubmitRequestModel({
     required this.fullName,
@@ -73,6 +76,9 @@ class SubmitRequestModel {
     required this.previousCity,
     required this.healthDeclaration,
     required this.digitalDeclarations,
+    this.uid,
+    this.occupation,
+    this.placeOfBirth,
   });
 
   Map<String, dynamic> toJson() {
@@ -109,6 +115,9 @@ class SubmitRequestModel {
       'fatherName': (fatherName == null || fatherName!.trim().isEmpty)
           ? null
           : fatherName,
+      'uid': uid,
+      'occupation': occupation,
+      'placeOfBirth': placeOfBirth,
     };
   }
 
@@ -150,6 +159,9 @@ class SubmitRequestModel {
       stateRegionName: json['stateRegionName'],
       districtName: json['districtName'],
       townshipName: json['townshipName'],
+      uid: json['uid'],
+      occupation: json['occupation'],
+      placeOfBirth: json['placeOfBirth'],
     );
   }
 }

@@ -62,6 +62,8 @@ class _IdentificationFormLayoutState
   String? _selectedNrcType;
 
   final TextEditingController _nrcNumberController = TextEditingController();
+  final TextEditingController _firstNameController = TextEditingController();
+  final TextEditingController _lastNameController = TextEditingController();
   final List<Map<String, String>> _nrcTypes = [
     {"code": "နိုင်", "label": "နိုင်"},
     {"code": "ဧည့်", "label": "ဧည့်"},
@@ -78,6 +80,15 @@ class _IdentificationFormLayoutState
     super.initState();
     widget.onReady(this);
 
+    final fullName = widget.controllers['fullName']?.text.trim() ?? '';
+    final nameParts = fullName.split(' ');
+    if (nameParts.length > 1) {
+      _lastNameController.text = nameParts.first;
+      _firstNameController.text = nameParts.sublist(1).join(' ');
+    } else {
+      _firstNameController.text = fullName;
+    }
+
     _selectedNrcStateCode = widget.values['nrcStateCode'];
     _selectedTownshipCode = widget.values['nrcTownshipCode'];
     _selectedNrcType = widget.values['nrcTypeCode'];
@@ -92,10 +103,20 @@ class _IdentificationFormLayoutState
   void dispose() {
     _nrcNumberController.dispose();
     _mobileNumberController.dispose();
+    _firstNameController.dispose();
+    _lastNameController.dispose();
     super.dispose();
   }
 
   // DATA RESOLUTION & MUTATION METHODS
+  void _onNameChanged() {
+    final first = _firstNameController.text.trim();
+    final last = _lastNameController.text.trim();
+    final full = "$first $last".trim();
+    widget.controllers['fullName']?.text = full;
+    widget.onValueChanged('fullName', full);
+  }
+
   void _initializeMobileNumber() {
     final String existingMobile = widget.controllers['mobile']?.text ?? '';
     String? currentCode = widget.values['mobileCode'];
@@ -327,19 +348,158 @@ class _IdentificationFormLayoutState
     );
   }
 
-  Widget _buildGenderField(double lw) {
-    return CustomDropdownField(
-      label: "Gender",
-      hint: "Select Gender",
+  Widget _buildFirstNameField(double lw) {
+    return CustomTextField(
+      label: "first name * (in passport)",
+      controller: _firstNameController,
+      filter: [
+        FilteringTextInputFormatter.singleLineFormatter,
+        UpperCaseTextFormatter(),
+        LengthLimitingTextInputFormatter(25),
+      ],
+      maxLength: 25,
       labelWidth: lw,
-      dialogWidth: 200,
-      dialogHeight: 100,
-      value: widget.values['gender'],
-      items: const ["Male", "Female"],
-      showSearch: false,
-      onChanged: (value) => widget.onValueChanged('gender', value),
-      validator: (value) => value == null ? "Please select gender" : null,
+      readonly: widget.isUpdateMode,
+      validator: (v) => FormValidators.required(v, 'First Name'),
+      onChanged: (value) => _onNameChanged(),
+    );
+  }
+
+  Widget _buildLastNameField(double lw) {
+    return CustomTextField(
+      label: "last name (in passport)",
+      controller: _lastNameController,
+      filter: [
+        FilteringTextInputFormatter.singleLineFormatter,
+        UpperCaseTextFormatter(),
+        LengthLimitingTextInputFormatter(25),
+      ],
+      maxLength: 25,
+      labelWidth: lw,
+      readonly: widget.isUpdateMode,
+      validator: (v) => FormValidators.required(v, 'Last Name'),
+      onChanged: (value) => _onNameChanged(),
+    );
+  }
+
+  Widget _buildUidField(double lw) {
+    return CustomTextField(
+      label: "UID",
+      hintText: "10 max (optional)",
+      controller: widget.controllers['uid']!,
+      maxLength: 10,
+      labelWidth: lw,
+      isRequired: false,
+      readonly: widget.isUpdateMode,
+      onChanged: (value) => widget.onValueChanged('uid', value),
+    );
+  }
+
+  Widget _buildOccupationField(double lw) {
+    return CustomTextField(
+      label: "Occupation",
+      controller: widget.controllers['occupation']!,
+      maxLength: 50,
+      labelWidth: lw,
+      readonly: widget.isUpdateMode,
+      validator: (v) => FormValidators.required(v, 'Occupation'),
+      onChanged: (value) => widget.onValueChanged('occupation', value),
+    );
+  }
+
+  Widget _buildPlaceOfBirthField(double lw, List<String> availableCountry) {
+    return CustomDropdownField(
+      label: "Country/ Place of birth",
+      hint: "Select Country",
+      labelWidth: lw,
+      dialogWidth: 250,
+      dialogHeight: 250,
+      value: widget.values['placeOfBirth'],
+      items: availableCountry,
+      validator: (v) => FormValidators.requiredDropdown(v, 'Place of birth'),
+      onChanged: (value) => widget.onValueChanged('placeOfBirth', value),
       spacing: 8,
+    );
+  }
+
+  Widget _buildGenderField(double lw) {
+    return FormField<String>(
+      initialValue: widget.values['gender'],
+      validator: (value) => value == null ? "Please select gender" : null,
+      builder: (FormFieldState<String> state) {
+        return Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Padding(
+              padding: const EdgeInsets.only(bottom: 8),
+              child: RichText(
+                text: const TextSpan(
+                  text: "Gender",
+                  style: TextStyle(
+                    fontSize: 14,
+                    fontWeight: FontWeight.w500,
+                    color: Colors.black87,
+                    fontFamily: 'sans-serif',
+                  ),
+                  children: [
+                    TextSpan(
+                      text: ' *',
+                      style: TextStyle(
+                        color: Colors.red,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+            Row(
+              children: [
+                _buildRadioButton("Male", state),
+                const SizedBox(width: 24),
+                _buildRadioButton("Female", state),
+              ],
+            ),
+            if (state.hasError)
+              Padding(
+                padding: const EdgeInsets.only(top: 6),
+                child: Text(
+                  state.errorText!,
+                  style: const TextStyle(fontSize: 12, color: Colors.red),
+                ),
+              ),
+          ],
+        );
+      },
+    );
+  }
+
+  Widget _buildRadioButton(String title, FormFieldState<String> state) {
+    return InkWell(
+      onTap: () {
+        state.didChange(title);
+        widget.onValueChanged('gender', title);
+      },
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Radio<String>(
+            value: title,
+            groupValue: state.value,
+            onChanged: (value) {
+              state.didChange(value);
+              widget.onValueChanged('gender', value);
+            },
+            activeColor: Colors.blue,
+            materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
+          ),
+          const SizedBox(width: 4),
+          Text(
+            title,
+            style: const TextStyle(fontSize: 14, color: Colors.black87),
+          ),
+        ],
+      ),
     );
   }
 
@@ -423,26 +583,60 @@ class _IdentificationFormLayoutState
     );
   }
 
-  Widget _buildEmailField(double lw, bool isMyanmar) {
+  Widget _buildFatherNameField(double lw) {
+    final isMyanmar =
+        widget.values['country'] == 'Myanmar' ||
+        widget.values['country'] == 'MMR';
     return CustomTextField(
-      label: "Email",
-      controller: widget.controllers['email']!,
+      label: "Father Name",
+      filter: [UpperCaseTextFormatter()],
+      maxLength: 50,
+      controller: widget.controllers['fatherName']!,
       labelWidth: lw,
-      maxLength: 30,
-      readonly: widget.isUpdateMode && isMyanmar,
-      validator: FormValidators.email,
-      onChanged: (value) => widget.onValueChanged('email', value),
+      validator: (v) => FormValidators.fatherName(v, isMyanmar: isMyanmar),
+      onChanged: (value) => widget.onValueChanged('fatherName', value),
+    );
+  }
+
+  Widget _buildEmailField(double lw, bool isMyanmar) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        CustomTextField(
+          label: isMyanmar ? "Personal E-mail" : "Email",
+          controller: widget.controllers['email']!,
+          labelWidth: lw,
+          maxLength: 30,
+          readonly: widget.isUpdateMode && isMyanmar,
+          validator: FormValidators.email,
+          onChanged: (value) => widget.onValueChanged('email', value),
+          suffixIcon: isMyanmar
+              ? const HoverInfoIcon(
+                  message:
+                      "Upon successful submission of your Myanmar e-Arrival form, a confirmation email containing your QR code PDF will be sent automatically to the email address provided. Please ensure that your email address is active and spelled correctly before submitting. If you do not receive the email within a few minutes, please check your spam or junk folder. (Note: Email addresses are not case-sensitive).",
+                )
+              : null,
+        ),
+        if (isMyanmar)
+          Padding(
+            padding: EdgeInsets.only(
+              top: 4,
+              left: MediaQuery.of(context).size.width < 500 ? 0 : lw + 8,
+            ),
+            child: const Text(
+              "Active Email needed to reply",
+              style: TextStyle(color: Colors.grey, fontSize: 12),
+            ),
+          ),
+      ],
     );
   }
 
   Widget _buildMobileField(double lw, bool isMobileWidth) {
     final mobileLabel = Padding(
-      padding: EdgeInsets.only(
-        top: isMobileWidth ? 0 : 14,
-        bottom: isMobileWidth ? 8 : 0,
-      ),
+      padding: const EdgeInsets.only(bottom: 8),
       child: SizedBox(
-        width: isMobileWidth ? double.infinity : lw,
+        width: double.infinity,
         child: RichText(
           text: const TextSpan(
             text: "Mobile Number",
@@ -581,19 +775,9 @@ class _IdentificationFormLayoutState
       ],
     );
 
-    if (isMobileWidth) {
-      return Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [mobileLabel, mobileInputs],
-      );
-    }
-    return Row(
+    return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        mobileLabel,
-        const SizedBox(width: 8),
-        Expanded(child: mobileInputs),
-      ],
+      children: [mobileLabel, mobileInputs],
     );
   }
 
@@ -733,7 +917,7 @@ class _IdentificationFormLayoutState
     );
   }
 
-  Widget _buildNrcAndFatherNameSection(
+  Widget _buildNrcField(
     double lw,
     bool isDesktop,
     bool isMobileWidth,
@@ -849,23 +1033,10 @@ class _IdentificationFormLayoutState
           );
         }
 
-        Widget fatherNameWidget = CustomTextField(
-          label: "Father Name",
-          filter: [UpperCaseTextFormatter()],
-          maxLength: 50,
-          controller: widget.controllers['fatherName']!,
-          labelWidth: lw,
-          validator: (v) => FormValidators.fatherName(v, isMyanmar: isMyanmar),
-          onChanged: (value) => widget.onValueChanged('fatherName', value),
-        );
-
         final nrcLabel = Padding(
-          padding: EdgeInsets.only(
-            top: isNrcRowDesktop ? 12 : 0,
-            bottom: isNrcRowDesktop ? 0 : 8,
-          ),
+          padding: const EdgeInsets.only(bottom: 8),
           child: SizedBox(
-            width: isNrcRowDesktop ? lw : double.infinity,
+            width: double.infinity,
             child: RichText(
               text: const TextSpan(
                 text: "NRC",
@@ -885,46 +1056,10 @@ class _IdentificationFormLayoutState
           ),
         );
 
-        if (isDesktop) {
-          return Row(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Expanded(
-                child: Row(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    nrcLabel,
-                    const SizedBox(width: 8),
-                    Expanded(child: nrcFields()),
-                  ],
-                ),
-              ),
-              const SizedBox(width: 40),
-              Expanded(child: fatherNameWidget),
-            ],
-          );
-        } else {
-          return Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              isNrcRowDesktop
-                  ? Row(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        nrcLabel,
-                        const SizedBox(width: 8),
-                        Expanded(child: nrcFields()),
-                      ],
-                    )
-                  : Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [nrcLabel, nrcFields()],
-                    ),
-              const SizedBox(height: 16),
-              fatherNameWidget,
-            ],
-          );
-        }
+        return Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [nrcLabel, nrcFields()],
+        );
       },
     );
   }
@@ -984,7 +1119,37 @@ class _IdentificationFormLayoutState
 
     if (isMyanmar) {
       formLayout = [
-        _buildPair(_buildFullNameField(lw), _buildGenderField(lw), isDesktop),
+        Row(
+          children: [
+            Container(
+              width: 5,
+              height: 30,
+              decoration: const BoxDecoration(
+                color: Color.fromRGBO(1, 156, 244, 1),
+              ),
+            ),
+            const SizedBox(width: 20),
+            const Text(
+              "Personal Information",
+              style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+            ),
+          ],
+        ),
+        const Divider(),
+        const SizedBox(height: 16),
+        _buildPair(
+          _buildLastNameField(lw),
+          _buildFirstNameField(lw),
+          isDesktop,
+        ),
+        const SizedBox(height: 20),
+        _buildPair(_buildGenderField(lw), _buildFatherNameField(lw), isDesktop),
+        const SizedBox(height: 20),
+        _buildPair(
+          _buildNrcField(lw, isDesktop, isMobileWidth, isMyanmar),
+          _buildUidField(lw),
+          isDesktop,
+        ),
         const SizedBox(height: 20),
         _buildPair(
           _buildDateOfBirthField(lw),
@@ -992,14 +1157,67 @@ class _IdentificationFormLayoutState
           isDesktop,
         ),
         const SizedBox(height: 20),
-        _buildNrcAndFatherNameSection(lw, isDesktop, isMobileWidth, isMyanmar),
-        const SizedBox(height: 20),
+        isDesktop
+            ? Row(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Expanded(child: _buildOccupationField(lw)),
+                  const SizedBox(width: 40),
+                  const Expanded(child: SizedBox.shrink()),
+                ],
+              )
+            : _buildOccupationField(lw),
+        const SizedBox(height: 24),
+
+        Row(
+          children: [
+            Container(
+              height: 30,
+              width: 5,
+              decoration: const BoxDecoration(
+                color: Color.fromRGBO(1, 156, 244, 1),
+              ),
+            ),
+            const SizedBox(width: 10),
+            const Text(
+              "Contact and location",
+              style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+            ),
+          ],
+        ),
+        const Divider(),
+        const SizedBox(height: 16),
         _buildPair(
-          _buildEmailField(lw, isMyanmar),
-          _buildMobileField(lw, isMobileWidth),
+          _buildPlaceOfBirthField(lw, availableCountry),
+          _buildAddressField(lw),
           isDesktop,
         ),
         const SizedBox(height: 20),
+        _buildPair(
+          _buildMobileField(lw, isMobileWidth),
+          _buildEmailField(lw, isMyanmar),
+          isDesktop,
+        ),
+        const SizedBox(height: 24),
+
+        Row(
+          children: [
+            Container(
+              height: 30,
+              width: 5,
+              decoration: const BoxDecoration(
+                color: Color.fromRGBO(1, 156, 244, 1),
+              ),
+            ),
+            const SizedBox(width: 10),
+            const Text(
+              "Passport Information",
+              style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+            ),
+          ],
+        ),
+        const Divider(),
+        const SizedBox(height: 16),
         _buildPair(
           _buildPassportNumberField(lw, isMyanmar),
           _buildIssuedCountryField(lw),
@@ -1011,19 +1229,6 @@ class _IdentificationFormLayoutState
           _buildExpiryDateField(lw, isMyanmar),
           isDesktop,
         ),
-        const SizedBox(height: 20),
-        isDesktop
-            ? Row(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Expanded(child: _buildAddressField(lw)),
-                  const SizedBox(width: 40),
-                  const Expanded(
-                    child: SizedBox.shrink(),
-                  ), // Invisible placeholder
-                ],
-              )
-            : _buildAddressField(lw),
       ];
     } else {
       formLayout = [
@@ -1068,6 +1273,112 @@ class _IdentificationFormLayoutState
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: formLayout,
+      ),
+    );
+  }
+}
+
+class HoverInfoIcon extends StatefulWidget {
+  final String message;
+  const HoverInfoIcon({super.key, required this.message});
+
+  @override
+  State<HoverInfoIcon> createState() => _HoverInfoIconState();
+}
+
+class _HoverInfoIconState extends State<HoverInfoIcon> {
+  final LayerLink _layerLink = LayerLink();
+  OverlayEntry? _overlayEntry;
+  bool _isHovered = false;
+
+  void _showOverlay() {
+    if (_overlayEntry != null) return;
+    final RenderBox? renderBox = context.findRenderObject() as RenderBox?;
+    if (renderBox == null) return;
+
+    _overlayEntry = OverlayEntry(
+      builder: (context) {
+        // Adjust for mobile vs desktop width
+        final screenWidth = MediaQuery.of(context).size.width;
+        final bool isMobile = screenWidth < 500;
+        return Positioned(
+          width: isMobile ? screenWidth * 0.8 : 350,
+          child: CompositedTransformFollower(
+            link: _layerLink,
+            showWhenUnlinked: false,
+            // Anchor the popup's left edge to the target's right edge
+            targetAnchor: Alignment.centerRight,
+            followerAnchor: isMobile
+                ? Alignment.topCenter
+                : Alignment.centerLeft,
+            offset: isMobile ? const Offset(0, 24) : const Offset(8, 0),
+            child: Material(
+              elevation: 4,
+              color: Colors.grey.shade800,
+              borderRadius: BorderRadius.circular(8),
+              child: Padding(
+                padding: const EdgeInsets.all(12),
+                child: Text(
+                  widget.message,
+                  style: const TextStyle(
+                    color: Colors.white,
+                    fontSize: 13,
+                    height: 1.4,
+                  ),
+                ),
+              ),
+            ),
+          ),
+        );
+      },
+    );
+    Overlay.of(context).insert(_overlayEntry!);
+  }
+
+  void _hideOverlay() {
+    _overlayEntry?.remove();
+    _overlayEntry = null;
+  }
+
+  @override
+  void dispose() {
+    _hideOverlay();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return CompositedTransformTarget(
+      link: _layerLink,
+      child: MouseRegion(
+        onEnter: (_) {
+          setState(() => _isHovered = true);
+          _showOverlay();
+        },
+        onExit: (_) {
+          setState(() => _isHovered = false);
+          _hideOverlay();
+        },
+        child: GestureDetector(
+          onTap: () {
+            if (_overlayEntry == null) {
+              _showOverlay();
+              Future.delayed(const Duration(seconds: 4), () {
+                if (mounted) _hideOverlay();
+              });
+            } else {
+              _hideOverlay();
+            }
+          },
+          child: Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 8),
+            child: Icon(
+              Icons.info_outline,
+              color: _isHovered ? Colors.blue.shade700 : Colors.blue,
+              size: 20,
+            ),
+          ),
+        ),
       ),
     );
   }
