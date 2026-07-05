@@ -27,7 +27,7 @@ class FormProgressBar extends StatelessWidget {
 
     return Center(
       child: ConstrainedBox(
-        constraints: const BoxConstraints(maxWidth: 500),
+        constraints: const BoxConstraints(maxWidth: 800),
         child: Padding(
           padding: EdgeInsets.symmetric(horizontal: isMobile ? 10 : 20),
           child: Row(

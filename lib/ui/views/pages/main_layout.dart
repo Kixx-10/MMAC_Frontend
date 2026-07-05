@@ -410,7 +410,7 @@ class _MainLayoutState extends State<MainLayout>
                                 const Text(
                                   "Official Myanmar eArrival Card",
                                   style: TextStyle(
-                                    fontSize: 16,
+                                    fontSize: 20,
                                     fontWeight: FontWeight.bold,
                                     color: Color.fromRGBO(9, 156, 244, 1),
                                   ),
