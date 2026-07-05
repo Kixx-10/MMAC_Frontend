@@ -122,19 +122,19 @@ class _HeroBanner extends StatelessWidget {
             children: [
               ElevatedButton.icon(
                 onPressed: () => onStartNewApplication?.call(),
-                icon: const Icon(Icons.add_circle_outline, size: 18),
+                icon: const Icon(Icons.add_circle_outline, size: 20),
                 label: const Text('New Application'),
                 style: ElevatedButton.styleFrom(
                   backgroundColor: Colors.white,
                   foregroundColor: const Color(0xff0078D4),
                   elevation: 0,
                   padding: const EdgeInsets.symmetric(
-                    horizontal: 24,
-                    vertical: 16,
+                    horizontal: 28,
+                    vertical: 18,
                   ),
                   textStyle: const TextStyle(
                     fontWeight: FontWeight.bold,
-                    fontSize: 14,
+                    fontSize: 16,
                   ),
                   shape: RoundedRectangleBorder(
                     borderRadius: BorderRadius.circular(8),
@@ -143,7 +143,7 @@ class _HeroBanner extends StatelessWidget {
               ),
               ElevatedButton.icon(
                 onPressed: () => onStartUpdateWorkflow?.call(),
-                icon: const Icon(Icons.edit_note, size: 18),
+                icon: const Icon(Icons.edit_note, size: 20),
                 label: const Text('Update Application'),
                 style: ElevatedButton.styleFrom(
                   backgroundColor: Colors.white.withOpacity(0.15),
@@ -151,12 +151,12 @@ class _HeroBanner extends StatelessWidget {
                   elevation: 0,
                   side: const BorderSide(color: Colors.white30),
                   padding: const EdgeInsets.symmetric(
-                    horizontal: 24,
-                    vertical: 16,
+                    horizontal: 28,
+                    vertical: 18,
                   ),
                   textStyle: const TextStyle(
                     fontWeight: FontWeight.bold,
-                    fontSize: 14,
+                    fontSize: 16,
                   ),
                   shape: RoundedRectangleBorder(
                     borderRadius: BorderRadius.circular(8),

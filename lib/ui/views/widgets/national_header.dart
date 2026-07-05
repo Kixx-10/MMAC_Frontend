@@ -9,12 +9,12 @@ class NationalHeader extends StatelessWidget {
   Widget build(BuildContext context) {
     final double screenWidth = MediaQuery.of(context).size.width;
     final bool isTablet = screenWidth > 551;
-    // Mobile/Tablet breakpoint
+    final bool isMobileNavBar = screenWidth < 900;
 
     return Container(
       padding: EdgeInsets.only(
-        left: isTablet ? 50.0 : 0,
-        right: isTablet ? 50.0 : 0,
+        left: isMobileNavBar ? 16.0 : 70.0,
+        right: isMobileNavBar ? 16.0 : 70.0,
       ),
       height: 145,
       decoration: BoxDecoration(
@@ -30,14 +30,14 @@ class NationalHeader extends StatelessWidget {
       child: Transform.translate(
         offset: const Offset(0, -12),
         child: Row(
-          mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
             // Left Coat of Arms Logo Container
             if (isTablet)
               Container(
-                margin: const EdgeInsets.only(left: 20, top: 10),
-                height: 90,
-                width: 90,
+                margin: const EdgeInsets.only(top: 10),
+                height: 80,
+                width: 80,
                 decoration: const BoxDecoration(
                   image: DecorationImage(
                     image: AssetImage('assets/images/department_logo.jpg'),
@@ -71,7 +71,7 @@ class NationalHeader extends StatelessWidget {
                   Text(
                     "The Republic of the Union of Myanmar",
                     style: TextStyle(
-                      fontSize: isTablet ? 16 : 12,
+                      fontSize: isTablet ? 14 : 10,
                       fontWeight: FontWeight.bold,
                       color: const Color.fromRGBO(119, 119, 119, 1),
                     ),
@@ -81,7 +81,7 @@ class NationalHeader extends StatelessWidget {
                   Text(
                     "MINISTRY OF IMMIGRATION AND POPULATION",
                     style: TextStyle(
-                      fontSize: isTablet ? 10 : 16,
+                      fontSize: isTablet ? 18 : 14,
                       fontWeight: FontWeight.bold,
                       color: Colors.black,
                     ),
@@ -94,7 +94,7 @@ class NationalHeader extends StatelessWidget {
             // Right Flag Element
             if (isTablet)
               Container(
-                margin: const EdgeInsets.only(right: 20, top: 10),
+                margin: const EdgeInsets.only(top: 10),
                 height: 60,
                 width: 90,
                 decoration: const BoxDecoration(

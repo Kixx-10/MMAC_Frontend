@@ -436,8 +436,8 @@ class _IdentificationFormLayoutState
                 text: const TextSpan(
                   text: "Gender",
                   style: TextStyle(
-                    fontSize: 14,
-                    fontWeight: FontWeight.w500,
+                    fontSize: 16,
+                    fontWeight: FontWeight.bold,
                     color: Colors.black87,
                     fontFamily: 'sans-serif',
                   ),
@@ -641,8 +641,8 @@ class _IdentificationFormLayoutState
           text: const TextSpan(
             text: "Mobile Number",
             style: TextStyle(
-              fontSize: 14,
-              fontWeight: FontWeight.w500,
+              fontSize: 16,
+              fontWeight: FontWeight.bold,
               color: Colors.black87,
               fontFamily: 'sans-serif',
             ),
@@ -1041,8 +1041,8 @@ class _IdentificationFormLayoutState
               text: const TextSpan(
                 text: "NRC",
                 style: TextStyle(
-                  fontSize: 14,
-                  fontWeight: FontWeight.w500,
+                  fontSize: 16,
+                  fontWeight: FontWeight.bold,
                   color: Colors.black87,
                 ),
                 children: [
@@ -1131,7 +1131,7 @@ class _IdentificationFormLayoutState
             const SizedBox(width: 20),
             const Text(
               "Personal Information",
-              style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+              style: TextStyle(fontSize: 20, fontWeight: FontWeight.w800),
             ),
           ],
         ),
@@ -1181,7 +1181,7 @@ class _IdentificationFormLayoutState
             const SizedBox(width: 10),
             const Text(
               "Contact and location",
-              style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+              style: TextStyle(fontSize: 20, fontWeight: FontWeight.w800),
             ),
           ],
         ),
@@ -1212,7 +1212,7 @@ class _IdentificationFormLayoutState
             const SizedBox(width: 10),
             const Text(
               "Passport Information",
-              style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+              style: TextStyle(fontSize: 20, fontWeight: FontWeight.w800),
             ),
           ],
         ),
@@ -1306,12 +1306,12 @@ class _HoverInfoIconState extends State<HoverInfoIcon> {
           child: CompositedTransformFollower(
             link: _layerLink,
             showWhenUnlinked: false,
-            // Anchor the popup's left edge to the target's right edge
-            targetAnchor: Alignment.centerRight,
+            // Anchor the popup's bottom edge to the target's top edge
+            targetAnchor: Alignment.topCenter,
             followerAnchor: isMobile
-                ? Alignment.topCenter
-                : Alignment.centerLeft,
-            offset: isMobile ? const Offset(0, 24) : const Offset(8, 0),
+                ? Alignment.bottomCenter
+                : Alignment.bottomCenter,
+            offset: isMobile ? const Offset(0, -24) : const Offset(0, -8),
             child: Material(
               elevation: 4,
               color: Colors.grey.shade800,

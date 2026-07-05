@@ -134,8 +134,8 @@ class _CustomDropdownFieldState extends State<CustomDropdownField> {
           text: TextSpan(
             text: widget.label,
             style: const TextStyle(
-              fontSize: 14,
-              fontWeight: FontWeight.w500,
+              fontSize: 16,
+              fontWeight: FontWeight.bold,
               color: Colors.black87,
             ),
             children: const [
@@ -245,7 +245,6 @@ class _CustomDropdownFieldState extends State<CustomDropdownField> {
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         lableWidget,
-        SizedBox(height: widget.spacing),
         dropDownField,
       ],
     );

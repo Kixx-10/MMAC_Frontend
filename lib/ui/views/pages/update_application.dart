@@ -701,7 +701,7 @@ class _UpdateApplicationState extends ConsumerState<UpdateApplication> {
       padding: const EdgeInsets.all(16),
       child: Center(
         child: Container(
-          constraints: const BoxConstraints(maxWidth: 800),
+          constraints: const BoxConstraints(maxWidth: 1100),
           padding: const EdgeInsets.all(24),
           decoration: BoxDecoration(
             color: Colors.white,
@@ -765,13 +765,22 @@ class _UpdateApplicationState extends ConsumerState<UpdateApplication> {
       width: double.infinity,
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: const Color(0xFFFAF2F2),
-        border: Border.all(color: Colors.white),
-        borderRadius: BorderRadius.circular(4),
+        color: Colors.white,
+        border: Border.all(color: Colors.grey.shade300),
+        borderRadius: BorderRadius.circular(8),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
+          const Text(
+            'NOTICE',
+            style: TextStyle(
+              fontSize: 18,
+              fontWeight: FontWeight.bold,
+              color: Colors.black87,
+            ),
+          ),
+          const SizedBox(height: 12),
           const Text(
             'Please note that you will not be able to update the following information:',
             style: TextStyle(fontSize: 15, color: Colors.black87),

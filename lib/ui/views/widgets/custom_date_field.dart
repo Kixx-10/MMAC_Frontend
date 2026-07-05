@@ -253,8 +253,8 @@ class _CustomDateFieldState extends State<CustomDateField> {
           text: TextSpan(
             text: widget.label,
             style: const TextStyle(
-              fontSize: 14,
-              fontWeight: FontWeight.w500,
+              fontSize: 16,
+              fontWeight: FontWeight.bold,
               color: Colors.black87,
               fontFamily: 'sans-serif',
             ),
@@ -336,7 +336,7 @@ class _CustomDateFieldState extends State<CustomDateField> {
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
-      children: [lableWidget, const SizedBox(height: 8), dateField],
+      children: [lableWidget, dateField],
     );
   }
 }
