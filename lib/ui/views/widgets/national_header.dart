@@ -9,13 +9,9 @@ class NationalHeader extends StatelessWidget {
   Widget build(BuildContext context) {
     final double screenWidth = MediaQuery.of(context).size.width;
     final bool isTablet = screenWidth > 551;
-    final bool isMobileNavBar = screenWidth < 900;
+
 
     return Container(
-      padding: EdgeInsets.only(
-        left: isMobileNavBar ? 16.0 : 70.0,
-        right: isMobileNavBar ? 16.0 : 70.0,
-      ),
       height: 145,
       decoration: BoxDecoration(
         color: Colors.white,
@@ -29,7 +25,12 @@ class NationalHeader extends StatelessWidget {
       ),
       child: Transform.translate(
         offset: const Offset(0, -12),
-        child: Row(
+        child: Center(
+          child: ConstrainedBox(
+            constraints: const BoxConstraints(maxWidth: 1100),
+            child: Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 16),
+              child: Row(
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
             // Left Coat of Arms Logo Container
@@ -106,6 +107,9 @@ class NationalHeader extends StatelessWidget {
                 ),
               ),
           ],
+        ),
+            ),
+          ),
         ),
       ),
     );
