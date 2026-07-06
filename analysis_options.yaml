@@ -6,6 +6,7 @@ analyzer:
     unused_local_variable: warning
     unused_element: warning
     dead_code: warning
+    deprecated_member_use: ignore
 
 linter:
   rules:
