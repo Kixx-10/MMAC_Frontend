@@ -16,6 +16,7 @@ import '../../widgets/mobile_code_search_dialog.dart';
 
 abstract class IdentificationFormLayoutInterface {
   bool validate();
+  List<String> getValidationErrors();
 }
 
 class IdentificationFormLayout extends ConsumerStatefulWidget {
@@ -316,6 +317,74 @@ class _IdentificationFormLayoutState
         widget.values['issuedDate'] != null;
   }
 
+  @override
+  List<String> getValidationErrors() {
+    List<String> errors = [];
+    final bool isMyanmar =
+        widget.values['country'] == 'Myanmar' ||
+        widget.values['country'] == 'MMR';
+
+    // Text Fields
+    if (widget.controllers['fullName']?.text.trim().isEmpty ?? true) {
+      errors.add("Full Name is missing.");
+    }
+    if (widget.controllers['email']?.text.trim().isEmpty ?? true) {
+      errors.add("Email is missing.");
+    } else if (FormValidators.email(widget.controllers['email']!.text.trim()) != null) {
+      errors.add("Email is invalid.");
+    }
+    if (widget.controllers['mobile']?.text.trim().isEmpty ?? true) {
+      errors.add("Contact number is missing.");
+    }
+    
+    // Dropdowns
+    if (widget.values['gender'] == null) errors.add("Gender is missing.");
+    if (widget.values['dateOfBirth'] == null) errors.add("Date of Birth is missing.");
+    if (widget.values['placeOfBirth'] == null) errors.add("Country/Place of birth is missing.");
+
+    // NRC (if Myanmar)
+    if (isMyanmar) {
+      if (_selectedNrcStateCode == null ||
+          _selectedTownshipCode == null ||
+          _selectedNrcType == null ||
+          _nrcNumberController.text.trim().length != 6) {
+        errors.add("NRC information is incomplete or invalid.");
+      }
+    }
+
+    // Passport info
+    if (widget.controllers['passportNumber']?.text.trim().isEmpty ?? true) {
+      errors.add("Passport Number is missing.");
+    }
+    if (widget.values['issuedCountry'] == null) {
+      errors.add("Issued Country is missing.");
+    }
+    if (widget.values['issuedDate'] == null) {
+      errors.add("Passport Issue Date is missing.");
+    }
+    if (widget.values['expiryDate'] == null) {
+      errors.add("Passport Expiry Date is missing.");
+    } else {
+      final String? passportExpiryError = FormValidators.passportExpiry(
+        expiryDate: widget.values['expiryDate'],
+        issuedDate: widget.values['issuedDate'],
+        isMyanmar: isMyanmar,
+      );
+      if (passportExpiryError != null) {
+        errors.add(passportExpiryError);
+      }
+    }
+
+    if (widget.controllers['address']?.text.trim().isEmpty ?? true) {
+      errors.add("Address is missing.");
+    }
+    if (widget.controllers['occupation']?.text.trim().isEmpty ?? true) {
+      errors.add("Occupation is missing.");
+    }
+
+    return errors;
+  }
+
   // WIDGET BUILDERS
   Widget _buildPair(Widget a, Widget b, bool isDesktop) {
     if (isDesktop) {
@@ -350,7 +419,7 @@ class _IdentificationFormLayoutState
 
   Widget _buildFirstNameField(double lw) {
     return CustomTextField(
-      label: "first name * (in passport)",
+      label: "First name * (in passport)",
       controller: _firstNameController,
       filter: [
         FilteringTextInputFormatter.singleLineFormatter,
@@ -367,7 +436,7 @@ class _IdentificationFormLayoutState
 
   Widget _buildLastNameField(double lw) {
     return CustomTextField(
-      label: "last name (in passport)",
+      label: "Last name (in passport)",
       controller: _lastNameController,
       filter: [
         FilteringTextInputFormatter.singleLineFormatter,
@@ -610,24 +679,21 @@ class _IdentificationFormLayoutState
           readonly: widget.isUpdateMode && isMyanmar,
           validator: FormValidators.email,
           onChanged: (value) => widget.onValueChanged('email', value),
-          suffixIcon: isMyanmar
-              ? const HoverInfoIcon(
-                  message:
-                      "Upon successful submission of your Myanmar e-Arrival form, a confirmation email containing your QR code PDF will be sent automatically to the email address provided. Please ensure that your email address is active and spelled correctly before submitting. If you do not receive the email within a few minutes, please check your spam or junk folder. (Note: Email addresses are not case-sensitive).",
-                )
-              : null,
-        ),
-        if (isMyanmar)
-          Padding(
-            padding: EdgeInsets.only(
-              top: 4,
-              left: MediaQuery.of(context).size.width < 500 ? 0 : lw + 8,
-            ),
-            child: const Text(
-              "Active Email needed to reply",
-              style: TextStyle(color: Colors.grey, fontSize: 12),
-            ),
+          suffixIcon: const HoverInfoIcon(
+            message:
+                "Upon successful submission of your Myanmar e-Arrival form, a confirmation email containing your QR code PDF will be sent automatically to the email address provided. Please ensure that your email address is active and spelled correctly before submitting. If you do not receive the email within a few minutes, please check your spam or junk folder. (Note: Email addresses are not case-sensitive).",
           ),
+        ),
+        Padding(
+          padding: EdgeInsets.only(
+            top: 4,
+            left: MediaQuery.of(context).size.width < 500 ? 0 : lw + 8,
+          ),
+          child: const Text(
+            "Active Email needed to reply",
+            style: TextStyle(color: Colors.grey, fontSize: 12),
+          ),
+        ),
       ],
     );
   }
@@ -639,7 +705,7 @@ class _IdentificationFormLayoutState
         width: double.infinity,
         child: RichText(
           text: const TextSpan(
-            text: "Mobile Number",
+            text: "Contact",
             style: TextStyle(
               fontSize: 16,
               fontWeight: FontWeight.bold,
@@ -828,7 +894,7 @@ class _IdentificationFormLayoutState
     DateTime minIssuedDate = dob ?? DateTime(1900);
 
     return CustomDateField(
-      label: "Issued Date",
+      label: "Passport Issued Date",
       value: widget.values['issuedDate'],
       labelWidth: lw,
       firstDate: minIssuedDate,
@@ -860,7 +926,7 @@ class _IdentificationFormLayoutState
     }
 
     return CustomDateField(
-      label: "Expiry Date",
+      label: "Passport Expiry Date",
       value: widget.values['expiryDate'],
       labelWidth: lw,
       firstDate: minExpiryDate,
@@ -879,7 +945,7 @@ class _IdentificationFormLayoutState
 
   Widget _buildIssuedCountryField(double lw) {
     return CustomDropdownField(
-      label: "Issued Country",
+      label: "Passport Issued Country",
       value: widget.values['issuedCountry'],
       hint: "Select Country",
       items: _countryNameList,
@@ -1088,6 +1154,31 @@ class _IdentificationFormLayoutState
     );
   }
 
+  Widget _buildSectionHeader(String title) {
+    return Column(
+      children: [
+        Row(
+          children: [
+            Container(
+              height: 30,
+              width: 5,
+              decoration: const BoxDecoration(
+                color: Color.fromRGBO(1, 156, 244, 1),
+              ),
+            ),
+            const SizedBox(width: 10),
+            Text(
+              title,
+              style: const TextStyle(fontSize: 20, fontWeight: FontWeight.w800),
+            ),
+          ],
+        ),
+        const Divider(),
+        const SizedBox(height: 16),
+      ],
+    );
+  }
+
   // MAIN BUILD METHOD
   @override
   Widget build(BuildContext context) {
@@ -1119,24 +1210,7 @@ class _IdentificationFormLayoutState
 
     if (isMyanmar) {
       formLayout = [
-        Row(
-          children: [
-            Container(
-              width: 5,
-              height: 30,
-              decoration: const BoxDecoration(
-                color: Color.fromRGBO(1, 156, 244, 1),
-              ),
-            ),
-            const SizedBox(width: 20),
-            const Text(
-              "Personal Information",
-              style: TextStyle(fontSize: 20, fontWeight: FontWeight.w800),
-            ),
-          ],
-        ),
-        const Divider(),
-        const SizedBox(height: 16),
+        _buildSectionHeader("Personal Information"),
         _buildPair(
           _buildLastNameField(lw),
           _buildFirstNameField(lw),
@@ -1169,24 +1243,7 @@ class _IdentificationFormLayoutState
             : _buildOccupationField(lw),
         const SizedBox(height: 24),
 
-        Row(
-          children: [
-            Container(
-              height: 30,
-              width: 5,
-              decoration: const BoxDecoration(
-                color: Color.fromRGBO(1, 156, 244, 1),
-              ),
-            ),
-            const SizedBox(width: 10),
-            const Text(
-              "Contact and location",
-              style: TextStyle(fontSize: 20, fontWeight: FontWeight.w800),
-            ),
-          ],
-        ),
-        const Divider(),
-        const SizedBox(height: 16),
+        _buildSectionHeader("Contact and location"),
         _buildPair(
           _buildPlaceOfBirthField(lw, availableCountry),
           _buildAddressField(lw),
@@ -1200,24 +1257,7 @@ class _IdentificationFormLayoutState
         ),
         const SizedBox(height: 24),
 
-        Row(
-          children: [
-            Container(
-              height: 30,
-              width: 5,
-              decoration: const BoxDecoration(
-                color: Color.fromRGBO(1, 156, 244, 1),
-              ),
-            ),
-            const SizedBox(width: 10),
-            const Text(
-              "Passport Information",
-              style: TextStyle(fontSize: 20, fontWeight: FontWeight.w800),
-            ),
-          ],
-        ),
-        const Divider(),
-        const SizedBox(height: 16),
+        _buildSectionHeader("Passport Information"),
         _buildPair(
           _buildPassportNumberField(lw, isMyanmar),
           _buildIssuedCountryField(lw),
@@ -1232,7 +1272,14 @@ class _IdentificationFormLayoutState
       ];
     } else {
       formLayout = [
-        _buildPair(_buildFullNameField(lw), _buildGenderField(lw), isDesktop),
+        _buildSectionHeader("Personal Information"),
+        _buildPair(
+          _buildLastNameField(lw),
+          _buildFirstNameField(lw),
+          isDesktop,
+        ),
+        const SizedBox(height: 20),
+        _buildPair(_buildGenderField(lw), _buildVisaNumberField(lw), isDesktop),
         const SizedBox(height: 20),
         _buildPair(
           _buildDateOfBirthField(lw),
@@ -1240,12 +1287,33 @@ class _IdentificationFormLayoutState
           isDesktop,
         ),
         const SizedBox(height: 20),
+        isDesktop
+            ? Row(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Expanded(child: _buildOccupationField(lw)),
+                  const SizedBox(width: 40),
+                  const Expanded(child: SizedBox.shrink()),
+                ],
+              )
+            : _buildOccupationField(lw),
+        const SizedBox(height: 24),
+
+        _buildSectionHeader("Contact and location"),
         _buildPair(
-          _buildEmailField(lw, isMyanmar),
-          _buildMobileField(lw, isMobileWidth),
+          _buildPlaceOfBirthField(lw, availableCountry),
+          _buildAddressField(lw),
           isDesktop,
         ),
         const SizedBox(height: 20),
+        _buildPair(
+          _buildMobileField(lw, isMobileWidth),
+          _buildEmailField(lw, isMyanmar),
+          isDesktop,
+        ),
+        const SizedBox(height: 24),
+
+        _buildSectionHeader("Passport Information"),
         _buildPair(
           _buildPassportNumberField(lw, isMyanmar),
           _buildIssuedCountryField(lw),
@@ -1255,12 +1323,6 @@ class _IdentificationFormLayoutState
         _buildPair(
           _buildIssuedDateField(lw),
           _buildExpiryDateField(lw, isMyanmar),
-          isDesktop,
-        ),
-        const SizedBox(height: 20),
-        _buildPair(
-          _buildAddressField(lw),
-          _buildVisaNumberField(lw),
           isDesktop,
         ),
       ];

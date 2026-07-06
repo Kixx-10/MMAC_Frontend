@@ -60,7 +60,6 @@ class _NewApplicationState extends ConsumerState<NewApplication>
     'fatherName': TextEditingController(),
     'uid': TextEditingController(),
     'occupation': TextEditingController(),
-    'placeOfBirth': TextEditingController(),
   };
 
   final Map<String, TextEditingController> _step2Controllers = {
@@ -102,6 +101,7 @@ class _NewApplicationState extends ConsumerState<NewApplication>
     'nrcTownshipCode': null,
     'nrcTypeCode': null,
     'nrcRawNumber': null,
+    'placeOfBirth': null,
   };
 
   // ---------------------------------------------------------------------------
@@ -386,6 +386,11 @@ class _NewApplicationState extends ConsumerState<NewApplication>
       if (_step1Interface!.validate()) {
         setState(() => currentStep++);
         _saveCurrentSession();
+      } else {
+        final errors = _step1Interface!.getValidationErrors();
+        if (errors.isNotEmpty) {
+          _showErrorDialog("Please fill in the following required fields:\n\n• ${errors.join('\n• ')}");
+        }
       }
     } else if (currentStep == 2) {
       if (_step2Interface == null)
@@ -393,6 +398,11 @@ class _NewApplicationState extends ConsumerState<NewApplication>
       if (_step2Interface!.validate()) {
         setState(() => currentStep++);
         _saveCurrentSession();
+      } else {
+        final errors = _step2Interface!.getValidationErrors();
+        if (errors.isNotEmpty) {
+          _showErrorDialog("Please fill in the following required fields:\n\n• ${errors.join('\n• ')}");
+        }
       }
     } else if (currentStep == 3) {
       if (_step3Interface == null)
@@ -400,6 +410,11 @@ class _NewApplicationState extends ConsumerState<NewApplication>
       if (_step3Interface!.validate()) {
         setState(() => currentStep++);
         _saveCurrentSession();
+      } else {
+        final errors = _step3Interface!.getValidationErrors();
+        if (errors.isNotEmpty) {
+          _showErrorDialog("Please fill in the following required fields:\n\n• ${errors.join('\n• ')}");
+        }
       }
     } else if (currentStep == 4) {
       if (!_isStep1DataValid())
@@ -463,7 +478,7 @@ class _NewApplicationState extends ConsumerState<NewApplication>
       digitalDeclarations: _safeString(_formValues['carryingRestricted']),
       uid: _text('uid'),
       occupation: _text('occupation'),
-      placeOfBirth: _text('placeOfBirth'),
+      placeOfBirth: _safeString(_formValues['placeOfBirth']),
     );
   }
 
@@ -473,7 +488,7 @@ class _NewApplicationState extends ConsumerState<NewApplication>
     try {
       final requestModel = _buildRequestModel();
       log("PAYLOAD: ${jsonEncode(requestModel.toJson())}", name: "Submit");
-      
+
       final response = await ref
           .read(submitControllerProvider.notifier)
           .submitApplicationAction(requestModel);
@@ -553,9 +568,9 @@ class _NewApplicationState extends ConsumerState<NewApplication>
   String get _sectionTitle {
     switch (currentStep) {
       case 1:
-        return _isMyanmar ? "" : "Personal Information";
+        return "";
       case 2:
-        return "Itinerary";
+        return "";
       case 3:
         return "Declarations";
       case 4:

@@ -348,74 +348,88 @@ class _MainLayoutState extends State<MainLayout>
                           Container(
                             color: Colors.white,
                             height: 50.0,
-                            padding: EdgeInsets.only(
-                              right: isMobile ? 16 : 70,
-                              left: isMobile ? 16 : 70,
-                              top: 5,
-                              bottom: 5,
-                            ),
-                            child: Row(
-                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                              children: [
-                                if (isMobile)
-                                  IconButton(
-                                    padding: EdgeInsets.zero,
-                                    alignment: Alignment.centerLeft,
-                                    icon: Icon(
-                                      _isMenuExpanded
-                                          ? Icons.close
-                                          : Icons.menu,
-                                      color: Colors.black87,
-                                    ),
-                                    onPressed: () {
-                                      setState(() {
-                                        _isMenuExpanded = !_isMenuExpanded;
-                                      });
-                                    },
-                                  )
-                                else
-                                  Row(
+                            child: Center(
+                              child: ConstrainedBox(
+                                constraints: const BoxConstraints(
+                                  maxWidth: 1100,
+                                ),
+                                child: Padding(
+                                  padding: const EdgeInsets.symmetric(
+                                    horizontal: 16,
+                                    vertical: 5,
+                                  ),
+                                  child: Row(
+                                    mainAxisAlignment:
+                                        MainAxisAlignment.spaceBetween,
                                     children: [
-                                      _CustomTabItem(
-                                        label: "Home",
-                                        isActive: _tabController.index == 0,
-                                        onTap: () => _handleTabTap(0),
-                                      ),
-                                      const SizedBox(width: 5),
-                                      _CustomTabItem(
-                                        label: "New Application",
-                                        isActive: _tabController.index == 1,
-                                        onTap: () => _handleTabTap(1),
-                                      ),
-                                      const SizedBox(width: 5),
-                                      _CustomTabItem(
-                                        label: "Update Application",
-                                        isActive: _tabController.index == 2,
-                                        onTap: () => _handleTabTap(2),
-                                      ),
-                                      const SizedBox(width: 5),
-                                      _CustomTabItem(
-                                        label: "FAQs",
-                                        isActive: _tabController.index == 3,
-                                        onTap: () => _handleTabTap(3),
-                                      ),
-                                      const SizedBox(width: 5),
-                                      _CustomTabItem(
-                                        label: "QrScan",
-                                        isActive: _tabController.index == 4,
-                                        onTap: () => _handleTabTap(4),
+                                      if (isMobile)
+                                        IconButton(
+                                          padding: EdgeInsets.zero,
+                                          alignment: Alignment.centerLeft,
+                                          icon: Icon(
+                                            _isMenuExpanded
+                                                ? Icons.close
+                                                : Icons.menu,
+                                            color: Colors.black87,
+                                          ),
+                                          onPressed: () {
+                                            setState(() {
+                                              _isMenuExpanded =
+                                                  !_isMenuExpanded;
+                                            });
+                                          },
+                                        )
+                                      else
+                                        Row(
+                                          children: [
+                                            _CustomTabItem(
+                                              label: "Home",
+                                              isActive:
+                                                  _tabController.index == 0,
+                                              onTap: () => _handleTabTap(0),
+                                            ),
+                                            const SizedBox(width: 5),
+                                            _CustomTabItem(
+                                              label: "New Application",
+                                              isActive:
+                                                  _tabController.index == 1,
+                                              onTap: () => _handleTabTap(1),
+                                            ),
+                                            const SizedBox(width: 5),
+                                            _CustomTabItem(
+                                              label: "Update Application",
+                                              isActive:
+                                                  _tabController.index == 2,
+                                              onTap: () => _handleTabTap(2),
+                                            ),
+                                            const SizedBox(width: 5),
+                                            _CustomTabItem(
+                                              label: "FAQs",
+                                              isActive:
+                                                  _tabController.index == 3,
+                                              onTap: () => _handleTabTap(3),
+                                            ),
+                                            const SizedBox(width: 5),
+                                            _CustomTabItem(
+                                              label: "QrScan",
+                                              isActive:
+                                                  _tabController.index == 4,
+                                              onTap: () => _handleTabTap(4),
+                                            ),
+                                          ],
+                                        ),
+                                      const Text(
+                                        "Official Myanmar eArrival Card",
+                                        style: TextStyle(
+                                          fontSize: 20,
+                                          fontWeight: FontWeight.bold,
+                                          color: Color.fromRGBO(9, 156, 244, 1),
+                                        ),
                                       ),
                                     ],
                                   ),
-                                const Text(
-                                  "Official Myanmar eArrival Card",
-                                  style: TextStyle(
-                                    fontSize: 20,
-                                    fontWeight: FontWeight.bold,
-                                    color: Color.fromRGBO(9, 156, 244, 1),
-                                  ),
                                 ),
-                              ],
+                              ),
                             ),
                           ),
                           if (isMobile && _isMenuExpanded)
@@ -425,17 +439,17 @@ class _MainLayoutState extends State<MainLayout>
                                 child: Column(
                                   mainAxisSize: MainAxisSize.min,
                                   children: [
-                                    _buildExpandableMenuItem("Home", 0),
+                                    _buildExpandableMenuItem("HOME", 0),
                                     _buildExpandableMenuItem(
-                                      "New Application",
+                                      "NEW APPLICATION",
                                       1,
                                     ),
                                     _buildExpandableMenuItem(
-                                      "Update Application",
+                                      "UPDATE APPLICATION",
                                       2,
                                     ),
-                                    _buildExpandableMenuItem("FAQs", 3),
-                                    _buildExpandableMenuItem("QrScan", 4),
+                                    _buildExpandableMenuItem("FAQS", 3),
+                                    _buildExpandableMenuItem("QRSCAN", 4),
                                   ],
                                 ),
                               ),

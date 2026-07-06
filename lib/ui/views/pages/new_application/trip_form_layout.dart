@@ -13,6 +13,7 @@ import '../../widgets/custom_date_field.dart';
 
 abstract class TripFormLayoutInterface {
   bool validate();
+  List<String> getValidationErrors();
 }
 
 class TripFormLayout extends ConsumerStatefulWidget {
@@ -143,13 +144,17 @@ class _TripFormLayoutState extends ConsumerState<TripFormLayout>
       if (mounted) {
         setState(() {
           _accommodationList = [
-            "Hotel",
-            "Motel / Inn",
-            "Company Staff Quarter",
-            "Relative's House / Friend's House",
             "Apartment / Condo",
-            "Monastery / Religious Center",
+            "Buddhist university",
+            "Church",
+            "Company Staff Quarter",
             "Embassy Housing",
+            "Factory",
+            "Hotel/Motel/Inn/ Resort",
+            "Meditation Center",
+            "Monastery / Religious Center",
+            "Relative's House / Friend's House",
+            "University Hostel",
             "Others",
           ];
         });
@@ -257,6 +262,44 @@ class _TripFormLayoutState extends ConsumerState<TripFormLayout>
     return _formKey.currentState!.validate();
   }
 
+  @override
+  List<String> getValidationErrors() {
+    List<String> errors = [];
+
+    if (widget.values['modeOfTravel'] == null) {
+      errors.add("Mode of Travel is missing.");
+    }
+    if (widget.values['portOfArrival'] == null) {
+      errors.add("Port of Arrival is missing.");
+    }
+    if (widget.values['arrivalDate'] == null) {
+      errors.add("Estimated Date of Arrival is missing.");
+    }
+    if (_getSafeController('vehicleNumber').text.trim().isEmpty) {
+      errors.add("Vehicle No/Code is missing.");
+    }
+    if (_getSafeController('previousCity').text.trim().isEmpty) {
+      errors.add("Previous City is missing.");
+    }
+    if (widget.values['purposeOfVisit'] == null || widget.values['purposeOfVisit'].toString().isEmpty) {
+      errors.add("Purpose of Visit is missing.");
+    }
+    if (widget.values['accommodation'] == null || widget.values['accommodation'].toString().isEmpty) {
+      errors.add("Accommodation Type is missing.");
+    }
+    if (widget.values['stateRegion'] == null) {
+      errors.add("State/Region is missing.");
+    }
+    if (widget.values['district'] == null) {
+      errors.add("District is missing.");
+    }
+    if (widget.values['township'] == null) {
+      errors.add("Township is missing.");
+    }
+
+    return errors;
+  }
+
   bool get _isOtherPurpose =>
       widget.values['selectedPurposeDropdown'] == "Others" ||
       (widget.values['purposeOfVisit'] != null &&
@@ -307,6 +350,55 @@ class _TripFormLayoutState extends ConsumerState<TripFormLayout>
       );
     }
     return Column(children: [a, const SizedBox(height: 16), b]);
+  }
+
+  Widget _buildTriple(Widget a, Widget b, Widget c, bool isDesktop) {
+    if (isDesktop) {
+      return Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Expanded(child: a),
+          const SizedBox(width: 20),
+          Expanded(child: b),
+          const SizedBox(width: 20),
+          Expanded(child: c),
+        ],
+      );
+    }
+    return Column(
+      children: [
+        a,
+        const SizedBox(height: 16),
+        b,
+        const SizedBox(height: 16),
+        c,
+      ],
+    );
+  }
+
+  Widget _buildSectionHeader(String title) {
+    return Column(
+      children: [
+        Row(
+          children: [
+            Container(
+              height: 30,
+              width: 5,
+              decoration: const BoxDecoration(
+                color: Color.fromRGBO(1, 156, 244, 1),
+              ),
+            ),
+            const SizedBox(width: 10),
+            Text(
+              title,
+              style: const TextStyle(fontSize: 20, fontWeight: FontWeight.w800),
+            ),
+          ],
+        ),
+        const Divider(),
+        const SizedBox(height: 16),
+      ],
+    );
   }
 
   Widget _errorWidget(String message, VoidCallback onRetry) {
@@ -479,20 +571,9 @@ class _TripFormLayoutState extends ConsumerState<TripFormLayout>
     );
   }
 
-  Widget _buildVehicleNameField() {
-    return CustomTextField(
-      label: "Vehicle Name",
-      controller: _getSafeController('vehicleName'),
-      maxLength: 50,
-      filter: [FilteringTextInputFormatter.singleLineFormatter],
-      validator: (v) => FormValidators.required(v, 'Vehicle Name'),
-      onChanged: (v) => widget.onValueChanged('vehicleName', v),
-    );
-  }
-
   Widget _buildVehicleNumberField() {
     return CustomTextField(
-      label: "Vehicle Number",
+      label: "Vehicle No/Code",
       controller: _getSafeController('vehicleNumber'),
       maxLength: 20,
       validator: (v) => FormValidators.required(v, 'Vehicle Number'),
@@ -609,8 +690,9 @@ class _TripFormLayoutState extends ConsumerState<TripFormLayout>
     return CustomTextField(
       label: "Address in Myanmar",
       maxLength: 100,
+      isRequired: false,
       controller: _getSafeController('addressInMyanmar'),
-      validator: (v) => FormValidators.required(v, 'Address in Myanmar'),
+      validator: (v) => null,
       onChanged: (v) => widget.onValueChanged('addressInMyanmar', v),
     );
   }
@@ -734,6 +816,7 @@ class _TripFormLayoutState extends ConsumerState<TripFormLayout>
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
+              _buildSectionHeader("Trip Information"),
               //  Row 1: Arrival Date | Mode of Travel
               _buildPair(
                 _buildArrivalDateField(),
@@ -759,33 +842,27 @@ class _TripFormLayoutState extends ConsumerState<TripFormLayout>
                 ),
               const SizedBox(height: 16),
 
-              //  Row 3: Vehicle Name | Vehicle Number
+              //  Row 3: Vehicle No/Code | Previous City
               _buildPair(
-                _buildVehicleNameField(),
                 _buildVehicleNumberField(),
+                _buildPreviousCityField(),
                 isDesktop,
               ),
-              const SizedBox(height: 16),
+              const SizedBox(height: 24),
 
-              //  Row 4: State/Region | District
-              _buildPair(
+              _buildSectionHeader("Address Detail"),
+              //  Row 4: State/Region | District | Township
+              _buildTriple(
                 _buildStateRegionField(locationState),
                 _buildDistrictField(locationState),
-                isDesktop,
-              ),
-              const SizedBox(height: 16),
-
-              //  Row 5: Township | Address in Myanmar
-              _buildPair(
                 _buildTownshipField(locationState),
-                _buildAddressInMyanmarField(),
                 isDesktop,
               ),
               const SizedBox(height: 16),
 
-              // Row 6: Previous City | Mobile/Accommodation
+              //  Row 5: Address in Myanmar | Accommodation Type (or Mobile)
               _buildPair(
-                _buildPreviousCityField(),
+                _buildAddressInMyanmarField(),
                 isMyanmar
                     ? _buildMobileNumberMMField()
                     : _buildAccommodationField(),

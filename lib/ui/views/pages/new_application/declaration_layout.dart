@@ -5,6 +5,7 @@ import '../../../../utils/form_validators.dart';
 
 abstract class DeclarationLayoutInterface {
   bool validate();
+  List<String> getValidationErrors();
 }
 
 class DeclarationLayout extends StatefulWidget {
@@ -60,6 +61,18 @@ class _DeclarationLayoutState extends State<DeclarationLayout>
     }
 
     return isValid;
+  }
+
+  @override
+  List<String> getValidationErrors() {
+    List<String> errors = [];
+    if (widget.values['hasSymptoms'] == null) {
+      errors.add("Health Declaration is missing.");
+    }
+    if (widget.values['carryingRestricted'] == null) {
+      errors.add("Restricted Goods Declaration is missing.");
+    }
+    return errors;
   }
 
   // ---------------------------------------------------------------------------
