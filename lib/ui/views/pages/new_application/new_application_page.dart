@@ -768,7 +768,7 @@ class _NewApplicationState extends ConsumerState<NewApplication>
 
   Widget _buildFormCard() {
     return Container(
-      width: 1100,
+      width: 1200,
       margin: const EdgeInsets.symmetric(horizontal: 24),
       child: Material(
         color: Colors.white,

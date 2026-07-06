@@ -8,6 +8,7 @@ import 'package:mmac/ui/views/pages/new_application/residency_layout.dart';
 import 'package:mmac/ui/views/pages/faqs.dart';
 import 'package:mmac/ui/views/pages/qr_scan_page.dart';
 import 'package:mmac/ui/views/pages/update_application.dart';
+import 'package:mmac/ui/views/pages/notice_page.dart';
 import 'package:mmac/ui/views/widgets/national_header.dart';
 import 'package:mmac/utils/form_session_service.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -27,6 +28,7 @@ class _MainLayoutState extends State<MainLayout>
   SubmitRequestModel? _fetchedUpdateData;
   bool _isSessionLoading = true;
   bool _isMenuExpanded = false;
+  bool _hasAcceptedNotice = false;
 
   @override
   void initState() {
@@ -217,6 +219,15 @@ class _MainLayoutState extends State<MainLayout>
   }
 
   Widget _buildNewApplicationTab() {
+    if (!_hasAcceptedNotice) {
+      return NoticePage(
+        onAccepted: () {
+          setState(() {
+            _hasAcceptedNotice = true;
+          });
+        },
+      );
+    }
     if (_selectedResidency == null) {
       return ResidencyLayout(onResidencySelected: _handleResidencySelection);
     }
@@ -290,7 +301,6 @@ class _MainLayoutState extends State<MainLayout>
           style: TextStyle(
             fontWeight: FontWeight.bold,
             color: isActive ? Colors.white : Colors.black87,
-            fontFamily: 'sans-serif',
           ),
         ),
       ),
@@ -351,7 +361,7 @@ class _MainLayoutState extends State<MainLayout>
                             child: Center(
                               child: ConstrainedBox(
                                 constraints: const BoxConstraints(
-                                  maxWidth: 1100,
+                                  maxWidth: 1200,
                                 ),
                                 child: Padding(
                                   padding: const EdgeInsets.symmetric(
@@ -568,7 +578,6 @@ class _CustomTabItemState extends State<_CustomTabItem> {
             style: TextStyle(
               fontWeight: FontWeight.bold,
               fontSize: 14,
-              fontFamily: 'sans-serif',
               color: widget.isActive
                   ? Colors.white
                   : (_isHovered ? const Color(0xFFB4CEF5) : Colors.black87),

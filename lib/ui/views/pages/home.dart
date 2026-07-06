@@ -207,7 +207,7 @@ class _ProcessTimeline extends StatelessWidget {
     return Container(
       width: double.infinity,
       padding: const EdgeInsets.symmetric(vertical: 50.0, horizontal: 24.0),
-      constraints: const BoxConstraints(maxWidth: 1100),
+      constraints: const BoxConstraints(maxWidth: 1200),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.center,
         children: [
