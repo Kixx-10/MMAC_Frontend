@@ -1,6 +1,7 @@
 // lib/ui/views/layouts/main_layout.dart
 
 import 'package:flutter/material.dart';
+import 'package:mmac/core/constants/app_fonts.dart';
 import 'package:mmac/data/models/submit_request_model.dart';
 import 'package:mmac/ui/views/pages/home.dart';
 import 'package:mmac/ui/views/pages/new_application/new_application_page.dart';
@@ -431,8 +432,9 @@ class _MainLayoutState extends State<MainLayout>
                                       const Text(
                                         "Official Myanmar eArrival Card",
                                         style: TextStyle(
-                                          fontSize: 20,
-                                          fontWeight: FontWeight.bold,
+                                          fontFamily: AppFonts.primaryFont,
+                                          fontSize: 21,
+                                          fontWeight: FontWeight.w600,
                                           color: Color.fromRGBO(9, 156, 244, 1),
                                         ),
                                       ),

@@ -64,7 +64,6 @@ class _NewApplicationState extends ConsumerState<NewApplication>
 
   final Map<String, TextEditingController> _step2Controllers = {
     'vehicleNumber': TextEditingController(),
-    'vehicleName': TextEditingController(),
     'accommodation': TextEditingController(),
     'addressInMyanmar': TextEditingController(),
     'mobileNumberMM': TextEditingController(),
@@ -382,48 +381,60 @@ class _NewApplicationState extends ConsumerState<NewApplication>
   // ---------------------------------------------------------------------------
   void _nextStep() {
     if (currentStep == 1) {
-      if (_step1Interface == null)
-       { return _showError('Form not ready, please wait.');}
+      if (_step1Interface == null) {
+        return _showError('Form not ready, please wait.');
+      }
       if (_step1Interface!.validate()) {
         setState(() => currentStep++);
         _saveCurrentSession();
       } else {
         final errors = _step1Interface!.getValidationErrors();
         if (errors.isNotEmpty) {
-          _showErrorDialog("Please fill in the following required fields:\n\n• ${errors.join('\n• ')}");
+          _showErrorDialog(
+            "Please fill in the following required fields:\n\n• ${errors.join('\n• ')}",
+          );
         }
       }
     } else if (currentStep == 2) {
-      if (_step2Interface == null)
-        { return _showError('Form not ready, please wait.');}
+      if (_step2Interface == null) {
+        return _showError('Form not ready, please wait.');
+      }
       if (_step2Interface!.validate()) {
         setState(() => currentStep++);
         _saveCurrentSession();
       } else {
         final errors = _step2Interface!.getValidationErrors();
         if (errors.isNotEmpty) {
-          _showErrorDialog("Please fill in the following required fields:\n\n• ${errors.join('\n• ')}");
+          _showErrorDialog(
+            "Please fill in the following required fields:\n\n• ${errors.join('\n• ')}",
+          );
         }
       }
     } else if (currentStep == 3) {
-      if (_step3Interface == null)
-        { return _showError('Form not ready, please wait.');}
+      if (_step3Interface == null) {
+        return _showError('Form not ready, please wait.');
+      }
       if (_step3Interface!.validate()) {
         setState(() => currentStep++);
         _saveCurrentSession();
       } else {
         final errors = _step3Interface!.getValidationErrors();
         if (errors.isNotEmpty) {
-          _showErrorDialog("Please fill in the following required fields:\n\n• ${errors.join('\n• ')}");
+          _showErrorDialog(
+            "Please fill in the following required fields:\n\n• ${errors.join('\n• ')}",
+          );
         }
       }
     } else if (currentStep == 4) {
-      if (!_isStep1DataValid())
-        {return _handleValidationError(1, 'Please check Section 1.');}
-      if (!_isStep2DataValid())
-        {return _handleValidationError(2, 'Please check Section 2.');}
-      if (!_isStep3DataValid())
-        {return _handleValidationError(3, 'Please check Section 3.');}
+      if (!_isStep1DataValid()) {
+        return _handleValidationError(1, 'Please check Section 1.');
+      }
+      if (!_isStep2DataValid()) {
+        return _handleValidationError(2, 'Please check Section 2.');
+      }
+      if (!_isStep3DataValid()) {
+        return _handleValidationError(3, 'Please check Section 3.');
+      }
       _submitApplication();
     }
   }

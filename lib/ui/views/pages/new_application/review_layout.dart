@@ -1,8 +1,9 @@
-// ignore_for_file: deprecated_member_use
+// lib/ui/views/pages/new_application/review_layout.dart
 
 import 'package:flutter/material.dart';
+import 'package:mmac/core/constants/app_fonts.dart';
 
-class ReviewLayout extends StatelessWidget {
+class ReviewLayout extends StatefulWidget {
   final Map<String, TextEditingController> controllers;
   final Map<String, dynamic> values;
   final Widget actionButtons;
@@ -18,8 +19,17 @@ class ReviewLayout extends StatelessWidget {
     required this.isUpdateMode,
   });
 
+  @override
+  State<ReviewLayout> createState() => _ReviewLayoutState();
+}
+
+class _ReviewLayoutState extends State<ReviewLayout> {
+  // 🎯 Track whether the user has agreed to the terms
+  bool _isAgreed = false;
+
   bool get _isMyanmar =>
-      values['country'] == 'Myanmar' || values['country'] == 'MMR';
+      widget.values['country'] == 'Myanmar' ||
+      widget.values['country'] == 'MMR';
 
   String _formatDate(dynamic date) {
     if (date == null) return '—';
@@ -31,7 +41,10 @@ class ReviewLayout extends StatelessWidget {
     return date.toString();
   }
 
+  // ---------------------------------------------------------------------------
   // SECTION BUILDERS
+  // ---------------------------------------------------------------------------
+
   Widget _buildWarningBanner() {
     return Container(
       width: double.infinity,
@@ -84,45 +97,57 @@ class ReviewLayout extends StatelessWidget {
       title: 'Personal Information',
       icon: Icons.person_outline_rounded,
       step: 1,
-      onEditRequested: onEditRequested,
+      onEditRequested: widget.onEditRequested,
       iconColor: Colors.blue.shade700,
       iconBgColor: Colors.blue.shade50,
       children: [
-        _ReviewTile(label: 'Full Name', value: controllers['fullName']?.text),
-        _ReviewTile(label: 'Gender', value: values['gender']),
+        _ReviewTile(
+          label: 'Full Name',
+          value: widget.controllers['fullName']?.text,
+        ),
+        _ReviewTile(label: 'Gender', value: widget.values['gender']),
         _ReviewTile(
           label: 'Date of Birth',
-          value: _formatDate(values['dateOfBirth']),
+          value: _formatDate(widget.values['dateOfBirth']),
         ),
-        _ReviewTile(label: 'Country', value: values['country']),
-        _ReviewTile(label: 'Email', value: controllers['email']?.text),
-        _ReviewTile(label: 'Mobile Number', value: controllers['mobile']?.text),
+        _ReviewTile(label: 'Country', value: widget.values['country']),
+        _ReviewTile(label: 'Email', value: widget.controllers['email']?.text),
+        _ReviewTile(
+          label: 'Mobile Number',
+          value: widget.controllers['mobile']?.text,
+        ),
         if (!_isMyanmar)
           _ReviewTile(
             label: 'Visa Number',
-            value: controllers['visaNumber']?.text,
+            value: widget.controllers['visaNumber']?.text,
           ),
         if (_isMyanmar) ...[
-          _ReviewTile(label: 'NRC', value: controllers['nrc']?.text),
+          _ReviewTile(label: 'NRC', value: widget.controllers['nrc']?.text),
           _ReviewTile(
             label: 'Father Name',
-            value: controllers['fatherName']?.text,
+            value: widget.controllers['fatherName']?.text,
           ),
         ],
         _ReviewTile(
           label: 'Passport Number',
-          value: controllers['passportNumber']?.text,
+          value: widget.controllers['passportNumber']?.text,
         ),
         _ReviewTile(
-          label: 'Issued Date',
-          value: _formatDate(values['issuedDate']),
+          label: 'Passport Issued Date',
+          value: _formatDate(widget.values['issuedDate']),
         ),
         _ReviewTile(
-          label: 'Expiry Date',
-          value: _formatDate(values['expiryDate']),
+          label: 'Passport Expiry Date',
+          value: _formatDate(widget.values['expiryDate']),
         ),
-        _ReviewTile(label: 'Issued Country', value: values['issuedCountry']),
-        _ReviewTile(label: 'Address', value: controllers['address']?.text),
+        _ReviewTile(
+          label: 'Passport Issued Country',
+          value: widget.values['issuedCountry'],
+        ),
+        _ReviewTile(
+          label: 'Place of Residence',
+          value: widget.controllers['address']?.text,
+        ),
       ],
     );
   }
@@ -132,42 +157,51 @@ class ReviewLayout extends StatelessWidget {
       title: 'Trip Details',
       icon: Icons.local_airport_outlined,
       step: 2,
-      onEditRequested: onEditRequested,
+      onEditRequested: widget.onEditRequested,
       iconColor: Colors.blue.shade700,
       iconBgColor: Colors.blue.shade50,
       children: [
         _ReviewTile(
           label: 'Arrival Date',
-          value: _formatDate(values['arrivalDate']),
+          value: _formatDate(widget.values['arrivalDate']),
         ),
-        _ReviewTile(label: 'Mode of Travel', value: values['modeOfTravel']),
-        _ReviewTile(label: 'Port of Arrival', value: values['portOfArrival']),
+        _ReviewTile(
+          label: 'Mode of Travel',
+          value: widget.values['modeOfTravel'],
+        ),
+        _ReviewTile(
+          label: 'Port of Arrival',
+          value: widget.values['portOfArrival'],
+        ),
         _ReviewTile(
           label: 'Vehicle Number',
-          value: controllers['vehicleNumber']?.text,
+          value: widget.controllers['vehicleNumber']?.text,
         ),
-        _ReviewTile(
-          label: 'Vehicle Name',
-          value: controllers['vehicleName']?.text,
-        ),
+
         if (!_isMyanmar)
-          _ReviewTile(label: 'Accommodation', value: values['accommodation']),
+          _ReviewTile(
+            label: 'Accommodation',
+            value: widget.values['accommodation'],
+          ),
         _ReviewTile(
           label: 'Address in Myanmar',
-          value: controllers['addressInMyanmar']?.text,
+          value: widget.controllers['addressInMyanmar']?.text,
         ),
-        _ReviewTile(label: 'State/Region', value: values['stateRegion']),
-        _ReviewTile(label: 'District', value: values['district']),
-        _ReviewTile(label: 'Township', value: values['township']),
+        _ReviewTile(label: 'State/Region', value: widget.values['stateRegion']),
+        _ReviewTile(label: 'District', value: widget.values['district']),
+        _ReviewTile(label: 'Township', value: widget.values['township']),
         if (_isMyanmar)
           _ReviewTile(
             label: 'Mobile (MM)',
-            value: controllers['mobileNumberMM']?.text,
+            value: widget.controllers['mobileNumberMM']?.text,
           ),
-        _ReviewTile(label: 'Purpose of Visit', value: values['purposeOfVisit']),
+        _ReviewTile(
+          label: 'Purpose of Visit',
+          value: widget.values['purposeOfVisit'],
+        ),
         _ReviewTile(
           label: 'Previous City',
-          value: controllers['previousCity']?.text,
+          value: widget.controllers['previousCity']?.text,
         ),
       ],
     );
@@ -178,21 +212,181 @@ class ReviewLayout extends StatelessWidget {
       title: 'Health & Declarations',
       icon: Icons.health_and_safety_outlined,
       step: 3,
-      onEditRequested: onEditRequested,
+      onEditRequested: widget.onEditRequested,
       iconColor: Colors.green.shade700,
       iconBgColor: Colors.green.shade50,
-      isGrid: false, // Declarations use a vertical list, not a grid
+      isGrid: false,
       children: [
         _DeclarationCard(
           label:
               'Fever, cough, sore throat or shortness of breath in past 14 days?',
-          value: values['hasSymptoms'],
+          value: widget.values['hasSymptoms'],
         ),
         _DeclarationCard(
           label: 'Carrying prohibited or restricted items?',
-          value: values['carryingRestricted'],
+          value: widget.values['carryingRestricted'],
         ),
       ],
+    );
+  }
+
+  //Legal Declaration Section
+  Widget _buildLegalDeclarationSection() {
+    return Container(
+      margin: const EdgeInsets.only(bottom: 24),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(16),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.03),
+            blurRadius: 15,
+            offset: const Offset(0, 4),
+          ),
+        ],
+        border: Border.all(
+          color: _isAgreed ? Colors.blue.shade300 : Colors.red.shade200,
+          width: 1.5,
+        ),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          // Header
+          Container(
+            width: double.infinity,
+            padding: const EdgeInsets.all(16),
+            decoration: BoxDecoration(
+              color: _isAgreed ? Colors.blue.shade50 : Colors.red.shade50,
+              borderRadius: const BorderRadius.only(
+                topLeft: Radius.circular(14),
+                topRight: Radius.circular(14),
+              ),
+            ),
+            child: Row(
+              children: [
+                Icon(
+                  Icons.gavel_rounded,
+                  color: _isAgreed ? Colors.blue.shade700 : Colors.red.shade700,
+                  size: 20,
+                ),
+                const SizedBox(width: 12),
+                Text(
+                  'Legal Declaration and Consent',
+                  style: TextStyle(
+                    fontSize: 15,
+                    fontFamily: AppFonts.primaryFont,
+                    fontWeight: FontWeight.bold,
+                    color: _isAgreed
+                        ? Colors.blue.shade900
+                        : Colors.red.shade900,
+                  ),
+                ),
+              ],
+            ),
+          ),
+          const Divider(height: 1, thickness: 1, color: Color(0xFFF5F5F7)),
+
+          // Text Content
+          Padding(
+            padding: const EdgeInsets.all(20),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                const Text(
+                  'I hereby confirm that all information I have provided in this application—including my core identity, contact details, travel itinerary, health status, and customs declarations—is true, accurate, and complete to the best of my knowledge and belief.',
+                  style: TextStyle(
+                    fontSize: 13,
+                    color: Colors.black87,
+                    height: 1.5,
+                  ),
+                ),
+                const SizedBox(height: 12),
+                const Text(
+                  'I fully understand and agree to the following terms:',
+                  style: TextStyle(
+                    fontSize: 13,
+                    fontWeight: FontWeight.bold,
+                    color: Colors.black87,
+                  ),
+                ),
+                const SizedBox(height: 12),
+                _buildLegalBullet(
+                  'Responsibility for Accuracy:',
+                  'I am solely responsible for the truthfulness and accuracy of all submitted data. If any of my travel or itinerary information changes prior to arrival, I pledge to immediately correct it using the "Update Application" function on this platform using my assigned DE Number. I commit to updating any incomplete or incorrect information immediately in accordance with the regulations of the Ministry of Immigration and Population.',
+                ),
+                _buildLegalBullet(
+                  'Submissions on Behalf of Others:',
+                  'If I am filling out and submitting this eArrival declaration on behalf of accompanying travelers or dependents, I affirm that each traveler has clearly reviewed and acknowledged the information I have entered. I certify that I am legally authorized to submit this data on their behalf as if it were submitted by the traveler personally.',
+                ),
+                _buildLegalBullet(
+                  'Penalties for False Statements:',
+                  'I understand that if the information submitted is incomplete, unclear, inaccurate, fraudulent, or conceals material facts, I may be subject to an immediate prohibition on entry into the Republic of the Union of Myanmar, and I will bear full legal and criminal responsibility for the unlawful act.',
+                ),
+                _buildLegalBullet(
+                  'Shared Liability for Dependents:',
+                  'If I submit fraudulent or inaccurate information on behalf of an accompanying traveler, that traveler may also be denied entry. In such cases, both the traveler and I will bear joint legal responsibility under the applicable laws of Myanmar.',
+                ),
+              ],
+            ),
+          ),
+
+          // Checkbox Toggle
+          Container(
+            decoration: BoxDecoration(
+              color: Colors.grey.shade50,
+              borderRadius: const BorderRadius.only(
+                bottomLeft: Radius.circular(14),
+                bottomRight: Radius.circular(14),
+              ),
+              border: Border(top: BorderSide(color: Colors.grey.shade200)),
+            ),
+            child: CheckboxListTile(
+              value: _isAgreed,
+              activeColor: Colors.blue.shade700,
+              contentPadding: const EdgeInsets.symmetric(
+                horizontal: 16,
+                vertical: 8,
+              ),
+              onChanged: (val) {
+                setState(() => _isAgreed = val ?? false);
+              },
+              title: const Text(
+                'I have read, fully understood, and explicitly agree to this declaration, and I accept full legal responsibility.',
+                style: TextStyle(
+                  fontSize: 13,
+                  fontWeight: FontWeight.w600,
+                  color: Colors.black87,
+                ),
+              ),
+              controlAffinity: ListTileControlAffinity.leading,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildLegalBullet(String title, String desc) {
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 12),
+      child: RichText(
+        text: TextSpan(
+          style: const TextStyle(
+            fontSize: 13,
+            color: Colors.black87,
+            height: 1.5,
+            fontFamily: 'sans-serif',
+          ),
+          children: [
+            TextSpan(
+              text: '$title ',
+              style: const TextStyle(fontWeight: FontWeight.bold),
+            ),
+            TextSpan(text: desc),
+          ],
+        ),
+      ),
     );
   }
 
@@ -207,7 +401,43 @@ class ReviewLayout extends StatelessWidget {
         _buildPersonalInfoSection(),
         _buildTripDetailsSection(),
         _buildHealthDeclarationsSection(),
-        actionButtons,
+
+        // 🎯 NEW: Legal Declaration Section added here
+        _buildLegalDeclarationSection(),
+
+        // 🎯 INTERCEPTOR TRICK: Protects the submit button
+        Stack(
+          children: [
+            widget.actionButtons,
+            if (!_isAgreed)
+              Positioned(
+                right: 0,
+                top: 0,
+                bottom: 0,
+                width:
+                    MediaQuery.of(context).size.width *
+                    0.4, // Covers the right side (Submit button)
+                child: GestureDetector(
+                  behavior: HitTestBehavior.opaque,
+                  onTap: () {
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      SnackBar(
+                        content: const Text(
+                          'Please check the agreement box in the Legal Declaration to submit your application.',
+                        ),
+                        backgroundColor: Colors.red.shade600,
+                        behavior: SnackBarBehavior.floating,
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(8),
+                        ),
+                      ),
+                    );
+                  },
+                  child: Container(color: Colors.transparent),
+                ),
+              ),
+          ],
+        ),
       ],
     );
   }
@@ -233,7 +463,7 @@ class _ReviewTile extends StatelessWidget {
         Text(
           label.toUpperCase(),
           style: TextStyle(
-            fontSize: 11,
+            fontSize: 13,
             fontWeight: FontWeight.w600,
             color: Colors.grey.shade500,
             letterSpacing: 0.5,
@@ -243,7 +473,7 @@ class _ReviewTile extends StatelessWidget {
         Text(
           displayValue,
           style: const TextStyle(
-            fontSize: 13,
+            fontSize: 15,
             fontWeight: FontWeight.w600,
             color: Colors.black87,
           ),
