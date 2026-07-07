@@ -17,7 +17,6 @@ class SubmitRequestModel {
   final String modeOfTravelId;
   final String portOfArrivalId;
   final String vehicleNumber;
-  final String vehicleName;
   final String? accommodation;
   final String? visaNo;
   final String? nrc;
@@ -39,6 +38,8 @@ class SubmitRequestModel {
   final String? uid;
   final String? occupation;
   final String? placeOfBirth;
+  final String? healthAttachmentBase64;
+  final String? healthAttachmentName;
 
   SubmitRequestModel({
     required this.fullName,
@@ -64,7 +65,6 @@ class SubmitRequestModel {
     required this.modeOfTravelId,
     required this.portOfArrivalId,
     required this.vehicleNumber,
-    required this.vehicleName,
     this.accommodation,
     required this.addressInMyanmar,
     required this.stateRegionId,
@@ -79,6 +79,8 @@ class SubmitRequestModel {
     this.uid,
     this.occupation,
     this.placeOfBirth,
+    this.healthAttachmentBase64,
+    this.healthAttachmentName,
   });
 
   Map<String, dynamic> toJson() {
@@ -99,7 +101,6 @@ class SubmitRequestModel {
       'modeOfTravelId': int.tryParse(modeOfTravelId) ?? 0,
       'portOfArrivalId': int.tryParse(portOfArrivalId) ?? 0,
       'vehicleNumber': vehicleNumber,
-      'vehicleName': vehicleName,
       'accommodation': accommodation,
       'addressInMyanmar': addressInMyanmar,
       'stateRegionId': int.tryParse(stateRegionId) ?? 0,
@@ -118,6 +119,8 @@ class SubmitRequestModel {
       'uid': uid,
       'occupation': occupation,
       'placeOfBirth': placeOfBirth,
+      'healthAttachmentBase64': healthAttachmentBase64,
+      'healthAttachmentName': healthAttachmentName,
     };
   }
 
@@ -143,7 +146,6 @@ class SubmitRequestModel {
       modeOfTravelId: (json['modeOfTravelId'] ?? 0).toString(),
       portOfArrivalId: (json['portOfArrivalId'] ?? 0).toString(),
       vehicleNumber: json['vehicleNumber'],
-      vehicleName: json['vehicleName'],
       accommodation: json['accommodation'],
       addressInMyanmar: json['addressInMyanmar'] ?? '',
       stateRegionId: (json['stateRegionId'] ?? 0).toString(),

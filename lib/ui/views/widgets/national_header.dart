@@ -1,6 +1,7 @@
 // ignore_for_file: deprecated_member_use
 
 import 'package:flutter/material.dart';
+import 'package:mmac/core/constants/app_fonts.dart';
 
 class NationalHeader extends StatelessWidget {
   const NationalHeader({super.key});
@@ -11,7 +12,7 @@ class NationalHeader extends StatelessWidget {
     final bool isTablet = screenWidth > 551;
 
     return Container(
-      height: 145,
+      height: 155,
       decoration: BoxDecoration(
         color: Colors.white,
         boxShadow: [
@@ -57,6 +58,7 @@ class NationalHeader extends StatelessWidget {
                       crossAxisAlignment: CrossAxisAlignment.center,
                       children: [
                         Container(
+                          margin: EdgeInsets.only(top: isTablet ? 5 : 0),
                           height: isTablet
                               ? 50
                               : 70, // FIXED: Corrected mobile scaling typo
@@ -70,12 +72,13 @@ class NationalHeader extends StatelessWidget {
                             ),
                           ),
                         ),
-                        const SizedBox(height: 6),
+                        const SizedBox(height: 3),
                         Text(
                           "The Republic of the Union of Myanmar",
                           style: TextStyle(
-                            fontSize: isTablet ? 14 : 10,
-                            fontWeight: FontWeight.bold,
+                            fontFamily: AppFonts.primaryFont,
+                            fontSize: isTablet ? 13 : 10,
+                            fontWeight: FontWeight.w600,
                             color: const Color.fromRGBO(119, 119, 119, 1),
                           ),
                           textAlign: TextAlign.center,
@@ -84,8 +87,9 @@ class NationalHeader extends StatelessWidget {
                         Text(
                           "MINISTRY OF IMMIGRATION AND POPULATION",
                           style: TextStyle(
-                            fontSize: isTablet ? 18 : 14,
-                            fontWeight: FontWeight.bold,
+                            fontFamily: AppFonts.primaryFont,
+                            fontSize: isTablet ? 17 : 14,
+                            fontWeight: FontWeight.w600,
                             color: Colors.black,
                           ),
                           textAlign: TextAlign.center,

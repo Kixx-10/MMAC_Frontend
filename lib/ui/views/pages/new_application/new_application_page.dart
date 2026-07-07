@@ -64,7 +64,6 @@ class _NewApplicationState extends ConsumerState<NewApplication>
 
   final Map<String, TextEditingController> _step2Controllers = {
     'vehicleNumber': TextEditingController(),
-    'vehicleName': TextEditingController(),
     'accommodation': TextEditingController(),
     'addressInMyanmar': TextEditingController(),
     'mobileNumberMM': TextEditingController(),
@@ -259,7 +258,6 @@ class _NewApplicationState extends ConsumerState<NewApplication>
       _step1Controllers['fatherName']?.text = fetchedData.fatherName ?? '';
 
       _step2Controllers['vehicleNumber']?.text = fetchedData.vehicleNumber;
-      _step2Controllers['vehicleName']?.text = fetchedData.vehicleName;
       _step2Controllers['accommodation']?.text =
           fetchedData.accommodation ?? '';
       _step2Controllers['addressInMyanmar']?.text =
@@ -471,7 +469,6 @@ class _NewApplicationState extends ConsumerState<NewApplication>
       purposeOfVisit: _safeString(_formValues['purposeOfVisit']),
       addressInMyanmar: _text('addressInMyanmar'),
       vehicleNumber: _text('vehicleNumber'),
-      vehicleName: _text('vehicleName'),
       accommodation: _text('accommodation'),
       previousCity: _text('previousCity'),
       healthDeclaration: _safeString(_formValues['hasSymptoms']),
@@ -479,6 +476,8 @@ class _NewApplicationState extends ConsumerState<NewApplication>
       uid: _text('uid'),
       occupation: _text('occupation'),
       placeOfBirth: _safeString(_formValues['placeOfBirth']),
+      healthAttachmentBase64: _safeString(_formValues['healthAttachmentBase64']),
+      healthAttachmentName: _safeString(_formValues['healthAttachmentName']),
     );
   }
 

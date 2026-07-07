@@ -1,6 +1,8 @@
 // lib/ui/views/pages/new_application/declaration_layout.dart
 
+import 'dart:convert';
 import 'package:flutter/material.dart';
+import 'package:file_picker/file_picker.dart';
 import '../../../../utils/form_validators.dart';
 
 abstract class DeclarationLayoutInterface {
@@ -30,11 +32,37 @@ class _DeclarationLayoutState extends State<DeclarationLayout>
     implements DeclarationLayoutInterface {
   // STATE & LIFECYCLE
   bool _showErrors = false;
+  bool _isPickingFile = false;
 
   @override
   void initState() {
     super.initState();
     widget.onReady(this);
+  }
+
+  Future<void> _pickHealthFile() async {
+    setState(() => _isPickingFile = true);
+    try {
+      FilePickerResult? result = await FilePicker.platform.pickFiles(
+        type: FileType.custom,
+        allowedExtensions: ['pdf', 'jpg', 'jpeg', 'png'],
+        withData: true,
+      );
+
+      if (result != null && result.files.isNotEmpty) {
+        final file = result.files.first;
+        if (file.bytes != null) {
+          final base64String = base64Encode(file.bytes!);
+          widget.onValueChanged('healthAttachmentName', file.name);
+          widget.onValueChanged('healthAttachmentBase64', base64String);
+          if (mounted) setState(() {});
+        }
+      }
+    } catch (e) {
+      debugPrint("Error picking file: $e");
+    } finally {
+      if (mounted) setState(() => _isPickingFile = false);
+    }
   }
 
   // VALIDATION
@@ -100,9 +128,51 @@ class _DeclarationLayoutState extends State<DeclarationLayout>
               : null,
           onChanged: (val) {
             widget.onValueChanged('hasSymptoms', val);
+            if (val != 'Yes') {
+              widget.onValueChanged('healthAttachmentName', null);
+              widget.onValueChanged('healthAttachmentBase64', null);
+            }
             if (mounted) setState(() => _showErrors = false);
           },
         ),
+        
+        if (widget.values['hasSymptoms'] == 'Yes') ...[
+          const SizedBox(height: 16),
+          Row(
+            children: [
+              ElevatedButton.icon(
+                onPressed: _isPickingFile ? null : _pickHealthFile,
+                icon: _isPickingFile 
+                  ? const SizedBox(width: 16, height: 16, child: CircularProgressIndicator(strokeWidth: 2))
+                  : const Icon(Icons.upload_file, size: 18),
+                label: const Text('Attach Medical Document'),
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: Colors.blue.shade50,
+                  foregroundColor: Colors.blue.shade700,
+                  elevation: 0,
+                  side: BorderSide(color: Colors.blue.shade200),
+                ),
+              ),
+              const SizedBox(width: 12),
+              Expanded(
+                child: Text(
+                  widget.values['healthAttachmentName'] ?? 'No file selected (PDF, JPG, PNG)',
+                  style: TextStyle(
+                    fontSize: 13,
+                    color: widget.values['healthAttachmentName'] != null 
+                        ? Colors.green.shade700 
+                        : Colors.grey.shade600,
+                    fontWeight: widget.values['healthAttachmentName'] != null 
+                        ? FontWeight.w600 
+                        : FontWeight.normal,
+                  ),
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                ),
+              ),
+            ],
+          ),
+        ],
 
         const SizedBox(height: 20),
         Divider(color: Colors.grey.shade200),

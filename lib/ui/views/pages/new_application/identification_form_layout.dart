@@ -971,18 +971,18 @@ class _IdentificationFormLayoutState
     );
   }
 
-  Widget _buildAddressField(double lw) {
-    return CustomTextField(
+  Widget _buildAddressField(double lw, List<String> availableCountry) {
+    return CustomDropdownField(
       label: "Place of Residence",
-      controller: widget.controllers['address']!,
+      hint: "Select Country",
       labelWidth: lw,
-      filter: [
-        LengthLimitingTextInputFormatter(100),
-        FilteringTextInputFormatter.allow(RegExp(r'[a-zA-Z0-9]')),
-      ],
-      maxLength: 100,
-      validator: (v) => FormValidators.required(v, 'Address'),
+      dialogWidth: 250,
+      dialogHeight: 250,
+      value: widget.values['address'],
+      items: availableCountry,
+      validator: (v) => FormValidators.requiredDropdown(v, 'Place of Residence'),
       onChanged: (value) => widget.onValueChanged('address', value),
+      spacing: 8,
     );
   }
 
@@ -1249,7 +1249,7 @@ class _IdentificationFormLayoutState
         _buildSectionHeader("Contact and location"),
         _buildPair(
           _buildPlaceOfBirthField(lw, availableCountry),
-          _buildAddressField(lw),
+          _buildAddressField(lw, availableCountry),
           isDesktop,
         ),
         const SizedBox(height: 20),
@@ -1305,7 +1305,7 @@ class _IdentificationFormLayoutState
         _buildSectionHeader("Contact and location"),
         _buildPair(
           _buildPlaceOfBirthField(lw, availableCountry),
-          _buildAddressField(lw),
+          _buildAddressField(lw, availableCountry),
           isDesktop,
         ),
         const SizedBox(height: 20),
