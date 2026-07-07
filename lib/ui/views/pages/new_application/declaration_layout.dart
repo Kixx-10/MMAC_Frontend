@@ -1,8 +1,8 @@
 // lib/ui/views/pages/new_application/declaration_layout.dart
 
 import 'dart:convert';
-import 'package:flutter/material.dart';
 import 'package:file_picker/file_picker.dart';
+import 'package:flutter/material.dart';
 import '../../../../utils/form_validators.dart';
 
 abstract class DeclarationLayoutInterface {
@@ -135,16 +135,20 @@ class _DeclarationLayoutState extends State<DeclarationLayout>
             if (mounted) setState(() => _showErrors = false);
           },
         ),
-        
+
         if (widget.values['hasSymptoms'] == 'Yes') ...[
           const SizedBox(height: 16),
           Row(
             children: [
               ElevatedButton.icon(
                 onPressed: _isPickingFile ? null : _pickHealthFile,
-                icon: _isPickingFile 
-                  ? const SizedBox(width: 16, height: 16, child: CircularProgressIndicator(strokeWidth: 2))
-                  : const Icon(Icons.upload_file, size: 18),
+                icon: _isPickingFile
+                    ? const SizedBox(
+                        width: 16,
+                        height: 16,
+                        child: CircularProgressIndicator(strokeWidth: 2),
+                      )
+                    : const Icon(Icons.upload_file, size: 18),
                 label: const Text('Attach Medical Document'),
                 style: ElevatedButton.styleFrom(
                   backgroundColor: Colors.blue.shade50,
@@ -156,14 +160,15 @@ class _DeclarationLayoutState extends State<DeclarationLayout>
               const SizedBox(width: 12),
               Expanded(
                 child: Text(
-                  widget.values['healthAttachmentName'] ?? 'No file selected (PDF, JPG, PNG)',
+                  widget.values['healthAttachmentName'] ??
+                      'No file selected (PDF, JPG, PNG)',
                   style: TextStyle(
                     fontSize: 13,
-                    color: widget.values['healthAttachmentName'] != null 
-                        ? Colors.green.shade700 
+                    color: widget.values['healthAttachmentName'] != null
+                        ? Colors.green.shade700
                         : Colors.grey.shade600,
-                    fontWeight: widget.values['healthAttachmentName'] != null 
-                        ? FontWeight.w600 
+                    fontWeight: widget.values['healthAttachmentName'] != null
+                        ? FontWeight.w600
                         : FontWeight.normal,
                   ),
                   maxLines: 1,
