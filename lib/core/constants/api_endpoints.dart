@@ -2,7 +2,8 @@ class ApiEndpoints {
   static const String address = "Utility/Getlocations";
   static String portOfArrival(int modeOfTravelId) =>
       "PortOfArrival/$modeOfTravelId";
-  static const String getCountry = "Country";
+  static const String getNationalityCountry = "Country/NationalityCountry";
+  static const String getPassportIssuedCountry="Country/PassportIssuedCountry";
   static const String getNRC = "Utility/GetNRCFormat";
   static const String submitApplication = "Application/Submit&UpdateApplication";
   static const String approveApplication= "Application/ApproveApplication";

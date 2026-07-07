@@ -5,7 +5,7 @@ class SubmitRequestModel {
   final String fullName;
   final String gender;
   final String dob;
-  final String countryOfBirthCode;
+  final String nationalityCode;
   final String email;
   final String mobileNumber;
   final String address;
@@ -29,6 +29,7 @@ class SubmitRequestModel {
   final String purposeOfVisit;
   final String previousCity;
   final String healthDeclaration;
+  final String? healthRecordUrl;
   final String digitalDeclarations;
   final String? modeOfTravelName;
   final String? portOfArrivalName;
@@ -37,15 +38,13 @@ class SubmitRequestModel {
   final String? townshipName;
   final String? uid;
   final String? occupation;
-  final String? placeOfBirth;
-  final String? healthAttachmentBase64;
-  final String? healthAttachmentName;
+  final String? placeOfBirthCode;
 
   SubmitRequestModel({
     required this.fullName,
     required this.gender,
     required this.dob,
-    required this.countryOfBirthCode,
+    required this.nationalityCode,
     required this.email,
     required this.mobileNumber,
     required this.address,
@@ -75,12 +74,11 @@ class SubmitRequestModel {
     required this.purposeOfVisit,
     required this.previousCity,
     required this.healthDeclaration,
+    this.healthRecordUrl,
     required this.digitalDeclarations,
     this.uid,
     this.occupation,
-    this.placeOfBirth,
-    this.healthAttachmentBase64,
-    this.healthAttachmentName,
+    this.placeOfBirthCode,
   });
 
   Map<String, dynamic> toJson() {
@@ -89,7 +87,7 @@ class SubmitRequestModel {
       'fullName': fullName,
       'gender': gender,
       'dob': dob,
-      'countryOfBirthCode': countryOfBirthCode,
+      'nationalityCode': nationalityCode,
       'email': email,
       'mobileNumber': mobileNumber,
       'address': address,
@@ -110,6 +108,7 @@ class SubmitRequestModel {
       'purposeOfVisit': purposeOfVisit,
       'previousCity': previousCity,
       'healthDeclaration': healthDeclaration,
+      'healthRecordUrl': healthRecordUrl,
       'digitalDeclarations': digitalDeclarations,
       'visaNo': (visaNo == null || visaNo!.trim().isEmpty) ? null : visaNo,
       'nrc': (nrc == null || nrc!.trim().isEmpty) ? null : nrc,
@@ -118,9 +117,7 @@ class SubmitRequestModel {
           : fatherName,
       'uid': uid,
       'occupation': occupation,
-      'placeOfBirth': placeOfBirth,
-      'healthAttachmentBase64': healthAttachmentBase64,
-      'healthAttachmentName': healthAttachmentName,
+      'placeOfBirthCode': placeOfBirthCode,
     };
   }
 
@@ -131,7 +128,7 @@ class SubmitRequestModel {
       fullName: json['fullName'] ?? '',
       gender: json['gender'] ?? '',
       dob: json['dob'] ?? '',
-      countryOfBirthCode: json['countryOfBirthCode'] ?? '',
+      nationalityCode: json['nationalityCode'] ?? '',
       email: json['email'] ?? '',
       mobileNumber: json['mobileNumber'] ?? '',
       address: json['address'] ?? '',
@@ -155,6 +152,7 @@ class SubmitRequestModel {
       purposeOfVisit: json['purposeOfVisit'] ?? '',
       previousCity: json['previousCity'],
       healthDeclaration: json['healthDeclaration'],
+      healthRecordUrl: json['healthRecordUrl'],
       digitalDeclarations: json['digitalDeclarations'],
       modeOfTravelName: json['modeOfTravelName'],
       portOfArrivalName: json['portOfArrivalName'],
@@ -163,7 +161,7 @@ class SubmitRequestModel {
       townshipName: json['townshipName'],
       uid: json['uid'],
       occupation: json['occupation'],
-      placeOfBirth: json['placeOfBirth'],
+      placeOfBirthCode: json['placeOfBirthCode'],
     );
   }
 }
