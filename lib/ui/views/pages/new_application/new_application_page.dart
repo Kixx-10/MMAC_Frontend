@@ -76,8 +76,8 @@ class _NewApplicationState extends ConsumerState<NewApplication>
     'residencyType': null,
     'gender': null,
     'dateOfBirth': null,
-    'country': null,
-    'countryCode': null,
+    //'country': null,
+    'nationalityCode': null,
     'issuedCountry': null,
     'issuedCountryCode': null,
     'issuedDate': null,
@@ -96,12 +96,13 @@ class _NewApplicationState extends ConsumerState<NewApplication>
     'purposeOfVisit': null,
     'selectedPurposeDropdown': null,
     'hasSymptoms': null,
+    'attachmentFile': null,
     'carryingRestricted': null,
     'nrcStateCode': null,
     'nrcTownshipCode': null,
     'nrcTypeCode': null,
     'nrcRawNumber': null,
-    'placeOfBirth': null,
+    'placeOfBirthCode': null,
   };
 
   // ---------------------------------------------------------------------------
@@ -183,10 +184,10 @@ class _NewApplicationState extends ConsumerState<NewApplication>
           _formValues['residencyType'] = widget.initialCountry;
           if (widget.initialCountry == 'Myanmar') {
             _formValues['country'] = 'Myanmar';
-            _formValues['countryCode'] = 'MMR';
+            _formValues['nationalityCode'] = 'MMR';
           } else {
             _formValues['country'] = null;
-            _formValues['countryCode'] = null;
+            _formValues['nationalityCode'] = null;
           }
           _saveCurrentSession();
         }
@@ -259,7 +260,6 @@ class _NewApplicationState extends ConsumerState<NewApplication>
       _step1Controllers['fatherName']?.text = fetchedData.fatherName ?? '';
 
       _step2Controllers['vehicleNumber']?.text = fetchedData.vehicleNumber;
-      _step2Controllers['vehicleName']?.text = fetchedData.vehicleName;
       _step2Controllers['accommodation']?.text =
           fetchedData.accommodation ?? '';
       _step2Controllers['addressInMyanmar']?.text =
@@ -290,7 +290,7 @@ class _NewApplicationState extends ConsumerState<NewApplication>
         _formValues['arrivalDate'] = DateTime.parse(fetchedData.arrivalDate);
       }
 
-      _formValues['countryCode'] = fetchedData.countryOfBirthCode;
+      _formValues['nationalityCode'] = fetchedData.nationalityCode;
       _formValues['issuedCountryCode'] = fetchedData.issuedCountryCode;
       _formValues['modeOfTravel'] = fetchedData.modeOfTravelName;
       _formValues['portOfArrival'] = fetchedData.portOfArrivalName;
@@ -305,6 +305,7 @@ class _NewApplicationState extends ConsumerState<NewApplication>
       _formValues['townshipId'] = fetchedData.townshipId;
       _formValues['purposeOfVisit'] = fetchedData.purposeOfVisit;
       _formValues['hasSymptoms'] = fetchedData.healthDeclaration;
+      _formValues['attachmentFile'] = fetchedData.healthRecordUrl;
       _formValues['carryingRestricted'] = fetchedData.digitalDeclarations;
 
       currentStep = 1;
@@ -382,7 +383,7 @@ class _NewApplicationState extends ConsumerState<NewApplication>
   void _nextStep() {
     if (currentStep == 1) {
       if (_step1Interface == null)
-        return _showError('Form not ready, please wait.');
+       { return _showError('Form not ready, please wait.');}
       if (_step1Interface!.validate()) {
         setState(() => currentStep++);
         _saveCurrentSession();
@@ -394,7 +395,7 @@ class _NewApplicationState extends ConsumerState<NewApplication>
       }
     } else if (currentStep == 2) {
       if (_step2Interface == null)
-        return _showError('Form not ready, please wait.');
+        { return _showError('Form not ready, please wait.');}
       if (_step2Interface!.validate()) {
         setState(() => currentStep++);
         _saveCurrentSession();
@@ -406,7 +407,7 @@ class _NewApplicationState extends ConsumerState<NewApplication>
       }
     } else if (currentStep == 3) {
       if (_step3Interface == null)
-        return _showError('Form not ready, please wait.');
+        { return _showError('Form not ready, please wait.');}
       if (_step3Interface!.validate()) {
         setState(() => currentStep++);
         _saveCurrentSession();
@@ -418,11 +419,11 @@ class _NewApplicationState extends ConsumerState<NewApplication>
       }
     } else if (currentStep == 4) {
       if (!_isStep1DataValid())
-        return _handleValidationError(1, 'Please check Section 1.');
+        {return _handleValidationError(1, 'Please check Section 1.');}
       if (!_isStep2DataValid())
-        return _handleValidationError(2, 'Please check Section 2.');
+        {return _handleValidationError(2, 'Please check Section 2.');}
       if (!_isStep3DataValid())
-        return _handleValidationError(3, 'Please check Section 3.');
+        {return _handleValidationError(3, 'Please check Section 3.');}
       _submitApplication();
     }
   }
@@ -450,7 +451,7 @@ class _NewApplicationState extends ConsumerState<NewApplication>
       fullName: _text('fullName'),
       gender: _genderCode(_formValues['gender']),
       dob: _formatDate(_formValues['dateOfBirth']),
-      countryOfBirthCode: _safeString(_formValues['countryCode']),
+      nationalityCode: _safeString(_formValues['nationalityCode']),
       email: _text('email'),
       mobileNumber: _text('mobile'),
       address: _text('address'),
@@ -471,14 +472,13 @@ class _NewApplicationState extends ConsumerState<NewApplication>
       purposeOfVisit: _safeString(_formValues['purposeOfVisit']),
       addressInMyanmar: _text('addressInMyanmar'),
       vehicleNumber: _text('vehicleNumber'),
-      vehicleName: _text('vehicleName'),
       accommodation: _text('accommodation'),
       previousCity: _text('previousCity'),
       healthDeclaration: _safeString(_formValues['hasSymptoms']),
       digitalDeclarations: _safeString(_formValues['carryingRestricted']),
       uid: _text('uid'),
       occupation: _text('occupation'),
-      placeOfBirth: _safeString(_formValues['placeOfBirth']),
+      placeOfBirthCode: _safeString(_formValues['placeOfBirthCode']),
     );
   }
 

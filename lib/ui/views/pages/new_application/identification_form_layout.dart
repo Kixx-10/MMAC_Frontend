@@ -5,8 +5,10 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:mmac/core/constants/api_endpoints.dart';
 import 'package:mmac/data/controllers/country_provider.dart';
 import 'package:mmac/data/controllers/nrc_provider.dart';
+import 'package:mmac/data/models/country_model.dart';
 import 'package:mmac/ui/views/pages/new_application/widget/nrc_selector_widget.dart';
 import 'package:mmac/utils/form_validators.dart';
 import 'package:mmac/utils/country_codes.dart';
@@ -56,8 +58,9 @@ class _IdentificationFormLayoutState
   bool _showNrcError = false;
   bool _isLoading = true;
 
-  final List<dynamic> _rawCountryObjects = [];
-  final List<String> _countryNameList = [];
+  List<String> _countryNameList = [];       
+  List<String> _passportCountryNameList = []; 
+  List<CountryModel> _rawCountryObjects = [];
 
   // --- NRC State Variables ---
   String? _selectedNrcStateCode;
@@ -171,19 +174,19 @@ class _IdentificationFormLayoutState
   void _fetchAndResolveCountries() {
     Future.microtask(() async {
       try {
-        final countryState = await ref.read(countryProvider.future);
+        final nationalityState = await ref.read(nationalityProvider(ApiEndpoints.getNationalityCountry).future);
+        final passportState = await ref.read(passportCountryProvider(ApiEndpoints.getPassportIssuedCountry).future);
         if (mounted) {
           setState(() {
             _rawCountryObjects.clear();
-            _countryNameList.clear();
-            _rawCountryObjects.addAll(countryState.countryList);
-            _countryNameList.addAll(
-              countryState.countryList.map((c) => c.countryName).toList(),
-            );
+          _rawCountryObjects.addAll(nationalityState.countryList);
+        
+          _countryNameList = nationalityState.countryList.map((c) => c.countryName).toList();
+          
+          _passportCountryNameList = passportState.countryList.map((c) => c.countryName).toList();
 
-            // Resolve human-readable country text from incoming API codes
-            _resolveCountryCodeToName('countryCode', 'country');
-            _resolveCountryCodeToName('issuedCountryCode', 'issuedCountry');
+          _resolveCountryCodeToName('countryCode', 'country');
+          _resolveCountryCodeToName('issuedCountryCode', 'issuedCountry');
 
             _isLoading = false;
           });
@@ -343,9 +346,9 @@ class _IdentificationFormLayoutState
     // Dropdowns
     if (widget.values['gender'] == null) errors.add("Gender is missing.");
     if (widget.values['dateOfBirth'] == null)
-      errors.add("Date of Birth is missing.");
+     { errors.add("Date of Birth is missing.");}
     if (widget.values['placeOfBirth'] == null)
-      errors.add("Country/Place of birth is missing.");
+     { errors.add("Country/Place of birth is missing.");}
 
     // NRC (if Myanmar)
     if (isMyanmar) {
@@ -488,10 +491,14 @@ class _IdentificationFormLayoutState
       labelWidth: lw,
       dialogWidth: 250,
       dialogHeight: 250,
-      value: widget.values['placeOfBirth'],
-      items: availableCountry,
+      value: widget.values['placeOfBirthCode'],
+      items: _countryNameList,
       validator: (v) => FormValidators.requiredDropdown(v, 'Place of birth'),
-      onChanged: (value) => widget.onValueChanged('placeOfBirth', value),
+      onChanged: (v) {
+      widget.onValueChanged('placeOfBirthName', v);   // "Afghanistan" — UI display
+      final matched = _rawCountryObjects.firstWhere((c) => c.countryName == v);
+      widget.onValueChanged('placeOfBirthCode', matched.countryCode); // "AFG" — backend
+                    },
       spacing: 8,
     );
   }
@@ -608,12 +615,12 @@ class _IdentificationFormLayoutState
       child: CustomDropdownField(
         label: "Nationality",
         value: widget.values['country'],
-        hint: "Select Country",
+        hint: "Select Nationality",
         readonly: widget.isUpdateMode || isMyanmar,
         labelWidth: lw,
         dialogWidth: 250,
         dialogHeight: 250,
-        items: availableCountry,
+        items: _countryNameList,
         validator: (v) => FormValidators.requiredDropdown(v, 'Country'),
         onChanged: (v) {
           widget.onValueChanged('country', v);
@@ -622,7 +629,7 @@ class _IdentificationFormLayoutState
               final matched = _rawCountryObjects.firstWhere(
                 (c) => c.countryName == v,
               );
-              widget.onValueChanged('countryCode', matched.countryCode);
+              widget.onValueChanged('nationalityCode', matched.countryCode);
             } catch (_) {}
 
             try {
@@ -951,7 +958,7 @@ class _IdentificationFormLayoutState
       label: "Passport Issued Country",
       value: widget.values['issuedCountry'],
       hint: "Select Country",
-      items: _countryNameList,
+      items: _passportCountryNameList,
       labelWidth: lw,
       dialogWidth: 250,
       dialogHeight: 250,
