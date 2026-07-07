@@ -110,7 +110,8 @@ class _ReviewLayoutState extends State<ReviewLayout> {
           label: 'Date of Birth',
           value: _formatDate(widget.values['dateOfBirth']),
         ),
-        _ReviewTile(label: 'Country', value: widget.values['country']),
+        _ReviewTile(label: 'Nationality', value: widget.values['country']),
+        _ReviewTile(label: 'Place of Birth', value: widget.values['placeOfBirth']),
         _ReviewTile(label: 'Email', value: widget.controllers['email']?.text),
         _ReviewTile(
           label: 'Mobile Number',
@@ -144,10 +145,7 @@ class _ReviewLayoutState extends State<ReviewLayout> {
           label: 'Passport Issued Country',
           value: widget.values['issuedCountry'],
         ),
-        _ReviewTile(
-          label: 'Place of Residence',
-          value: widget.controllers['address']?.text,
-        ),
+       _ReviewTile(label: 'Place of Residence', value: widget.values['placeOfResidence']),
       ],
     );
   }

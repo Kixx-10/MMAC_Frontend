@@ -11,8 +11,8 @@ class ApiClient {
     dio = Dio(
       BaseOptions(
         baseUrl: "http://localhost:5021/api/",
-        connectTimeout: const Duration(seconds: 15),
-        receiveTimeout: const Duration(seconds: 15),
+        connectTimeout: const Duration(seconds: 30),
+        receiveTimeout: const Duration(seconds: 30),
       ),
     );
     dio.interceptors.add(

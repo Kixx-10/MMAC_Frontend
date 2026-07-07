@@ -491,11 +491,11 @@ class _IdentificationFormLayoutState
       labelWidth: lw,
       dialogWidth: 250,
       dialogHeight: 250,
-      value: widget.values['placeOfBirthCode'],
+      value: widget.values['placeOfBirth'],
       items: _countryNameList,
       validator: (v) => FormValidators.requiredDropdown(v, 'Place of birth'),
       onChanged: (v) {
-      widget.onValueChanged('placeOfBirthName', v);   // "Afghanistan" — UI display
+      widget.onValueChanged('placeOfBirth', v);   // "Afghanistan" — UI display
       final matched = _rawCountryObjects.firstWhere((c) => c.countryName == v);
       widget.onValueChanged('placeOfBirthCode', matched.countryCode); // "AFG" — backend
                     },
@@ -978,20 +978,33 @@ class _IdentificationFormLayoutState
     );
   }
 
-  Widget _buildAddressField(double lw, List<String> availableCountry) {
-    return CustomDropdownField(
-      label: "Place of Residence",
-      hint: "Select Country",
-      labelWidth: lw,
-      dialogWidth: 250,
-      dialogHeight: 250,
-      value: widget.values['address'],
-      items: availableCountry,
-      validator: (v) => FormValidators.requiredDropdown(v, 'Place of Residence'),
-      onChanged: (value) => widget.onValueChanged('address', value),
-      spacing: 8,
-    );
-  }
+  Widget _buildPlaceOfResidenceField(double lw, List<String> availableCountry) {
+  return CustomDropdownField(
+    label: "Place of Residence",
+    hint: "Select Country",
+    labelWidth: lw,
+    dialogWidth: 250,
+    dialogHeight: 250,
+    value: widget.values['placeOfResidence'],
+    items: _passportCountryNameList,
+    validator: (v) => FormValidators.requiredDropdown(v, 'Place of Residence'),
+    onChanged: (value) {
+      widget.onValueChanged('placeOfResidence', value);
+
+      if (value != null && value.isNotEmpty) {
+        try {
+          final matched = _rawCountryObjects.firstWhere(
+            (c) => c.countryName == value,
+          );
+          widget.onValueChanged('placeOfResidenceCode', matched.countryCode);
+        } catch (e) {
+          debugPrint("Country match not found: $e");
+        }
+      }
+    },
+    spacing: 8,
+  );
+}
 
   Widget _buildNrcField(
     double lw,
@@ -1256,7 +1269,7 @@ class _IdentificationFormLayoutState
         _buildSectionHeader("Contact and location"),
         _buildPair(
           _buildPlaceOfBirthField(lw, availableCountry),
-          _buildAddressField(lw, availableCountry),
+          _buildPlaceOfResidenceField(lw, _passportCountryNameList),
           isDesktop,
         ),
         const SizedBox(height: 20),
@@ -1312,7 +1325,7 @@ class _IdentificationFormLayoutState
         _buildSectionHeader("Contact and location"),
         _buildPair(
           _buildPlaceOfBirthField(lw, availableCountry),
-          _buildAddressField(lw, availableCountry),
+          _buildPlaceOfResidenceField(lw, _passportCountryNameList),
           isDesktop,
         ),
         const SizedBox(height: 20),

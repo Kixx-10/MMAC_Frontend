@@ -75,8 +75,9 @@ class _NewApplicationState extends ConsumerState<NewApplication>
     'residencyType': null,
     'gender': null,
     'dateOfBirth': null,
-    //'country': null,
     'nationalityCode': null,
+    'placeOfBirthCode': null,
+    'placeOfResidenceCode': null,
     'issuedCountry': null,
     'issuedCountryCode': null,
     'issuedDate': null,
@@ -101,7 +102,7 @@ class _NewApplicationState extends ConsumerState<NewApplication>
     'nrcTownshipCode': null,
     'nrcTypeCode': null,
     'nrcRawNumber': null,
-    'placeOfBirthCode': null,
+    
   };
 
   // ---------------------------------------------------------------------------
@@ -255,7 +256,6 @@ class _NewApplicationState extends ConsumerState<NewApplication>
       _step1Controllers['mobile']?.text = fetchedData.mobileNumber;
       _step1Controllers['visaNumber']?.text = fetchedData.visaNo ?? '';
       _step1Controllers['passportNumber']?.text = fetchedData.passportNo;
-      _step1Controllers['address']?.text = fetchedData.address;
       _step1Controllers['fatherName']?.text = fetchedData.fatherName ?? '';
 
       _step2Controllers['vehicleNumber']?.text = fetchedData.vehicleNumber;
@@ -291,6 +291,7 @@ class _NewApplicationState extends ConsumerState<NewApplication>
 
       _formValues['nationalityCode'] = fetchedData.nationalityCode;
       _formValues['issuedCountryCode'] = fetchedData.issuedCountryCode;
+      _formValues['placeOfResidenceCode'] = fetchedData.placeOfResidenceCode;
       _formValues['modeOfTravel'] = fetchedData.modeOfTravelName;
       _formValues['portOfArrival'] = fetchedData.portOfArrivalName;
       _formValues['stateRegion'] = fetchedData.stateRegionName;
@@ -465,7 +466,7 @@ class _NewApplicationState extends ConsumerState<NewApplication>
       nationalityCode: _safeString(_formValues['nationalityCode']),
       email: _text('email'),
       mobileNumber: _text('mobile'),
-      address: _text('address'),
+      placeOfResidenceCode: _safeString(_formValues['placeOfResidenceCode']),
       visaNo: _text('visaNumber'),
       nrc: _isMyanmar ? _text('nrc') : '',
       fatherName: _isMyanmar ? _text('fatherName') : '',
