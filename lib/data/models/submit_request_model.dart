@@ -8,7 +8,7 @@ class SubmitRequestModel {
   final String nationalityCode;
   final String email;
   final String mobileNumber;
-  final String address;
+  final String placeOfResidenceCode;
   final String passportNo;
   final String issuedCountryCode;
   final String issuedDate;
@@ -49,7 +49,7 @@ class SubmitRequestModel {
     required this.nationalityCode,
     required this.email,
     required this.mobileNumber,
-    required this.address,
+    required this.placeOfResidenceCode,
     this.visaNo,
     this.nrc,
     this.fatherName,
@@ -82,7 +82,7 @@ class SubmitRequestModel {
     this.occupation,
     this.placeOfBirthCode,
     this.healthAttachmentBase64,
-    this.healthAttachmentName,
+    this.healthAttachmentName, 
   });
 
   Map<String, dynamic> toJson() {
@@ -94,7 +94,7 @@ class SubmitRequestModel {
       'nationalityCode': nationalityCode,
       'email': email,
       'mobileNumber': mobileNumber,
-      'address': address,
+      'placeOfResidenceCode': placeOfResidenceCode,
       'passportNo': passportNo,
       'issuedCountryCode': issuedCountryCode,
       'issuedDate': issuedDate,
@@ -137,7 +137,7 @@ class SubmitRequestModel {
       nationalityCode: json['nationalityCode'] ?? '',
       email: json['email'] ?? '',
       mobileNumber: json['mobileNumber'] ?? '',
-      address: json['address'] ?? '',
+      placeOfResidenceCode: json['placeOfResidenceCode'] ?? '',
       visaNo: json['visaNo'] ?? '',
       nrc: json['nrc'] ?? '',
       fatherName: json['fatherName'] ?? '',
