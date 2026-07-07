@@ -2,6 +2,7 @@
 
 import 'dart:developer' as dev;
 import 'package:dio/dio.dart';
+import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:mmac/core/constants/api_endpoints.dart';
 import 'package:mmac/core/network/api_client.dart';
 import 'package:mmac/data/models/search_request_model.dart';
@@ -10,11 +11,15 @@ import 'package:mmac/data/models/submit_response_model.dart';
 
 class SubmitRepository {
   final ApiClient _apiClient = ApiClient();
+  final _storage = const FlutterSecureStorage();
 
 Future<SubmitResponseModel?> submitApplication(SubmitRequestModel submitRequestModel) async {
   try {
     final payload = submitRequestModel.toJson();
     final response = await _apiClient.post(ApiEndpoints.submitApplication, data: payload);
+    if (response.data['token'] != null) {
+      await _storage.write(key: 'token', value: response.data['token']);
+    }
     return SubmitResponseModel.fromJson(response.data);
   } on DioException catch (e) {
     if (e.response != null) {
