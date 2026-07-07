@@ -1,5 +1,7 @@
 // lib/ui/views/pages/new_application/identification_form_layout.dart
 
+// ignore_for_file: unused_element, deprecated_member_use
+
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -333,17 +335,20 @@ class _IdentificationFormLayoutState
     }
     if (widget.controllers['email']?.text.trim().isEmpty ?? true) {
       errors.add("Email is missing.");
-    } else if (FormValidators.email(widget.controllers['email']!.text.trim()) != null) {
+    } else if (FormValidators.email(widget.controllers['email']!.text.trim()) !=
+        null) {
       errors.add("Email is invalid.");
     }
     if (widget.controllers['mobile']?.text.trim().isEmpty ?? true) {
       errors.add("Contact number is missing.");
     }
-    
+
     // Dropdowns
     if (widget.values['gender'] == null) errors.add("Gender is missing.");
-    if (widget.values['dateOfBirth'] == null) errors.add("Date of Birth is missing.");
-    if (widget.values['placeOfBirth'] == null) errors.add("Country/Place of birth is missing.");
+    if (widget.values['dateOfBirth'] == null)
+      errors.add("Date of Birth is missing.");
+    if (widget.values['placeOfBirth'] == null)
+      errors.add("Country/Place of birth is missing.");
 
     // NRC (if Myanmar)
     if (isMyanmar) {
@@ -511,7 +516,6 @@ class _IdentificationFormLayoutState
                     fontSize: 16,
                     fontWeight: FontWeight.bold,
                     color: Colors.black87,
-                    fontFamily: 'sans-serif',
                   ),
                   children: [
                     TextSpan(
@@ -713,7 +717,6 @@ class _IdentificationFormLayoutState
               fontSize: 16,
               fontWeight: FontWeight.bold,
               color: Colors.black87,
-              fontFamily: 'sans-serif',
             ),
             children: [
               TextSpan(

@@ -697,7 +697,7 @@ class _UpdateApplicationState extends ConsumerState<UpdateApplication> {
       padding: const EdgeInsets.all(16),
       child: Center(
         child: Container(
-          constraints: const BoxConstraints(maxWidth: 1100),
+          constraints: const BoxConstraints(maxWidth: 1200),
           padding: const EdgeInsets.all(24),
           decoration: BoxDecoration(
             color: Colors.white,

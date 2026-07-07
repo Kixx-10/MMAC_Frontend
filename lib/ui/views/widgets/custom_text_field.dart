@@ -49,7 +49,6 @@ class CustomTextField extends StatelessWidget {
               fontSize: 16,
               fontWeight: FontWeight.bold,
               color: Colors.black87,
-              fontFamily: 'sans-serif',
             ),
             children: [
               if (isRequired)

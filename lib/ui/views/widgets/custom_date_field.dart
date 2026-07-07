@@ -256,7 +256,6 @@ class _CustomDateFieldState extends State<CustomDateField> {
               fontSize: 16,
               fontWeight: FontWeight.bold,
               color: Colors.black87,
-              fontFamily: 'sans-serif',
             ),
             children: const [
               TextSpan(
