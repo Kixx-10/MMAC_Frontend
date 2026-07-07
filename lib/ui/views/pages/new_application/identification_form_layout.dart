@@ -346,9 +346,9 @@ class _IdentificationFormLayoutState
     // Dropdowns
     if (widget.values['gender'] == null) errors.add("Gender is missing.");
     if (widget.values['dateOfBirth'] == null)
-      errors.add("Date of Birth is missing.");
+     { errors.add("Date of Birth is missing.");}
     if (widget.values['placeOfBirth'] == null)
-      errors.add("Country/Place of birth is missing.");
+     { errors.add("Country/Place of birth is missing.");}
 
     // NRC (if Myanmar)
     if (isMyanmar) {
@@ -491,10 +491,14 @@ class _IdentificationFormLayoutState
       labelWidth: lw,
       dialogWidth: 250,
       dialogHeight: 250,
-      value: widget.values['placeOfBirth'],
+      value: widget.values['placeOfBirthCode'],
       items: _countryNameList,
       validator: (v) => FormValidators.requiredDropdown(v, 'Place of birth'),
-      onChanged: (value) => widget.onValueChanged('placeOfBirth', value),
+      onChanged: (v) {
+      widget.onValueChanged('placeOfBirthName', v);   // "Afghanistan" — UI display
+      final matched = _rawCountryObjects.firstWhere((c) => c.countryName == v);
+      widget.onValueChanged('placeOfBirthCode', matched.countryCode); // "AFG" — backend
+                    },
       spacing: 8,
     );
   }
@@ -625,7 +629,7 @@ class _IdentificationFormLayoutState
               final matched = _rawCountryObjects.firstWhere(
                 (c) => c.countryName == v,
               );
-              widget.onValueChanged('countryCode', matched.countryCode);
+              widget.onValueChanged('nationalityCode', matched.countryCode);
             } catch (_) {}
 
             try {
