@@ -5,6 +5,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:mmac/core/constants/api_endpoints.dart';
 import 'package:mmac/data/models/search_request_model.dart';
 import 'package:mmac/data/models/submit_request_model.dart';
 import 'package:mmac/data/controllers/update_application_provider.dart';
@@ -74,11 +75,12 @@ class _UpdateApplicationState extends ConsumerState<UpdateApplication> {
   Future<void> _fetchCountries() async {
     Future.microtask(() async {
       try {
-        final countryState = await ref.read(countryProvider.future);
+        final nationalityState = await ref.read(nationalityProvider(ApiEndpoints.getNationalityCountry).future);
+        final passportState = await ref.read(passportCountryProvider(ApiEndpoints.getPassportIssuedCountry).future);
         if (mounted) {
           setState(() {
             _rawCountryObjects.clear();
-            _rawCountryObjects.addAll(countryState.countryList);
+            _rawCountryObjects.addAll(nationalityState.countryList);
             _isLoadingCountries = false;
           });
         }
@@ -172,13 +174,7 @@ class _UpdateApplicationState extends ConsumerState<UpdateApplication> {
       Future.microtask(() {
         final fetchedData = ref.read(updateApplicationProvider).value;
         if (fetchedData != null) {
-          // Optional Safety Guard: If your SubmitRequestModel has a status field, check it here!
-          // final status = fetchedData.status?.toLowerCase() ?? 'pending';
-          // if (status == 'approved' || status == 'rejected') {
-          //   _showInfoDialog("Status: ${fetchedData.status}", "This application has already been processed and cannot be edited.", isError: false);
-          //   return;
-          // }
-
+      
           widget.onApplicationFetched(fetchedData);
         }
       });
