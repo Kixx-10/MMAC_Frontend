@@ -18,7 +18,6 @@ class MyApp extends StatelessWidget {
         fontFamily: AppFonts.primaryFont,
       ),
       home: const MainLayout(),
-      //home:ResidencyLayout()
     );
   }
 }
