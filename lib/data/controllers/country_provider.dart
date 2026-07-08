@@ -26,10 +26,11 @@ class CountryNotifier extends FamilyAsyncNotifier<CountryState, String> {
   }
 }
 
-final nationalityProvider = AsyncNotifierProviderFamily<CountryNotifier, CountryState, String>(
+final allCountriesProvider = AsyncNotifierProviderFamily<CountryNotifier, CountryState, String>(
   () => CountryNotifier(),
 );
 
-final passportCountryProvider = AsyncNotifierProviderFamily<CountryNotifier, CountryState, String>(
+// ignore: non_constant_identifier_names
+final ICAOMemberCountriesProvider = AsyncNotifierProviderFamily<CountryNotifier, CountryState, String>(
   () => CountryNotifier(),
 );
