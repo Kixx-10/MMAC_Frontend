@@ -128,8 +128,8 @@ class _DeclarationLayoutState extends State<DeclarationLayout>
           onChanged: (val) {
             widget.onValueChanged('hasSymptoms', val);
             if (val != 'Yes') {
-              widget.onValueChanged('healthAttachmentName', null);
-              widget.onValueChanged('healthAttachmentBase64', null);
+              widget.onValueChanged('healthRecordUrl', null);
+              widget.onValueChanged('healthRecordUrl', null);
             }
             if (mounted) setState(() => _showErrors = false);
           },
