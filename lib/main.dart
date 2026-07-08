@@ -3,7 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:mmac/ui/views/pages/main_layout.dart';
 import 'package:mmac/core/constants/app_fonts.dart';
 
-void main()async {
+void main() async {
   runApp(const ProviderScope(child: MyApp()));
 }
 
@@ -14,9 +14,7 @@ class MyApp extends StatelessWidget {
   Widget build(BuildContext context) {
     return MaterialApp(
       debugShowCheckedModeBanner: false,
-      theme: ThemeData(
-        fontFamily: AppFonts.primaryFont,
-      ),
+      theme: ThemeData(fontFamily: AppFonts.primaryFont),
       home: const MainLayout(),
     );
   }
