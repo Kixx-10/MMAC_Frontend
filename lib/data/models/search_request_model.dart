@@ -24,7 +24,7 @@ class NativeSearchRequestModel {
   }
 }
 
-// နိုင်ငံခြားသားများအတွက် သီးသန့် ရှာဖွေရေး Model
+
 class ForeignerSearchRequestModel {
   final String qrReference;
   final String residencyType;
@@ -44,7 +44,6 @@ class ForeignerSearchRequestModel {
 
   Map<String, dynamic> toJson() {
     return {
-      // 🎯 ပြင်ဆင်ချက်: Backend က လိုချင်သော နာမည်များအတိုင်း Key များကို ပြောင်းပေးလိုက်ပါသည်
       'referenceNo': qrReference,
       'passportNo': passportNumber,
       'countryOfBirthCode': nationalityCode,

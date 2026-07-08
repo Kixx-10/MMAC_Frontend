@@ -96,7 +96,7 @@ class _NewApplicationState extends ConsumerState<NewApplication>
     'purposeOfVisit': null,
     'selectedPurposeDropdown': null,
     'hasSymptoms': null,
-    'attachmentFile': null,
+    'healthRecordUrl': null,
     'carryingRestricted': null,
     'nrcStateCode': null,
     'nrcTownshipCode': null,
@@ -305,7 +305,7 @@ class _NewApplicationState extends ConsumerState<NewApplication>
       _formValues['townshipId'] = fetchedData.townshipId;
       _formValues['purposeOfVisit'] = fetchedData.purposeOfVisit;
       _formValues['hasSymptoms'] = fetchedData.healthDeclaration;
-      _formValues['attachmentFile'] = fetchedData.healthRecordUrl;
+      _formValues['healthRecordUrl'] = fetchedData.healthRecordUrl;
       _formValues['carryingRestricted'] = fetchedData.digitalDeclarations;
 
       currentStep = 1;

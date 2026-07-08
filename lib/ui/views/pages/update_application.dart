@@ -75,12 +75,13 @@ class _UpdateApplicationState extends ConsumerState<UpdateApplication> {
   Future<void> _fetchCountries() async {
     Future.microtask(() async {
       try {
-        final nationalityState = await ref.read(nationalityProvider(ApiEndpoints.getNationalityCountry).future);
-        final passportState = await ref.read(passportCountryProvider(ApiEndpoints.getPassportIssuedCountry).future);
+       // ignore: non_constant_identifier_names
+       final ICAOMemberState = await ref.read(ICAOMemberCountriesProvider(ApiEndpoints.getIcaoMemberCountries).future);
+        final allCountriesState = await ref.read(allCountriesProvider(ApiEndpoints.getAllCountries).future);
         if (mounted) {
           setState(() {
             _rawCountryObjects.clear();
-            _rawCountryObjects.addAll(nationalityState.countryList);
+            _rawCountryObjects.addAll(ICAOMemberState.countryList);
             _isLoadingCountries = false;
           });
         }

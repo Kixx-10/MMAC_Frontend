@@ -58,8 +58,8 @@ class _IdentificationFormLayoutState
   bool _showNrcError = false;
   bool _isLoading = true;
 
-  List<String> _countryNameList = [];       
-  List<String> _passportCountryNameList = []; 
+  List<String> _ICAOcountryNameList = [];       
+  List<String> _AllCountryNameList = []; 
   List<CountryModel> _rawCountryObjects = [];
 
   // --- NRC State Variables ---
@@ -174,16 +174,17 @@ class _IdentificationFormLayoutState
   void _fetchAndResolveCountries() {
     Future.microtask(() async {
       try {
-        final nationalityState = await ref.read(nationalityProvider(ApiEndpoints.getNationalityCountry).future);
-        final passportState = await ref.read(passportCountryProvider(ApiEndpoints.getPassportIssuedCountry).future);
+        // ignore: non_constant_identifier_names
+        final ICAOMemberState = await ref.read(ICAOMemberCountriesProvider(ApiEndpoints.getIcaoMemberCountries).future);
+        final allCountriesState = await ref.read(allCountriesProvider(ApiEndpoints.getAllCountries).future);
         if (mounted) {
           setState(() {
             _rawCountryObjects.clear();
-          _rawCountryObjects.addAll(nationalityState.countryList);
+          _rawCountryObjects.addAll(ICAOMemberState.countryList);
         
-          _countryNameList = nationalityState.countryList.map((c) => c.countryName).toList();
+          _ICAOcountryNameList = ICAOMemberState.countryList.map((c) => c.countryName).toList();
           
-          _passportCountryNameList = passportState.countryList.map((c) => c.countryName).toList();
+          _AllCountryNameList = allCountriesState.countryList.map((c) => c.countryName).toList();
 
           _resolveCountryCodeToName('countryCode', 'country');
           _resolveCountryCodeToName('issuedCountryCode', 'issuedCountry');
@@ -492,7 +493,7 @@ class _IdentificationFormLayoutState
       dialogWidth: 250,
       dialogHeight: 250,
       value: widget.values['placeOfBirth'],
-      items: _countryNameList,
+      items: _ICAOcountryNameList,
       validator: (v) => FormValidators.requiredDropdown(v, 'Place of birth'),
       onChanged: (v) {
       widget.onValueChanged('placeOfBirth', v);   // "Afghanistan" — UI display
@@ -620,7 +621,7 @@ class _IdentificationFormLayoutState
         labelWidth: lw,
         dialogWidth: 250,
         dialogHeight: 250,
-        items: _countryNameList,
+        items: _ICAOcountryNameList,
         validator: (v) => FormValidators.requiredDropdown(v, 'Country'),
         onChanged: (v) {
           widget.onValueChanged('country', v);
@@ -958,7 +959,7 @@ class _IdentificationFormLayoutState
       label: "Passport Issued Country",
       value: widget.values['issuedCountry'],
       hint: "Select Country",
-      items: _passportCountryNameList,
+      items: _AllCountryNameList,
       labelWidth: lw,
       dialogWidth: 250,
       dialogHeight: 250,
@@ -986,7 +987,7 @@ class _IdentificationFormLayoutState
     dialogWidth: 250,
     dialogHeight: 250,
     value: widget.values['placeOfResidence'],
-    items: _passportCountryNameList,
+    items: _AllCountryNameList,
     validator: (v) => FormValidators.requiredDropdown(v, 'Place of Residence'),
     onChanged: (value) {
       widget.onValueChanged('placeOfResidence', value);
@@ -1225,8 +1226,8 @@ class _IdentificationFormLayoutState
         widget.values['country'] == 'MMR';
 
     final List<String> availableCountry = isMyanmar
-        ? _countryNameList
-        : _countryNameList.where((c) => c != 'Myanmar' && c != 'MMR').toList();
+        ? _ICAOcountryNameList.where((c) => c == 'Myanmar' || c == 'MMR').toList()
+        : _ICAOcountryNameList.where((c) => c != 'Myanmar' && c != 'MMR').toList();
 
     const double lw = 140;
     List<Widget> formLayout;
@@ -1269,7 +1270,7 @@ class _IdentificationFormLayoutState
         _buildSectionHeader("Contact and location"),
         _buildPair(
           _buildPlaceOfBirthField(lw, availableCountry),
-          _buildPlaceOfResidenceField(lw, _passportCountryNameList),
+          _buildPlaceOfResidenceField(lw, _AllCountryNameList),
           isDesktop,
         ),
         const SizedBox(height: 20),
@@ -1325,7 +1326,7 @@ class _IdentificationFormLayoutState
         _buildSectionHeader("Contact and location"),
         _buildPair(
           _buildPlaceOfBirthField(lw, availableCountry),
-          _buildPlaceOfResidenceField(lw, _passportCountryNameList),
+          _buildPlaceOfResidenceField(lw, _AllCountryNameList),
           isDesktop,
         ),
         const SizedBox(height: 20),
