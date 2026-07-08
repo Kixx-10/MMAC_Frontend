@@ -53,8 +53,7 @@ class _DeclarationLayoutState extends State<DeclarationLayout>
         final file = result.files.first;
         if (file.bytes != null) {
           final base64String = base64Encode(file.bytes!);
-          widget.onValueChanged('healthAttachmentName', file.name);
-          widget.onValueChanged('healthAttachmentBase64', base64String);
+          widget.onValueChanged('healthRecordUrl', base64String);
           if (mounted) setState(() {});
         }
       }
@@ -160,14 +159,14 @@ class _DeclarationLayoutState extends State<DeclarationLayout>
               const SizedBox(width: 12),
               Expanded(
                 child: Text(
-                  widget.values['healthAttachmentName'] ??
+                  widget.values['healthRecordUrl'] ??
                       'No file selected (PDF, JPG, PNG)',
                   style: TextStyle(
                     fontSize: 13,
-                    color: widget.values['healthAttachmentName'] != null
+                    color: widget.values['healthRecordUrl'] != null
                         ? Colors.green.shade700
                         : Colors.grey.shade600,
-                    fontWeight: widget.values['healthAttachmentName'] != null
+                    fontWeight: widget.values['healthRecordUrl'] != null
                         ? FontWeight.w600
                         : FontWeight.normal,
                   ),

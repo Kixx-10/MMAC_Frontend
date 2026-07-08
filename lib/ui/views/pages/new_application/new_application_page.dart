@@ -491,8 +491,7 @@ class _NewApplicationState extends ConsumerState<NewApplication>
       uid: _text('uid'),
       occupation: _text('occupation'),
       placeOfBirthCode: _safeString(_formValues['placeOfBirthCode']),
-      healthAttachmentBase64: _safeString(_formValues['healthAttachmentBase64']),
-      healthAttachmentName: _safeString(_formValues['healthAttachmentName']),
+      healthRecordUrl: _safeString(_formValues['healthRecordUrl']),
     );
   }
 

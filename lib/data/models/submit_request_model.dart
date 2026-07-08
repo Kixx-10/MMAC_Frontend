@@ -39,8 +39,6 @@ class SubmitRequestModel {
   final String? uid;
   final String? occupation;
   final String? placeOfBirthCode;
-  final String? healthAttachmentBase64;
-  final String? healthAttachmentName;
 
   SubmitRequestModel({
     required this.fullName,
@@ -81,8 +79,6 @@ class SubmitRequestModel {
     this.uid,
     this.occupation,
     this.placeOfBirthCode,
-    this.healthAttachmentBase64,
-    this.healthAttachmentName, 
   });
 
   Map<String, dynamic> toJson() {
@@ -122,8 +118,6 @@ class SubmitRequestModel {
       'uid': uid,
       'occupation': occupation,
       'placeOfBirthCode': placeOfBirthCode,
-      'healthAttachmentBase64': healthAttachmentBase64,
-      'healthAttachmentName': healthAttachmentName,
     };
   }
 
@@ -141,8 +135,6 @@ class SubmitRequestModel {
       visaNo: json['visaNo'] ?? '',
       nrc: json['nrc'] ?? '',
       fatherName: json['fatherName'] ?? '',
-      healthAttachmentBase64: json['healthAttachmentBase64'],
-      healthAttachmentName: json['healthAttachmentName'],
       passportNo: json['passportNo'] ?? '',
       issuedCountryCode: json['issuedCountryCode'] ?? '',
       issuedDate: json['issuedDate'] ?? '',
