@@ -102,7 +102,6 @@ class _NewApplicationState extends ConsumerState<NewApplication>
     'nrcTownshipCode': null,
     'nrcTypeCode': null,
     'nrcRawNumber': null,
-    
   };
 
   // ---------------------------------------------------------------------------
@@ -257,6 +256,7 @@ class _NewApplicationState extends ConsumerState<NewApplication>
       _step1Controllers['visaNumber']?.text = fetchedData.visaNo ?? '';
       _step1Controllers['passportNumber']?.text = fetchedData.passportNo;
       _step1Controllers['fatherName']?.text = fetchedData.fatherName ?? '';
+      _step1Controllers['occupation']?.text = fetchedData.occupation ?? '';
 
       _step2Controllers['vehicleNumber']?.text = fetchedData.vehicleNumber;
       _step2Controllers['accommodation']?.text =
@@ -292,6 +292,7 @@ class _NewApplicationState extends ConsumerState<NewApplication>
       _formValues['nationalityCode'] = fetchedData.nationalityCode;
       _formValues['issuedCountryCode'] = fetchedData.issuedCountryCode;
       _formValues['placeOfResidenceCode'] = fetchedData.placeOfResidenceCode;
+      _formValues['placeOfBirthCode'] = fetchedData.placeOfBirthCode;
       _formValues['modeOfTravel'] = fetchedData.modeOfTravelName;
       _formValues['portOfArrival'] = fetchedData.portOfArrivalName;
       _formValues['stateRegion'] = fetchedData.stateRegionName;

@@ -2,6 +2,8 @@
 
 // ignore_for_file: unused_element, deprecated_member_use
 
+import 'dart:convert';
+
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -11,7 +13,6 @@ import 'package:mmac/data/controllers/nrc_provider.dart';
 import 'package:mmac/data/models/country_model.dart';
 import 'package:mmac/ui/views/pages/new_application/widget/nrc_selector_widget.dart';
 import 'package:mmac/utils/form_validators.dart';
-import 'package:mmac/utils/country_codes.dart';
 import 'package:mmac/utils/upper_case_text_formatter.dart';
 import '../../widgets/custom_text_field.dart';
 import '../../widgets/custom_date_field.dart';
@@ -100,9 +101,10 @@ class _IdentificationFormLayoutState
     _selectedNrcType = widget.values['nrcTypeCode'];
     _nrcNumberController.text = widget.values['nrcRawNumber'] ?? '';
 
-    _countryCodes = CountryCodeData.codes;
-    _initializeMobileNumber();
+    // _countryCodes = CountryCodeData.codes;
+    // _initializeMobileNumber();
     _fetchAndResolveCountries();
+    _loadCountryCodesFromJson();
   }
 
   @override
@@ -112,6 +114,40 @@ class _IdentificationFormLayoutState
     _firstNameController.dispose();
     _lastNameController.dispose();
     super.dispose();
+  }
+
+  Future<void> _loadCountryCodesFromJson() async {
+    try {
+      // 1. Load the file from your assets
+      final String response = await rootBundle.loadString(
+        'assets/data/country_codes.json',
+      );
+
+      // 2. Decode it
+      final List<dynamic> decoded = jsonDecode(response);
+
+      if (mounted) {
+        setState(() {
+          // 3. Safely cast it to match the exact type your dialog expects
+          _countryCodes = decoded
+              .map((item) => Map<String, String>.from(item))
+              .toList();
+
+          // 4. NOW it is safe to auto-detect the mobile number!
+          _initializeMobileNumber();
+        });
+      }
+    } catch (e) {
+      debugPrint("Failed to load country codes JSON: $e");
+      // Fallback just in case the JSON fails
+      if (mounted) {
+        setState(() {
+          _countryCodes = [
+            {"country": "Myanmar", "code": "+95"},
+          ];
+        });
+      }
+    }
   }
 
   // DATA RESOLUTION & MUTATION METHODS
@@ -186,8 +222,10 @@ class _IdentificationFormLayoutState
           
           _AllCountryNameList = allCountriesState.countryList.map((c) => c.countryName).toList();
 
-          _resolveCountryCodeToName('countryCode', 'country');
-          _resolveCountryCodeToName('issuedCountryCode', 'issuedCountry');
+            _resolveCountryCodeToName('nationalityCode', 'country');
+            _resolveCountryCodeToName('issuedCountryCode', 'issuedCountry');
+            _resolveCountryCodeToName('placeOfResidenceCode', 'placeOfBirth');
+            _resolveCountryCodeToName('placeOfBirthCode', 'placeOfResidence');
 
             _isLoading = false;
           });
@@ -346,10 +384,12 @@ class _IdentificationFormLayoutState
 
     // Dropdowns
     if (widget.values['gender'] == null) errors.add("Gender is missing.");
-    if (widget.values['dateOfBirth'] == null)
-     { errors.add("Date of Birth is missing.");}
-    if (widget.values['placeOfBirth'] == null)
-     { errors.add("Country/Place of birth is missing.");}
+    if (widget.values['dateOfBirth'] == null) {
+      errors.add("Date of Birth is missing.");
+    }
+    if (widget.values['placeOfBirth'] == null) {
+      errors.add("Country/Place of birth is missing.");
+    }
 
     // NRC (if Myanmar)
     if (isMyanmar) {
@@ -371,6 +411,9 @@ class _IdentificationFormLayoutState
     if (widget.values['issuedDate'] == null) {
       errors.add("Passport Issue Date is missing.");
     }
+    if (widget.values['placeOfResidence'] == null) {
+      errors.add("Place Of Residence is missing");
+    }
     if (widget.values['expiryDate'] == null) {
       errors.add("Passport Expiry Date is missing.");
     } else {
@@ -384,9 +427,6 @@ class _IdentificationFormLayoutState
       }
     }
 
-    if (widget.controllers['address']?.text.trim().isEmpty ?? true) {
-      errors.add("Address is missing.");
-    }
     if (widget.controllers['occupation']?.text.trim().isEmpty ?? true) {
       errors.add("Occupation is missing.");
     }
@@ -496,10 +536,15 @@ class _IdentificationFormLayoutState
       items: _ICAOcountryNameList,
       validator: (v) => FormValidators.requiredDropdown(v, 'Place of birth'),
       onChanged: (v) {
-      widget.onValueChanged('placeOfBirth', v);   // "Afghanistan" — UI display
-      final matched = _rawCountryObjects.firstWhere((c) => c.countryName == v);
-      widget.onValueChanged('placeOfBirthCode', matched.countryCode); // "AFG" — backend
-                    },
+        widget.onValueChanged('placeOfBirth', v); // "Afghanistan" — UI display
+        final matched = _rawCountryObjects.firstWhere(
+          (c) => c.countryName == v,
+        );
+        widget.onValueChanged(
+          'placeOfBirthCode',
+          matched.countryCode,
+        ); // "AFG" — backend
+      },
       spacing: 8,
     );
   }
@@ -992,20 +1037,20 @@ class _IdentificationFormLayoutState
     onChanged: (value) {
       widget.onValueChanged('placeOfResidence', value);
 
-      if (value != null && value.isNotEmpty) {
-        try {
-          final matched = _rawCountryObjects.firstWhere(
-            (c) => c.countryName == value,
-          );
-          widget.onValueChanged('placeOfResidenceCode', matched.countryCode);
-        } catch (e) {
-          debugPrint("Country match not found: $e");
+        if (value != null && value.isNotEmpty) {
+          try {
+            final matched = _rawCountryObjects.firstWhere(
+              (c) => c.countryName == value,
+            );
+            widget.onValueChanged('placeOfResidenceCode', matched.countryCode);
+          } catch (e) {
+            debugPrint("Country match not found: $e");
+          }
         }
-      }
-    },
-    spacing: 8,
-  );
-}
+      },
+      spacing: 8,
+    );
+  }
 
   Widget _buildNrcField(
     double lw,
