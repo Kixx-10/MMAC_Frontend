@@ -77,6 +77,7 @@ class _UpdateApplicationState extends ConsumerState<UpdateApplication> {
       try {
        // ignore: non_constant_identifier_names
        final ICAOMemberState = await ref.read(ICAOMemberCountriesProvider(ApiEndpoints.getIcaoMemberCountries).future);
+        // ignore: unused_local_variable
         final allCountriesState = await ref.read(allCountriesProvider(ApiEndpoints.getAllCountries).future);
         if (mounted) {
           setState(() {

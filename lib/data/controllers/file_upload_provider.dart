@@ -1,5 +1,5 @@
 // lib/data/controllers/file_upload_provider.dart
-import 'dart:io';
+import 'dart:typed_data';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:mmac/data/reposistories/file_upload_repository.dart';
 
@@ -35,24 +35,31 @@ class FileUploadNotifier extends Notifier<FileUploadState> {
   @override
   FileUploadState build() => const FileUploadState();
 
-  Future<String?> upload(File file) async {
-    state = state.copyWith(isUploading: true, error: null);
-    try {
-      final url = await _repo.uploadHealthRecord(file);
-      state = state.copyWith(
-        isUploading: false,
-        uploadedUrl: url,
-        localFileName: file.path.split('/').last,
-      );
-      return url;
-    } catch (e) {
-      state = state.copyWith(
-        isUploading: false,
-        error: e.toString().replaceAll('Exception: ', ''),
-      );
-      return null;
-    }
+ Future<String?> upload(Uint8List bytes, String fileName) async {
+  state = state.copyWith(
+    isUploading: true,
+    error: null,
+  );
+
+  try {
+    final url = await _repo.uploadHealthRecord(bytes, fileName);
+
+    state = state.copyWith(
+      isUploading: false,
+      uploadedUrl: url,
+      localFileName: fileName,
+    );
+
+    return url;
+  } catch (e) {
+    state = state.copyWith(
+      isUploading: false,
+      error: e.toString(),
+    );
+
+    return null;
   }
+}
 
   void clear() => state = const FileUploadState();
 }

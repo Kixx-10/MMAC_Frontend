@@ -36,10 +36,7 @@ class _NewApplicationState extends ConsumerState<NewApplication>
     with AutomaticKeepAliveClientMixin {
   @override
   bool get wantKeepAlive => true;
-
-  // ---------------------------------------------------------------------------
   // STATE VARIABLES
-  // ---------------------------------------------------------------------------
   int currentStep = 1;
   final int totalSteps = 4;
   bool _isSessionLoading = true;
@@ -233,6 +230,11 @@ class _NewApplicationState extends ConsumerState<NewApplication>
     Future.microtask(() {
       if (mounted) {
         setState(() => _formValues[key] = value);
+        //to check url inlcude
+        debugPrint(
+        "_formValues['healthRecordUrl'] = ${_formValues['healthRecordUrl']}",
+      );
+      //
         _saveCurrentSession();
       }
     });
@@ -492,11 +494,12 @@ class _NewApplicationState extends ConsumerState<NewApplication>
       uid: _text('uid'),
       occupation: _text('occupation'),
       placeOfBirthCode: _safeString(_formValues['placeOfBirthCode']),
-      healthRecordUrl: _safeString(_formValues['healthRecordUrl']),
+      healthRecordUrl: _formValues['healthRecordUrl'],
     );
   }
 
   Future<void> _submitApplication() async {
+    log("DEBUG: healthRecordUrl is: ${_formValues['healthRecordUrl']}");
     _showLoadingDialog();
 
     try {
