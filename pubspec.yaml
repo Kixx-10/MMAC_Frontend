@@ -43,6 +43,7 @@ flutter:
     - assets/data/country_codes.json
     - assets/images/
     - assets/images/department_logo.jpg
+    - assets/images/department_logo2.png
     - assets/images/national_flag.jpg
     - assets/images/national_logo.jpg
     - assets/images/nrc.jpg

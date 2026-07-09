@@ -9,6 +9,7 @@ class ReviewLayout extends StatefulWidget {
   final Widget actionButtons;
   final Function(int targetStep) onEditRequested;
   final bool isUpdateMode;
+  final Function(String, dynamic) onValueChanged;
 
   const ReviewLayout({
     super.key,
@@ -17,6 +18,7 @@ class ReviewLayout extends StatefulWidget {
     required this.actionButtons,
     required this.onEditRequested,
     required this.isUpdateMode,
+    required this.onValueChanged,
   });
 
   @override
@@ -24,8 +26,16 @@ class ReviewLayout extends StatefulWidget {
 }
 
 class _ReviewLayoutState extends State<ReviewLayout> {
-  // 🎯 Track whether the user has agreed to the terms
-  bool _isAgreed = false;
+  //  Track whether the user has agreed to the terms
+  // bool _isAgreed = false;
+
+  @override
+  void initState() {
+    super.initState();
+    // _isAgreed = widget.values['isAgreed'] == true;
+  }
+
+  bool get _isAgreed => widget.values['isAgreed'] == true;
 
   bool get _isMyanmar =>
       widget.values['country'] == 'Myanmar' ||
@@ -111,7 +121,10 @@ class _ReviewLayoutState extends State<ReviewLayout> {
           value: _formatDate(widget.values['dateOfBirth']),
         ),
         _ReviewTile(label: 'Nationality', value: widget.values['country']),
-        _ReviewTile(label: 'Place of Birth', value: widget.values['placeOfBirth']),
+        _ReviewTile(
+          label: 'Place of Birth',
+          value: widget.values['placeOfBirth'],
+        ),
         _ReviewTile(label: 'Email', value: widget.controllers['email']?.text),
         _ReviewTile(
           label: 'Mobile Number',
@@ -145,7 +158,10 @@ class _ReviewLayoutState extends State<ReviewLayout> {
           label: 'Passport Issued Country',
           value: widget.values['issuedCountry'],
         ),
-       _ReviewTile(label: 'Place of Residence', value: widget.values['placeOfResidence']),
+        _ReviewTile(
+          label: 'Place of Residence',
+          value: widget.values['placeOfResidence'],
+        ),
       ],
     );
   }
@@ -297,6 +313,7 @@ class _ReviewLayoutState extends State<ReviewLayout> {
                     fontSize: 13,
                     color: Colors.black87,
                     height: 1.5,
+                    fontFamily: AppFonts.primaryFont,
                   ),
                 ),
                 const SizedBox(height: 12),
@@ -306,6 +323,7 @@ class _ReviewLayoutState extends State<ReviewLayout> {
                     fontSize: 13,
                     fontWeight: FontWeight.bold,
                     color: Colors.black87,
+                    fontFamily: AppFonts.primaryFont,
                   ),
                 ),
                 const SizedBox(height: 12),
@@ -347,7 +365,7 @@ class _ReviewLayoutState extends State<ReviewLayout> {
                 vertical: 8,
               ),
               onChanged: (val) {
-                setState(() => _isAgreed = val ?? false);
+                widget.onValueChanged('isAgreed', val ?? false);
               },
               title: const Text(
                 'I have read, fully understood, and explicitly agree to this declaration, and I accept full legal responsibility.',
@@ -355,6 +373,7 @@ class _ReviewLayoutState extends State<ReviewLayout> {
                   fontSize: 13,
                   fontWeight: FontWeight.w600,
                   color: Colors.black87,
+                  fontFamily: AppFonts.primaryFont,
                 ),
               ),
               controlAffinity: ListTileControlAffinity.leading,
@@ -374,12 +393,15 @@ class _ReviewLayoutState extends State<ReviewLayout> {
             fontSize: 13,
             color: Colors.black87,
             height: 1.5,
-            fontFamily: 'sans-serif',
+            fontFamily: AppFonts.primaryFont,
           ),
           children: [
             TextSpan(
               text: '$title ',
-              style: const TextStyle(fontWeight: FontWeight.bold),
+              style: const TextStyle(
+                fontWeight: FontWeight.bold,
+                fontFamily: AppFonts.primaryFont,
+              ),
             ),
             TextSpan(text: desc),
           ],

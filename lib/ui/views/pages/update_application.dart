@@ -75,10 +75,16 @@ class _UpdateApplicationState extends ConsumerState<UpdateApplication> {
   Future<void> _fetchCountries() async {
     Future.microtask(() async {
       try {
-       // ignore: non_constant_identifier_names
-       final ICAOMemberState = await ref.read(ICAOMemberCountriesProvider(ApiEndpoints.getIcaoMemberCountries).future);
+        // ignore: non_constant_identifier_names
+        final ICAOMemberState = await ref.read(
+          ICAOMemberCountriesProvider(
+            ApiEndpoints.getIcaoMemberCountries,
+          ).future,
+        );
         // ignore: unused_local_variable
-        final allCountriesState = await ref.read(allCountriesProvider(ApiEndpoints.getAllCountries).future);
+        final allCountriesState = await ref.read(
+          allCountriesProvider(ApiEndpoints.getAllCountries).future,
+        );
         if (mounted) {
           setState(() {
             _rawCountryObjects.clear();
@@ -176,7 +182,6 @@ class _UpdateApplicationState extends ConsumerState<UpdateApplication> {
       Future.microtask(() {
         final fetchedData = ref.read(updateApplicationProvider).value;
         if (fetchedData != null) {
-      
           widget.onApplicationFetched(fetchedData);
         }
       });
@@ -534,7 +539,7 @@ class _UpdateApplicationState extends ConsumerState<UpdateApplication> {
     final countryField = Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        _buildLabel("Country *"),
+        _buildLabel("Nationality *"),
         _isLoadingCountries
             ? const LinearProgressIndicator()
             : Container(

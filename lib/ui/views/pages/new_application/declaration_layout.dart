@@ -1,9 +1,6 @@
-
-import 'dart:io';
 import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-
 import 'package:mmac/data/controllers/file_upload_provider.dart';
 import '../../../../utils/form_validators.dart';
 
@@ -44,17 +41,17 @@ class _DeclarationLayoutState extends ConsumerState<DeclarationLayout>
   bool validate() {
     final bool symptomValid =
         FormValidators.declaration(
-              widget.values['hasSymptoms'],
-              'Health Declaration',
-            ) ==
-            null;
+          widget.values['hasSymptoms'],
+          'Health Declaration',
+        ) ==
+        null;
 
     final bool restrictedValid =
         FormValidators.declaration(
-              widget.values['carryingRestricted'],
-              'Restricted Goods Declaration',
-            ) ==
-            null;
+          widget.values['carryingRestricted'],
+          'Restricted Goods Declaration',
+        ) ==
+        null;
 
     final bool isValid = symptomValid && restrictedValid;
 
@@ -79,12 +76,13 @@ class _DeclarationLayoutState extends ConsumerState<DeclarationLayout>
     return errors;
   }
 
-Future<void> _pickAndUpload() async {
+  Future<void> _pickAndUpload() async {
   final result = await FilePicker.platform.pickFiles(
     type: FileType.custom,
     allowedExtensions: ['jpg', 'jpeg', 'png', 'pdf', 'doc', 'docx'],
   );
 
+  // ignore: unnecessary_null_comparison
   if (result == null || result.files.single.name == null) return;
 
   final platformFile = result.files.single;
@@ -206,7 +204,7 @@ class _HealthRecordUploadSection extends StatelessWidget {
   Widget build(BuildContext context) {
     final displayUrl = uploadState.uploadedUrl ?? fallbackUrl;
     final displayFileName = uploadState.localFileName ?? fallbackFileName;
-   if (displayUrl != null) {
+    if (displayUrl != null) {
       return Container(
         padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
         decoration: BoxDecoration(
@@ -250,10 +248,7 @@ class _HealthRecordUploadSection extends StatelessWidget {
               child: CircularProgressIndicator(strokeWidth: 2),
             ),
             const SizedBox(width: 10),
-            Text(
-              'Uploading...',
-              style: TextStyle(color: Colors.blue.shade700),
-            ),
+            Text('Uploading...', style: TextStyle(color: Colors.blue.shade700)),
           ],
         ),
       );
@@ -424,6 +419,3 @@ class _DeclarationQuestion extends StatelessWidget {
     );
   }
 }
-
-
-

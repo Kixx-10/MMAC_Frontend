@@ -59,8 +59,8 @@ class _IdentificationFormLayoutState
   bool _showNrcError = false;
   bool _isLoading = true;
 
-  List<String> _ICAOcountryNameList = [];       
-  List<String> _AllCountryNameList = []; 
+  List<String> _ICAOcountryNameList = [];
+  List<String> _AllCountryNameList = [];
   List<CountryModel> _rawCountryObjects = [];
 
   // --- NRC State Variables ---
@@ -211,11 +211,18 @@ class _IdentificationFormLayoutState
     Future.microtask(() async {
       try {
         // ignore: non_constant_identifier_names
-        final ICAOMemberState = await ref.read(ICAOMemberCountriesProvider(ApiEndpoints.getIcaoMemberCountries).future);
-        final allCountriesState = await ref.read(allCountriesProvider(ApiEndpoints.getAllCountries).future);
+        final ICAOMemberState = await ref.read(
+          ICAOMemberCountriesProvider(
+            ApiEndpoints.getIcaoMemberCountries,
+          ).future,
+        );
+        final allCountriesState = await ref.read(
+          allCountriesProvider(ApiEndpoints.getAllCountries).future,
+        );
         if (mounted) {
           setState(() {
             _rawCountryObjects.clear();
+
           _rawCountryObjects.addAll(allCountriesState.countryList);
         
           _ICAOcountryNameList = ICAOMemberState.countryList.map((c) => c.countryName).toList();
@@ -731,6 +738,7 @@ class _IdentificationFormLayoutState
         CustomTextField(
           label: isMyanmar ? "Personal E-mail" : "Email",
           controller: widget.controllers['email']!,
+          hintText: "Active Email Required",
           labelWidth: lw,
           maxLength: 30,
           readonly: widget.isUpdateMode && isMyanmar,
@@ -741,16 +749,16 @@ class _IdentificationFormLayoutState
                 "Upon successful submission of your Myanmar e-Arrival form, a confirmation email containing your QR code PDF will be sent automatically to the email address provided. Please ensure that your email address is active and spelled correctly before submitting. If you do not receive the email within a few minutes, please check your spam or junk folder. (Note: Email addresses are not case-sensitive).",
           ),
         ),
-        Padding(
-          padding: EdgeInsets.only(
-            top: 4,
-            left: MediaQuery.of(context).size.width < 500 ? 0 : lw + 8,
-          ),
-          child: const Text(
-            "Active Email needed to reply",
-            style: TextStyle(color: Colors.grey, fontSize: 12),
-          ),
-        ),
+        // Padding(
+        //   padding: EdgeInsets.only(
+        //     top: 4,
+        //     left: MediaQuery.of(context).size.width < 500 ? 0 : lw + 8,
+        //   ),
+        //   child: const Text(
+        //     "Active Email needed to reply",
+        //     style: TextStyle(color: Colors.grey, fontSize: 12),
+        //   ),
+        // ),
       ],
     );
   }
@@ -1025,17 +1033,18 @@ class _IdentificationFormLayoutState
   }
 
   Widget _buildPlaceOfResidenceField(double lw, List<String> availableCountry) {
-  return CustomDropdownField(
-    label: "Place of Residence",
-    hint: "Select Country",
-    labelWidth: lw,
-    dialogWidth: 250,
-    dialogHeight: 250,
-    value: widget.values['placeOfResidence'],
-    items: _AllCountryNameList,
-    validator: (v) => FormValidators.requiredDropdown(v, 'Place of Residence'),
-    onChanged: (value) {
-      widget.onValueChanged('placeOfResidence', value);
+    return CustomDropdownField(
+      label: "Place of Residence",
+      hint: "Select Country",
+      labelWidth: lw,
+      dialogWidth: 250,
+      dialogHeight: 250,
+      value: widget.values['placeOfResidence'],
+      items: _AllCountryNameList,
+      validator: (v) =>
+          FormValidators.requiredDropdown(v, 'Place of Residence'),
+      onChanged: (value) {
+        widget.onValueChanged('placeOfResidence', value);
 
         if (value != null && value.isNotEmpty) {
           try {
@@ -1271,8 +1280,12 @@ class _IdentificationFormLayoutState
         widget.values['country'] == 'MMR';
 
     final List<String> availableCountry = isMyanmar
-        ? _ICAOcountryNameList.where((c) => c == 'Myanmar' || c == 'MMR').toList()
-        : _ICAOcountryNameList.where((c) => c != 'Myanmar' && c != 'MMR').toList();
+        ? _ICAOcountryNameList.where(
+            (c) => c == 'Myanmar' || c == 'MMR',
+          ).toList()
+        : _ICAOcountryNameList.where(
+            (c) => c != 'Myanmar' && c != 'MMR',
+          ).toList();
 
     const double lw = 140;
     List<Widget> formLayout;
