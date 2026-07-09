@@ -216,7 +216,7 @@ class _IdentificationFormLayoutState
         if (mounted) {
           setState(() {
             _rawCountryObjects.clear();
-          _rawCountryObjects.addAll(ICAOMemberState.countryList);
+          _rawCountryObjects.addAll(allCountriesState.countryList);
         
           _ICAOcountryNameList = ICAOMemberState.countryList.map((c) => c.countryName).toList();
           
