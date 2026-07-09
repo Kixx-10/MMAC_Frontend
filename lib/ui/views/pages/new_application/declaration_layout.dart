@@ -1,8 +1,8 @@
-
 import 'dart:io';
 import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:mmac/core/constants/app_fonts.dart';
 
 import 'package:mmac/data/controllers/file_upload_provider.dart';
 import '../../../../utils/form_validators.dart';
@@ -44,17 +44,17 @@ class _DeclarationLayoutState extends ConsumerState<DeclarationLayout>
   bool validate() {
     final bool symptomValid =
         FormValidators.declaration(
-              widget.values['hasSymptoms'],
-              'Health Declaration',
-            ) ==
-            null;
+          widget.values['hasSymptoms'],
+          'Health Declaration',
+        ) ==
+        null;
 
     final bool restrictedValid =
         FormValidators.declaration(
-              widget.values['carryingRestricted'],
-              'Restricted Goods Declaration',
-            ) ==
-            null;
+          widget.values['carryingRestricted'],
+          'Restricted Goods Declaration',
+        ) ==
+        null;
 
     final bool isValid = symptomValid && restrictedValid;
 
@@ -79,35 +79,33 @@ class _DeclarationLayoutState extends ConsumerState<DeclarationLayout>
     return errors;
   }
 
-Future<void> _pickAndUpload() async {
-  final result = await FilePicker.platform.pickFiles(
-    type: FileType.custom,
-    allowedExtensions: ['jpg', 'jpeg', 'png', 'pdf', 'doc', 'docx'],
-  );
+  Future<void> _pickAndUpload() async {
+    final result = await FilePicker.platform.pickFiles(
+      type: FileType.custom,
+      allowedExtensions: ['jpg', 'jpeg', 'png', 'pdf', 'doc', 'docx'],
+    );
 
-  if (result == null || result.files.single.name == null) return;
+    if (result == null || result.files.single.name == null) return;
 
- final platformFile = result.files.single;
+    final platformFile = result.files.single;
 
-if (platformFile.bytes == null) {
-  ScaffoldMessenger.of(context).showSnackBar(
-    const SnackBar(
-      content: Text("Unable to read selected file."),
-    ),
-  );
-  return;
-}
+    if (platformFile.bytes == null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text("Unable to read selected file.")),
+      );
+      return;
+    }
 
-final url = await ref.read(fileUploadProvider.notifier).upload(
-  platformFile.bytes!,
-  platformFile.name,
-);
+    final url = await ref
+        .read(fileUploadProvider.notifier)
+        .upload(platformFile.bytes!, platformFile.name);
 
-if (url != null) {
-  widget.onValueChanged("healthRecordUrl", url);
-  setState(() {});
-}
-}
+    if (url != null) {
+      widget.onValueChanged("healthRecordUrl", url);
+      setState(() {});
+    }
+  }
+
   void _clearHealthRecord() {
     ref.read(fileUploadProvider.notifier).clear();
     widget.onValueChanged('healthRecordUrl', null);
@@ -150,6 +148,7 @@ if (url != null) {
           const SizedBox(height: 16),
           _HealthRecordUploadSection(
             uploadState: uploadState,
+            saveUrl: widget.values['healthRecordUrl'],
             onPickAndUpload: _pickAndUpload,
             onClear: _clearHealthRecord,
           ),
@@ -185,6 +184,7 @@ if (url != null) {
 
 class _HealthRecordUploadSection extends StatelessWidget {
   final dynamic uploadState;
+  final String? saveUrl;
   final VoidCallback onPickAndUpload;
   final VoidCallback onClear;
 
@@ -192,26 +192,32 @@ class _HealthRecordUploadSection extends StatelessWidget {
     required this.uploadState,
     required this.onPickAndUpload,
     required this.onClear,
+    this.saveUrl,
   });
 
   @override
   Widget build(BuildContext context) {
-    if (uploadState.uploadedUrl != null) {
+    if (uploadState.uploadedUrl != null ||
+        (saveUrl != null && saveUrl!.isNotEmpty)) {
       return Container(
         padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
         decoration: BoxDecoration(
-          color: Colors.green.shade50,
+          color: Colors.blue.shade50,
           borderRadius: BorderRadius.circular(8),
-          border: Border.all(color: Colors.green.shade200),
+          border: Border.all(color: Colors.blue.shade200),
         ),
         child: Row(
           children: [
-            Icon(Icons.check_circle, color: Colors.green.shade600, size: 20),
+            Icon(Icons.check_circle, color: Colors.blue.shade600, size: 20),
             const SizedBox(width: 8),
             Expanded(
               child: Text(
-                uploadState.localFileName ?? 'File uploaded',
-                style: TextStyle(fontSize: 13, color: Colors.green.shade800),
+                uploadState.localFileName ?? 'Health Record Uploaded',
+                style: TextStyle(
+                  fontSize: 13,
+                  color: Colors.blue.shade800,
+                  fontFamily: AppFonts.primaryFont,
+                ),
                 overflow: TextOverflow.ellipsis,
               ),
             ),
@@ -240,10 +246,7 @@ class _HealthRecordUploadSection extends StatelessWidget {
               child: CircularProgressIndicator(strokeWidth: 2),
             ),
             const SizedBox(width: 10),
-            Text(
-              'Uploading...',
-              style: TextStyle(color: Colors.blue.shade700),
-            ),
+            Text('Uploading...', style: TextStyle(color: Colors.blue.shade700)),
           ],
         ),
       );
@@ -393,6 +396,3 @@ class _DeclarationQuestion extends StatelessWidget {
     );
   }
 }
-
-
-

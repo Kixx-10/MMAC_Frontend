@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:mmac/core/constants/app_fonts.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 class NoticePage extends StatefulWidget {
   final VoidCallback onAccepted;
@@ -146,7 +147,12 @@ class _NoticePageState extends State<NoticePage> {
                     Align(
                       alignment: Alignment.centerRight,
                       child: ElevatedButton(
-                        onPressed: widget.onAccepted,
+                        onPressed: () async {
+                          //  Save to SharedPreferences so it survives browser refresh
+                          final prefs = await SharedPreferences.getInstance();
+                          await prefs.setBool('hasAcceptedNotice', true);
+                          widget.onAccepted();
+                        },
                         style: ElevatedButton.styleFrom(
                           backgroundColor: Colors.blue.shade700,
                           padding: const EdgeInsets.symmetric(
