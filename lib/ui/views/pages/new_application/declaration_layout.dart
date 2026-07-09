@@ -87,30 +87,32 @@ Future<void> _pickAndUpload() async {
 
   if (result == null || result.files.single.name == null) return;
 
- final platformFile = result.files.single;
+  final platformFile = result.files.single;
 
-if (platformFile.bytes == null) {
-  ScaffoldMessenger.of(context).showSnackBar(
-    const SnackBar(
-      content: Text("Unable to read selected file."),
-    ),
-  );
-  return;
-}
+  if (platformFile.bytes == null) {
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(content: Text("Unable to read selected file.")),
+    );
+    return;
+  }
 
-final url = await ref.read(fileUploadProvider.notifier).upload(
-  platformFile.bytes!,
-  platformFile.name,
-);
+  final uploadResult = await ref
+      .read(fileUploadProvider.notifier)
+      .upload(platformFile.bytes!, platformFile.name);
 
-if (url != null) {
-  widget.onValueChanged("healthRecordUrl", url);
-  setState(() {});
-}
+  if (uploadResult != null) {
+    widget.onValueChanged("healthRecordUrl", uploadResult['fileUrl']);
+    widget.onValueChanged(
+      "healthRecordFileName",
+      uploadResult['originalFileName'],
+    );
+    setState(() {});
+  }
 }
   void _clearHealthRecord() {
     ref.read(fileUploadProvider.notifier).clear();
     widget.onValueChanged('healthRecordUrl', null);
+    widget.onValueChanged('healthRecordFileName', null);
     setState(() {});
   }
 
@@ -147,13 +149,15 @@ if (url != null) {
         ),
 
         if (widget.values['hasSymptoms'] == 'Yes') ...[
-          const SizedBox(height: 16),
-          _HealthRecordUploadSection(
-            uploadState: uploadState,
-            onPickAndUpload: _pickAndUpload,
-            onClear: _clearHealthRecord,
-          ),
-        ],
+  const SizedBox(height: 16),
+  _HealthRecordUploadSection(
+    uploadState: uploadState,
+    fallbackUrl: widget.values['healthRecordUrl'] as String?,
+    fallbackFileName: widget.values['healthRecordFileName'] as String?,
+    onPickAndUpload: _pickAndUpload,
+    onClear: _clearHealthRecord,
+  ),
+],
 
         const SizedBox(height: 20),
         Divider(color: Colors.grey.shade200),
@@ -185,6 +189,8 @@ if (url != null) {
 
 class _HealthRecordUploadSection extends StatelessWidget {
   final dynamic uploadState;
+  final String? fallbackUrl;
+  final String? fallbackFileName;
   final VoidCallback onPickAndUpload;
   final VoidCallback onClear;
 
@@ -192,11 +198,15 @@ class _HealthRecordUploadSection extends StatelessWidget {
     required this.uploadState,
     required this.onPickAndUpload,
     required this.onClear,
+    this.fallbackUrl,
+    this.fallbackFileName,
   });
 
   @override
   Widget build(BuildContext context) {
-    if (uploadState.uploadedUrl != null) {
+    final displayUrl = uploadState.uploadedUrl ?? fallbackUrl;
+    final displayFileName = uploadState.localFileName ?? fallbackFileName;
+   if (displayUrl != null) {
       return Container(
         padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
         decoration: BoxDecoration(
@@ -210,7 +220,7 @@ class _HealthRecordUploadSection extends StatelessWidget {
             const SizedBox(width: 8),
             Expanded(
               child: Text(
-                uploadState.localFileName ?? 'File uploaded',
+                displayFileName ?? 'File uploaded',
                 style: TextStyle(fontSize: 13, color: Colors.green.shade800),
                 overflow: TextOverflow.ellipsis,
               ),

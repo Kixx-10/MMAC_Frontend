@@ -35,28 +35,25 @@ class FileUploadNotifier extends Notifier<FileUploadState> {
   @override
   FileUploadState build() => const FileUploadState();
 
- Future<String?> upload(Uint8List bytes, String fileName) async {
-  state = state.copyWith(
-    isUploading: true,
-    error: null,
-  );
+Future<Map<String, String>?> upload(Uint8List bytes, String fileName) async {
+  state = state.copyWith(isUploading: true, error: null);
 
   try {
-    final url = await _repo.uploadHealthRecord(bytes, fileName);
+    final result = await _repo.uploadHealthRecord(bytes, fileName);
 
-    state = state.copyWith(
-      isUploading: false,
-      uploadedUrl: url,
-      localFileName: fileName,
-    );
+    if (result != null) {
+      state = state.copyWith(
+        isUploading: false,
+        uploadedUrl: result['fileUrl'],
+        localFileName: result['originalFileName'] ?? fileName,
+      );
+    } else {
+      state = state.copyWith(isUploading: false, error: "Upload failed");
+    }
 
-    return url;
+    return result;
   } catch (e) {
-    state = state.copyWith(
-      isUploading: false,
-      error: e.toString(),
-    );
-
+    state = state.copyWith(isUploading: false, error: e.toString());
     return null;
   }
 }

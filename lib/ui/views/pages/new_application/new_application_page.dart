@@ -94,6 +94,7 @@ class _NewApplicationState extends ConsumerState<NewApplication>
     'selectedPurposeDropdown': null,
     'hasSymptoms': null,
     'healthRecordUrl': null,
+    'healthRecordFileName': null,
     'carryingRestricted': null,
     'nrcStateCode': null,
     'nrcTownshipCode': null,
@@ -309,6 +310,7 @@ class _NewApplicationState extends ConsumerState<NewApplication>
       _formValues['purposeOfVisit'] = fetchedData.purposeOfVisit;
       _formValues['hasSymptoms'] = fetchedData.healthDeclaration;
       _formValues['healthRecordUrl'] = fetchedData.healthRecordUrl;
+      _formValues['healthRecordFileName'] = fetchedData.healthRecordFileName;
       _formValues['carryingRestricted'] = fetchedData.digitalDeclarations;
 
       currentStep = 1;
@@ -490,11 +492,13 @@ class _NewApplicationState extends ConsumerState<NewApplication>
       accommodation: _text('accommodation'),
       previousCity: _text('previousCity'),
       healthDeclaration: _safeString(_formValues['hasSymptoms']),
+      healthRecordUrl: _formValues['healthRecordUrl'],
+      healthRecordFileName: _formValues['healthRecordFileName'],
       digitalDeclarations: _safeString(_formValues['carryingRestricted']),
       uid: _text('uid'),
       occupation: _text('occupation'),
       placeOfBirthCode: _safeString(_formValues['placeOfBirthCode']),
-      healthRecordUrl: _formValues['healthRecordUrl'],
+     
     );
   }
 
