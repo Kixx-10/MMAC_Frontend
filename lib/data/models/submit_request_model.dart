@@ -30,6 +30,7 @@ class SubmitRequestModel {
   final String previousCity;
   final String healthDeclaration;
   final String? healthRecordUrl;
+  final String? healthRecordFileName; 
   final String digitalDeclarations;
   final String? modeOfTravelName;
   final String? portOfArrivalName;
@@ -75,6 +76,7 @@ class SubmitRequestModel {
     required this.previousCity,
     required this.healthDeclaration,
     this.healthRecordUrl,
+    this.healthRecordFileName,
     required this.digitalDeclarations,
     this.uid,
     this.occupation,
@@ -109,6 +111,7 @@ class SubmitRequestModel {
       'previousCity': previousCity,
       'healthDeclaration': healthDeclaration,
       'healthRecordUrl': healthRecordUrl,
+      'healthRecordFileName': healthRecordFileName,
       'digitalDeclarations': digitalDeclarations,
       'visaNo': (visaNo == null || visaNo!.trim().isEmpty) ? null : visaNo,
       'nrc': (nrc == null || nrc!.trim().isEmpty) ? null : nrc,
@@ -153,6 +156,7 @@ class SubmitRequestModel {
       previousCity: json['previousCity'],
       healthDeclaration: json['healthDeclaration'],
       healthRecordUrl: json['healthRecordUrl'],
+      healthRecordFileName: json['healthRecordFileName'], 
       digitalDeclarations: json['digitalDeclarations'],
       modeOfTravelName: json['modeOfTravelName'],
       portOfArrivalName: json['portOfArrivalName'],
