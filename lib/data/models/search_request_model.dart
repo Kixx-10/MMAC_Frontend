@@ -48,7 +48,7 @@ class ForeignerSearchRequestModel {
       'passportNo': passportNumber,
       'countryOfBirthCode': nationalityCode,
       'expiryDate':
-          passportExpiry, // Front-End တွင် string ("YYYY-MM-DD") အနေဖြင့် ရှိနေသည်၊ ASP.NET က အလိုအလျောက် Date ပြောင်းပေးပါလိမ့်မည်
+          passportExpiry, 
       'dob': dob,
     };
   }
