@@ -232,9 +232,9 @@ class _NewApplicationState extends ConsumerState<NewApplication>
         setState(() => _formValues[key] = value);
         //to check url inlcude
         debugPrint(
-        "_formValues['healthRecordUrl'] = ${_formValues['healthRecordUrl']}",
-      );
-      //
+          "_formValues['healthRecordUrl'] = ${_formValues['healthRecordUrl']}",
+        );
+        //
         _saveCurrentSession();
       }
     });
@@ -696,6 +696,7 @@ class _NewApplicationState extends ConsumerState<NewApplication>
           values: _formValues,
           actionButtons: _buildActionButtons(),
           isUpdateMode: widget.isUpdateMode,
+          onValueChanged: _updateFormValue,
           onEditRequested: (step) {
             setState(() => currentStep = step);
             _saveCurrentSession();

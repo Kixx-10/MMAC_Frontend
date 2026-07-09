@@ -59,10 +59,12 @@ class _MainLayoutState extends State<MainLayout>
     try {
       final prefs = await SharedPreferences.getInstance();
       final int savedTabIndex = prefs.getInt('last_active_tab') ?? 0;
+      final bool noticeAccepted = prefs.getBool('hasAcceptedNotice') ?? false;
 
       if (mounted) {
         WidgetsBinding.instance.addPostFrameCallback((_) {
           if (mounted) _tabController.index = savedTabIndex;
+          setState(() => _hasAcceptedNotice = noticeAccepted);
         });
       }
 
@@ -394,28 +396,28 @@ class _MainLayoutState extends State<MainLayout>
                                         Row(
                                           children: [
                                             _CustomTabItem(
-                                              label: "Home",
+                                              label: "HOME",
                                               isActive:
                                                   _tabController.index == 0,
                                               onTap: () => _handleTabTap(0),
                                             ),
                                             const SizedBox(width: 5),
                                             _CustomTabItem(
-                                              label: "New Application",
+                                              label: "NEW APPLICATION",
                                               isActive:
                                                   _tabController.index == 1,
                                               onTap: () => _handleTabTap(1),
                                             ),
                                             const SizedBox(width: 5),
                                             _CustomTabItem(
-                                              label: "Update Application",
+                                              label: "UPDATE APPLICATION",
                                               isActive:
                                                   _tabController.index == 2,
                                               onTap: () => _handleTabTap(2),
                                             ),
                                             const SizedBox(width: 5),
                                             _CustomTabItem(
-                                              label: "FAQs",
+                                              label: "FAQ",
                                               isActive:
                                                   _tabController.index == 3,
                                               onTap: () => _handleTabTap(3),

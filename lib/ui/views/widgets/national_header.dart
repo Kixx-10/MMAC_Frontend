@@ -42,9 +42,9 @@ class NationalHeader extends StatelessWidget {
                       decoration: const BoxDecoration(
                         image: DecorationImage(
                           image: AssetImage(
-                            'assets/images/department_logo.jpg',
+                            'assets/images/department_logo2.png',
                           ),
-                          fit: BoxFit.contain,
+                          fit: BoxFit.cover,
                         ),
                         color: Color(0xffF3F4F6),
                         shape: BoxShape.circle,
