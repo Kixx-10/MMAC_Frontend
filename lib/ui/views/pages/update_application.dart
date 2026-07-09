@@ -1,6 +1,6 @@
 // lib/ui/views/pages/update_application/update_application_page.dart
 
-// ignore_for_file: curly_braces_in_flow_control_structures, prefer_function_declarations_over_variables, deprecated_member_use, unused_field, empty_catches
+// ignore_for_file: prefer_function_declarations_over_variables, deprecated_member_use, unused_field, empty_catches
 
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -171,7 +171,7 @@ class _UpdateApplicationState extends ConsumerState<UpdateApplication> {
       if (errorMessage.toLowerCase().contains("not found")) {
         displayTitle = "Application Uneditable";
         displayMessage =
-            "We could not find any pending application with these details. The application may have already been Approved or Rejected, or the details are incorrect. \n\nApproved applications cannot be modified.";
+            "We could not find a pending application with these details. The application may have already been Approved or Rejected, or the details are incorrect. \n\nApproved applications cannot be modified.";
       }
 
       _showInfoDialog(displayTitle, displayMessage, isError: true);
@@ -182,6 +182,13 @@ class _UpdateApplicationState extends ConsumerState<UpdateApplication> {
       Future.microtask(() {
         final fetchedData = ref.read(updateApplicationProvider).value;
         if (fetchedData != null) {
+          // Optional Safety Guard: If your SubmitRequestModel has a status field, check it here!
+          // final status = fetchedData.status?.toLowerCase() ?? 'pending';
+          // if (status == 'approved' || status == 'rejected') {
+          //   _showInfoDialog("Status: ${fetchedData.status}", "This application has already been processed and cannot be edited.", isError: false);
+          //   return;
+          // }
+
           widget.onApplicationFetched(fetchedData);
         }
       });
@@ -539,7 +546,7 @@ class _UpdateApplicationState extends ConsumerState<UpdateApplication> {
     final countryField = Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        _buildLabel("Nationality *"),
+        _buildLabel("Country *"),
         _isLoadingCountries
             ? const LinearProgressIndicator()
             : Container(
@@ -559,7 +566,7 @@ class _UpdateApplicationState extends ConsumerState<UpdateApplication> {
                         : _searchControllers['nationalityCode']?.text,
                     isExpanded: true,
                     hint: Text(
-                      "Select Country",
+                      "Select Nationality",
                       style: TextStyle(fontSize: isMobile ? 10 : 12),
                     ),
                     items: _rawCountryObjects.map<DropdownMenuItem<String>>((
@@ -704,7 +711,7 @@ class _UpdateApplicationState extends ConsumerState<UpdateApplication> {
       padding: const EdgeInsets.all(16),
       child: Center(
         child: Container(
-          constraints: const BoxConstraints(maxWidth: 1200),
+          constraints: const BoxConstraints(maxWidth: 800),
           padding: const EdgeInsets.all(24),
           decoration: BoxDecoration(
             color: Colors.white,
@@ -764,51 +771,150 @@ class _UpdateApplicationState extends ConsumerState<UpdateApplication> {
   }
 
   Widget _buildNoticeBox(bool isMyanmar) {
+    // 🎯 The dynamic list handling the Passport vs NRC switch
+    final items = [
+      'Full Name',
+      isMyanmar ? 'NRC Number' : 'Passport Number',
+      'Date of Birth',
+      'Date of Passport Expiry',
+      'Country / Citizenship',
+      'Date of Arrival',
+    ];
+
     return Container(
       width: double.infinity,
-      padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
         color: Colors.white,
-        border: Border.all(color: Colors.grey.shade300),
         borderRadius: BorderRadius.circular(8),
+        border: Border(
+          left: BorderSide(color: Colors.blue.shade500, width: 4),
+          top: BorderSide(color: Colors.grey.shade200, width: 1),
+          right: BorderSide(color: Colors.grey.shade200, width: 1),
+          bottom: BorderSide(color: Colors.grey.shade200, width: 1),
+        ),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.02),
+            blurRadius: 8,
+            offset: const Offset(0, 4),
+          ),
+        ],
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          const Text(
-            'NOTICE',
-            style: TextStyle(
-              fontSize: 18,
-              fontWeight: FontWeight.bold,
-              color: Colors.black87,
+          // Header Section
+          Padding(
+            padding: const EdgeInsets.all(16),
+            child: Row(
+              children: [
+                Container(
+                  padding: const EdgeInsets.all(6),
+                  decoration: BoxDecoration(
+                    color: Colors.blue.shade50,
+                    shape: BoxShape.circle,
+                  ),
+                  child: Icon(
+                    Icons.warning_amber_rounded,
+                    color: Colors.blue.shade600,
+                    size: 20,
+                  ),
+                ),
+                const SizedBox(width: 12),
+                const Text(
+                  'Important Notice',
+                  style: TextStyle(
+                    fontSize: 16,
+                    fontWeight: FontWeight.bold,
+                    color: Colors.black87,
+                  ),
+                ),
+              ],
             ),
           ),
-          const SizedBox(height: 12),
-          const Text(
-            'Please note that you will not be able to update the following information:',
-            style: TextStyle(fontSize: 15, color: Colors.black87),
-          ),
-          const SizedBox(height: 12),
-          const Text(
-            '1. Date of Arrival\n2. Full Name',
-            style: TextStyle(fontSize: 15, color: Colors.black87, height: 1.4),
-          ),
-          Text(
-            '3. ${isMyanmar ? "NRC Number" : "Passport Number"}',
-            style: const TextStyle(
-              fontSize: 15,
-              color: Colors.black87,
-              height: 1.4,
+          Divider(height: 1, color: Colors.grey.shade200),
+
+          // Body Content Section
+          Padding(
+            padding: const EdgeInsets.all(20),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  'Please note that the following details cannot be edited after your submission:',
+                  style: TextStyle(fontSize: 14, color: Colors.grey.shade600),
+                ),
+                const SizedBox(height: 20),
+
+                // Grid Checklist
+                LayoutBuilder(
+                  builder: (context, constraints) {
+                    final isMobile = constraints.maxWidth < 450;
+                    return GridView.builder(
+                      shrinkWrap: true,
+                      physics: const NeverScrollableScrollPhysics(),
+                      itemCount: items.length,
+                      gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+                        crossAxisCount: isMobile ? 1 : 2,
+                        mainAxisExtent: 32,
+                        crossAxisSpacing: 16,
+                        mainAxisSpacing: 8,
+                      ),
+                      itemBuilder: (context, index) {
+                        return Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            Container(
+                              padding: const EdgeInsets.all(2),
+                              decoration: BoxDecoration(
+                                color: Colors.blue.shade50,
+                                shape: BoxShape.circle,
+                              ),
+                              child: Icon(
+                                Icons.check,
+                                size: 12,
+                                color: Colors.blue.shade600,
+                              ),
+                            ),
+                            const SizedBox(width: 10),
+                            Expanded(
+                              child: Text(
+                                items[index],
+                                style: const TextStyle(
+                                  fontSize: 14,
+                                  color: Colors.black87,
+                                ),
+                              ),
+                            ),
+                          ],
+                        );
+                      },
+                    );
+                  },
+                ),
+
+                const SizedBox(height: 12),
+                Divider(height: 32, color: Colors.grey.shade200),
+
+                // Bottom Footer Text
+                RichText(
+                  text: TextSpan(
+                    text: 'Need to make a change? ',
+                    style: TextStyle(fontSize: 14, color: Colors.grey.shade600),
+                    children: [
+                      TextSpan(
+                        text: 'Start a new submission',
+                        style: TextStyle(
+                          fontSize: 14,
+                          color: Colors.blue.shade600,
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ],
             ),
-          ),
-          const Text(
-            '4. Date of Passport Expiry\n5. Date of Birth\n6. Country / Citizenship',
-            style: TextStyle(fontSize: 15, color: Colors.black87, height: 1.4),
-          ),
-          const SizedBox(height: 16),
-          const Text(
-            'If you wish to update any of the fields above, please make a new submission.',
-            style: TextStyle(fontSize: 15, color: Colors.black87),
           ),
         ],
       ),

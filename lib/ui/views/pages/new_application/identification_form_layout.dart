@@ -222,7 +222,6 @@ class _IdentificationFormLayoutState
         if (mounted) {
           setState(() {
             _rawCountryObjects.clear();
-<<<<<<< HEAD
             _rawCountryObjects.addAll(allCountriesState.countryList);
 
             _ICAOcountryNameList = ICAOMemberState.countryList
@@ -232,13 +231,6 @@ class _IdentificationFormLayoutState
             _AllCountryNameList = allCountriesState.countryList
                 .map((c) => c.countryName)
                 .toList();
-=======
-          _rawCountryObjects.addAll(allCountriesState.countryList);
-        
-          _ICAOcountryNameList = ICAOMemberState.countryList.map((c) => c.countryName).toList();
-          
-          _AllCountryNameList = allCountriesState.countryList.map((c) => c.countryName).toList();
->>>>>>> main
 
             _resolveCountryCodeToName('nationalityCode', 'country');
             _resolveCountryCodeToName('issuedCountryCode', 'issuedCountry');
