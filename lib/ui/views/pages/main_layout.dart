@@ -259,6 +259,9 @@ class _MainLayoutState extends State<MainLayout>
         onApplicationFetched: (SubmitRequestModel data) {
           setState(() => _fetchedUpdateData = data);
         },
+        onStartNewApplication: () {
+          _handleTabTap(1);
+        },
       );
     }
 
