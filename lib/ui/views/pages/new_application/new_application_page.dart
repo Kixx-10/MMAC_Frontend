@@ -53,6 +53,7 @@ class _NewApplicationState extends ConsumerState<NewApplication>
     'visaNumber': TextEditingController(),
     'passportNumber': TextEditingController(),
     'address': TextEditingController(),
+
     'nrc': TextEditingController(),
     'fatherName': TextEditingController(),
     'uid': TextEditingController(),
@@ -498,7 +499,6 @@ class _NewApplicationState extends ConsumerState<NewApplication>
       uid: _text('uid'),
       occupation: _text('occupation'),
       placeOfBirthCode: _safeString(_formValues['placeOfBirthCode']),
-     
     );
   }
 

@@ -127,6 +127,10 @@ class _ReviewLayoutState extends State<ReviewLayout> {
         ),
         _ReviewTile(label: 'Email', value: widget.controllers['email']?.text),
         _ReviewTile(
+          label: 'Place of Residence',
+          value: widget.controllers['address']?.text,
+        ),
+        _ReviewTile(
           label: 'Mobile Number',
           value: widget.controllers['mobile']?.text,
         ),
@@ -240,6 +244,11 @@ class _ReviewLayoutState extends State<ReviewLayout> {
           label: 'Carrying prohibited or restricted items?',
           value: widget.values['carryingRestricted'],
         ),
+        if (widget.values['hasSymptoms'] == 'Yes' &&
+            widget.values['healthRecordFileName'] != null)
+          _AttachmentCard(
+            fileName: widget.values['healthRecordFileName']!,
+          ),
       ],
     );
   }
@@ -664,6 +673,45 @@ class _DeclarationCard extends StatelessWidget {
                 color: color,
                 letterSpacing: 0.5,
               ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _AttachmentCard extends StatelessWidget {
+  final String fileName;
+
+  const _AttachmentCard({required this.fileName});
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      margin: const EdgeInsets.only(bottom: 12),
+      padding: const EdgeInsets.all(14),
+      decoration: BoxDecoration(
+        color: Colors.blue.shade50,
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: Colors.blue.shade200),
+      ),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.center,
+        children: [
+          Icon(Icons.attach_file, color: Colors.blue.shade700, size: 20),
+          const SizedBox(width: 12),
+          Expanded(
+            child: Text(
+              fileName,
+              style: TextStyle(
+                fontSize: 13,
+                fontWeight: FontWeight.w600,
+                color: Colors.blue.shade900,
+                height: 1.4,
+              ),
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
             ),
           ),
         ],

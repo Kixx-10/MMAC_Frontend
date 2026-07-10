@@ -730,7 +730,7 @@ class _UpdateApplicationState extends ConsumerState<UpdateApplication> {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 const SizedBox(height: 16),
-                _buildNoticeBox(isMyanmar),
+                // _buildNoticeBox(isMyanmar),
                 const SizedBox(height: 24),
 
                 const Text(
@@ -770,154 +770,154 @@ class _UpdateApplicationState extends ConsumerState<UpdateApplication> {
     );
   }
 
-  Widget _buildNoticeBox(bool isMyanmar) {
-    // 🎯 The dynamic list handling the Passport vs NRC switch
-    final items = [
-      'Full Name',
-      isMyanmar ? 'NRC Number' : 'Passport Number',
-      'Date of Birth',
-      'Date of Passport Expiry',
-      'Country / Citizenship',
-      'Date of Arrival',
-    ];
+  // Widget _buildNoticeBox(bool isMyanmar) {
+  //   // 🎯 The dynamic list handling the Passport vs NRC switch
+  //   final items = [
+  //     'Full Name',
+  //     isMyanmar ? 'NRC Number' : 'Passport Number',
+  //     'Date of Birth',
+  //     'Date of Passport Expiry',
+  //     'Country / Citizenship',
+  //     'Date of Arrival',
+  //   ];
 
-    return Container(
-      width: double.infinity,
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(8),
-        border: Border(
-          left: BorderSide(color: Colors.blue.shade500, width: 4),
-          top: BorderSide(color: Colors.grey.shade200, width: 1),
-          right: BorderSide(color: Colors.grey.shade200, width: 1),
-          bottom: BorderSide(color: Colors.grey.shade200, width: 1),
-        ),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withOpacity(0.02),
-            blurRadius: 8,
-            offset: const Offset(0, 4),
-          ),
-        ],
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          // Header Section
-          Padding(
-            padding: const EdgeInsets.all(16),
-            child: Row(
-              children: [
-                Container(
-                  padding: const EdgeInsets.all(6),
-                  decoration: BoxDecoration(
-                    color: Colors.blue.shade50,
-                    shape: BoxShape.circle,
-                  ),
-                  child: Icon(
-                    Icons.warning_amber_rounded,
-                    color: Colors.blue.shade600,
-                    size: 20,
-                  ),
-                ),
-                const SizedBox(width: 12),
-                const Text(
-                  'Important Notice',
-                  style: TextStyle(
-                    fontSize: 16,
-                    fontWeight: FontWeight.bold,
-                    color: Colors.black87,
-                  ),
-                ),
-              ],
-            ),
-          ),
-          Divider(height: 1, color: Colors.grey.shade200),
+  //   return Container(
+  //     width: double.infinity,
+  //     decoration: BoxDecoration(
+  //       color: Colors.white,
+  //       borderRadius: BorderRadius.circular(8),
+  //       border: Border(
+  //         left: BorderSide(color: Colors.blue.shade500, width: 4),
+  //         top: BorderSide(color: Colors.grey.shade200, width: 1),
+  //         right: BorderSide(color: Colors.grey.shade200, width: 1),
+  //         bottom: BorderSide(color: Colors.grey.shade200, width: 1),
+  //       ),
+  //       boxShadow: [
+  //         BoxShadow(
+  //           color: Colors.black.withOpacity(0.02),
+  //           blurRadius: 8,
+  //           offset: const Offset(0, 4),
+  //         ),
+  //       ],
+  //     ),
+  //     child: Column(
+  //       crossAxisAlignment: CrossAxisAlignment.start,
+  //       children: [
+  //         // Header Section
+  //         Padding(
+  //           padding: const EdgeInsets.all(16),
+  //           child: Row(
+  //             children: [
+  //               Container(
+  //                 padding: const EdgeInsets.all(6),
+  //                 decoration: BoxDecoration(
+  //                   color: Colors.blue.shade50,
+  //                   shape: BoxShape.circle,
+  //                 ),
+  //                 child: Icon(
+  //                   Icons.warning_amber_rounded,
+  //                   color: Colors.blue.shade600,
+  //                   size: 20,
+  //                 ),
+  //               ),
+  //               const SizedBox(width: 12),
+  //               const Text(
+  //                 'Important Notice',
+  //                 style: TextStyle(
+  //                   fontSize: 16,
+  //                   fontWeight: FontWeight.bold,
+  //                   color: Colors.black87,
+  //                 ),
+  //               ),
+  //             ],
+  //           ),
+  //         ),
+  //         Divider(height: 1, color: Colors.grey.shade200),
 
-          // Body Content Section
-          Padding(
-            padding: const EdgeInsets.all(20),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  'Please note that the following details cannot be edited after your submission:',
-                  style: TextStyle(fontSize: 14, color: Colors.grey.shade600),
-                ),
-                const SizedBox(height: 20),
+  //         // Body Content Section
+  //         Padding(
+  //           padding: const EdgeInsets.all(20),
+  //           child: Column(
+  //             crossAxisAlignment: CrossAxisAlignment.start,
+  //             children: [
+  //               Text(
+  //                 'Please note that the following details cannot be edited after your submission:',
+  //                 style: TextStyle(fontSize: 14, color: Colors.grey.shade600),
+  //               ),
+  //               const SizedBox(height: 20),
 
-                // Grid Checklist
-                LayoutBuilder(
-                  builder: (context, constraints) {
-                    final isMobile = constraints.maxWidth < 450;
-                    return GridView.builder(
-                      shrinkWrap: true,
-                      physics: const NeverScrollableScrollPhysics(),
-                      itemCount: items.length,
-                      gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
-                        crossAxisCount: isMobile ? 1 : 2,
-                        mainAxisExtent: 32,
-                        crossAxisSpacing: 16,
-                        mainAxisSpacing: 8,
-                      ),
-                      itemBuilder: (context, index) {
-                        return Row(
-                          mainAxisSize: MainAxisSize.min,
-                          children: [
-                            Container(
-                              padding: const EdgeInsets.all(2),
-                              decoration: BoxDecoration(
-                                color: Colors.blue.shade50,
-                                shape: BoxShape.circle,
-                              ),
-                              child: Icon(
-                                Icons.check,
-                                size: 12,
-                                color: Colors.blue.shade600,
-                              ),
-                            ),
-                            const SizedBox(width: 10),
-                            Expanded(
-                              child: Text(
-                                items[index],
-                                style: const TextStyle(
-                                  fontSize: 14,
-                                  color: Colors.black87,
-                                ),
-                              ),
-                            ),
-                          ],
-                        );
-                      },
-                    );
-                  },
-                ),
+  //               // Grid Checklist
+  //               LayoutBuilder(
+  //                 builder: (context, constraints) {
+  //                   final isMobile = constraints.maxWidth < 450;
+  //                   return GridView.builder(
+  //                     shrinkWrap: true,
+  //                     physics: const NeverScrollableScrollPhysics(),
+  //                     itemCount: items.length,
+  //                     gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+  //                       crossAxisCount: isMobile ? 1 : 2,
+  //                       mainAxisExtent: 32,
+  //                       crossAxisSpacing: 16,
+  //                       mainAxisSpacing: 8,
+  //                     ),
+  //                     itemBuilder: (context, index) {
+  //                       return Row(
+  //                         mainAxisSize: MainAxisSize.min,
+  //                         children: [
+  //                           Container(
+  //                             padding: const EdgeInsets.all(2),
+  //                             decoration: BoxDecoration(
+  //                               color: Colors.blue.shade50,
+  //                               shape: BoxShape.circle,
+  //                             ),
+  //                             child: Icon(
+  //                               Icons.check,
+  //                               size: 12,
+  //                               color: Colors.blue.shade600,
+  //                             ),
+  //                           ),
+  //                           const SizedBox(width: 10),
+  //                           Expanded(
+  //                             child: Text(
+  //                               items[index],
+  //                               style: const TextStyle(
+  //                                 fontSize: 14,
+  //                                 color: Colors.black87,
+  //                               ),
+  //                             ),
+  //                           ),
+  //                         ],
+  //                       );
+  //                     },
+  //                   );
+  //                 },
+  //               ),
 
-                const SizedBox(height: 12),
-                Divider(height: 32, color: Colors.grey.shade200),
+  //               const SizedBox(height: 12),
+  //               Divider(height: 32, color: Colors.grey.shade200),
 
-                // Bottom Footer Text
-                RichText(
-                  text: TextSpan(
-                    text: 'Need to make a change? ',
-                    style: TextStyle(fontSize: 14, color: Colors.grey.shade600),
-                    children: [
-                      TextSpan(
-                        text: 'Start a new submission',
-                        style: TextStyle(
-                          fontSize: 14,
-                          color: Colors.blue.shade600,
-                          fontWeight: FontWeight.w600,
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-              ],
-            ),
-          ),
-        ],
-      ),
-    );
-  }
+  //               // Bottom Footer Text
+  //               RichText(
+  //                 text: TextSpan(
+  //                   text: 'Need to make a change? ',
+  //                   style: TextStyle(fontSize: 14, color: Colors.grey.shade600),
+  //                   children: [
+  //                     TextSpan(
+  //                       text: 'Start a new submission',
+  //                       style: TextStyle(
+  //                         fontSize: 14,
+  //                         color: Colors.blue.shade600,
+  //                         fontWeight: FontWeight.w600,
+  //                       ),
+  //                     ),
+  //                   ],
+  //                 ),
+  //               ),
+  //             ],
+  //           ),
+  //         ),
+  //       ],
+  //     ),
+  //   );
+  // }
 }
