@@ -7,7 +7,7 @@ import 'package:mmac/ui/views/pages/home.dart';
 import 'package:mmac/ui/views/pages/new_application/new_application_page.dart';
 import 'package:mmac/ui/views/pages/new_application/residency_layout.dart';
 import 'package:mmac/ui/views/pages/faqs.dart';
-import 'package:mmac/ui/views/pages/qr_scan_page.dart';
+//import 'package:mmac/ui/views/pages/qr_scan_page.dart';
 import 'package:mmac/ui/views/pages/update_application.dart';
 import 'package:mmac/ui/views/pages/notice_page.dart';
 import 'package:mmac/ui/views/widgets/national_header.dart';
@@ -422,13 +422,15 @@ class _MainLayoutState extends State<MainLayout>
                                                   _tabController.index == 3,
                                               onTap: () => _handleTabTap(3),
                                             ),
-                                            const SizedBox(width: 5),
-                                            _CustomTabItem(
-                                              label: "QrScan",
-                                              isActive:
-                                                  _tabController.index == 4,
-                                              onTap: () => _handleTabTap(4),
-                                            ),
+
+                                            // To be implemented in the future
+                                            // const SizedBox(width: 5),
+                                            // _CustomTabItem(
+                                            //   label: "QrScan",
+                                            //   isActive:
+                                            //       _tabController.index == 4,
+                                            //   onTap: () => _handleTabTap(4),
+                                            // ),
                                           ],
                                         ),
                                       const Text(
@@ -463,7 +465,7 @@ class _MainLayoutState extends State<MainLayout>
                                       2,
                                     ),
                                     _buildExpandableMenuItem("FAQS", 3),
-                                    _buildExpandableMenuItem("QRSCAN", 4),
+                                   // _buildExpandableMenuItem("QRSCAN", 4),
                                   ],
                                 ),
                               ),
@@ -499,7 +501,7 @@ class _MainLayoutState extends State<MainLayout>
                   // 4. FAQS PAGE
                   FAQS(onReturnHome: () => _tabController.animateTo(0)),
                   // 5. QR SCAN PAGE
-                  const QrScanPage(),
+                  //const QrScanPage(),  To be implemented in the future
                 ],
               ),
             ),
