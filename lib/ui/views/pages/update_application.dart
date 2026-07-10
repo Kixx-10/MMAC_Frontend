@@ -17,12 +17,14 @@ class UpdateApplication extends ConsumerStatefulWidget {
   final String? initialCountry;
   final Function(SubmitRequestModel) onApplicationFetched;
   final VoidCallback onBackPressed;
+  final VoidCallback? onStartNewApplication;
 
   const UpdateApplication({
     super.key,
     this.initialCountry,
     required this.onBackPressed,
     required this.onApplicationFetched,
+    this.onStartNewApplication,
   });
 
   @override
@@ -730,7 +732,7 @@ class _UpdateApplicationState extends ConsumerState<UpdateApplication> {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 const SizedBox(height: 16),
-                // _buildNoticeBox(isMyanmar),
+                _buildNoticeBox(isMyanmar),
                 const SizedBox(height: 24),
 
                 const Text(
@@ -770,154 +772,157 @@ class _UpdateApplicationState extends ConsumerState<UpdateApplication> {
     );
   }
 
-  // Widget _buildNoticeBox(bool isMyanmar) {
-  //   // 🎯 The dynamic list handling the Passport vs NRC switch
-  //   final items = [
-  //     'Full Name',
-  //     isMyanmar ? 'NRC Number' : 'Passport Number',
-  //     'Date of Birth',
-  //     'Date of Passport Expiry',
-  //     'Country / Citizenship',
-  //     'Date of Arrival',
-  //   ];
+  Widget _buildNoticeBox(bool isMyanmar) {
+    final isMobile = MediaQuery.of(context).size.width < 500;
 
-  //   return Container(
-  //     width: double.infinity,
-  //     decoration: BoxDecoration(
-  //       color: Colors.white,
-  //       borderRadius: BorderRadius.circular(8),
-  //       border: Border(
-  //         left: BorderSide(color: Colors.blue.shade500, width: 4),
-  //         top: BorderSide(color: Colors.grey.shade200, width: 1),
-  //         right: BorderSide(color: Colors.grey.shade200, width: 1),
-  //         bottom: BorderSide(color: Colors.grey.shade200, width: 1),
-  //       ),
-  //       boxShadow: [
-  //         BoxShadow(
-  //           color: Colors.black.withOpacity(0.02),
-  //           blurRadius: 8,
-  //           offset: const Offset(0, 4),
-  //         ),
-  //       ],
-  //     ),
-  //     child: Column(
-  //       crossAxisAlignment: CrossAxisAlignment.start,
-  //       children: [
-  //         // Header Section
-  //         Padding(
-  //           padding: const EdgeInsets.all(16),
-  //           child: Row(
-  //             children: [
-  //               Container(
-  //                 padding: const EdgeInsets.all(6),
-  //                 decoration: BoxDecoration(
-  //                   color: Colors.blue.shade50,
-  //                   shape: BoxShape.circle,
-  //                 ),
-  //                 child: Icon(
-  //                   Icons.warning_amber_rounded,
-  //                   color: Colors.blue.shade600,
-  //                   size: 20,
-  //                 ),
-  //               ),
-  //               const SizedBox(width: 12),
-  //               const Text(
-  //                 'Important Notice',
-  //                 style: TextStyle(
-  //                   fontSize: 16,
-  //                   fontWeight: FontWeight.bold,
-  //                   color: Colors.black87,
-  //                 ),
-  //               ),
-  //             ],
-  //           ),
-  //         ),
-  //         Divider(height: 1, color: Colors.grey.shade200),
+    return Container(
+      width: 800,
+      decoration: BoxDecoration(
+        borderRadius: BorderRadius.circular(12),
+        color: Colors.white,
+        boxShadow: [
+          const BoxShadow(
+            color: Colors.grey,
+            offset: Offset(1, 1),
+            blurRadius: 1,
+            spreadRadius: 1,
+          ),
+        ],
+      ),
+      child: Column(
+        children: [
+          Container(
+            height: 8,
+            width: double.infinity,
+            decoration: const BoxDecoration(
+              color: Colors.blue,
+              borderRadius: BorderRadius.only(
+                topLeft: Radius.circular(12),
+                topRight: Radius.circular(12),
+              ),
+            ),
+          ),
+          Container(
+            width: double.infinity,
+            height: 120,
+            alignment: Alignment.center,
+            decoration: const BoxDecoration(color: Colors.white54),
+            child: Padding(
+              padding: const EdgeInsets.all(40.0),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.start,
+                crossAxisAlignment: CrossAxisAlignment.center,
+                children: [
+                  Container(
+                    height: 50,
+                    width: 50,
+                    alignment: Alignment.center,
+                    decoration: BoxDecoration(
+                      shape: BoxShape.circle,
+                      color: Colors.blue.shade50,
+                    ),
+                    child: const Icon(
+                      Icons.warning_amber_rounded,
+                      color: Colors.blue,
+                      size: 30,
+                    ),
+                  ),
+                  const SizedBox(width: 30),
+                  Text(
+                    "Important Notice",
+                    style: TextStyle(
+                      fontSize: isMobile ? 16 : 25,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ),
+          const Divider(),
+          const SizedBox(height: 5),
+          Padding(
+            padding: const EdgeInsets.all(30),
+            child: Column(
+              children: [
+                const Text(
+                  "Please note that the following Details cannot be edited after submission:",
+                  style: TextStyle(fontSize: 18, color: Colors.grey),
+                ),
+                const SizedBox(height: 40),
+                Wrap(
+                  spacing: 20,
+                  runSpacing: 20,
+                  children: [
+                    SizedBox(
+                      width: 250,
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          _buildNoticeItems("Full Name"),
+                          const SizedBox(height: 20),
+                          _buildNoticeItems("Date of Birth"),
+                          const SizedBox(height: 20),
+                          _buildNoticeItems("Nationality"),
+                        ],
+                      ),
+                    ),
+                    SizedBox(
+                      width: 250,
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          _buildNoticeItems(
+                            isMyanmar ? "Passport Number" : "NRC Number",
+                          ),
+                          const SizedBox(height: 20),
+                          _buildNoticeItems("Passport Expiry Date"),
+                          const SizedBox(height: 20),
+                          _buildNoticeItems("Date of Arrival"),
+                        ],
+                      ),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 20),
+                const Divider(),
+                const SizedBox(height: 10),
+                Wrap(
+                  crossAxisAlignment: WrapCrossAlignment.center,
+                  children: [
+                    const Text(
+                      "Need to make a change?",
+                      style: TextStyle(fontSize: 18, color: Colors.grey),
+                    ),
+                    const SizedBox(width: 10),
+                    InkWell(
+                      onTap: widget.onStartNewApplication,
+                      child: const Text(
+                        "Start a new submission",
+                        style: TextStyle(
+                          fontSize: 18,
+                          color: Color.fromRGBO(1, 156, 244, 1),
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
 
-  //         // Body Content Section
-  //         Padding(
-  //           padding: const EdgeInsets.all(20),
-  //           child: Column(
-  //             crossAxisAlignment: CrossAxisAlignment.start,
-  //             children: [
-  //               Text(
-  //                 'Please note that the following details cannot be edited after your submission:',
-  //                 style: TextStyle(fontSize: 14, color: Colors.grey.shade600),
-  //               ),
-  //               const SizedBox(height: 20),
-
-  //               // Grid Checklist
-  //               LayoutBuilder(
-  //                 builder: (context, constraints) {
-  //                   final isMobile = constraints.maxWidth < 450;
-  //                   return GridView.builder(
-  //                     shrinkWrap: true,
-  //                     physics: const NeverScrollableScrollPhysics(),
-  //                     itemCount: items.length,
-  //                     gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
-  //                       crossAxisCount: isMobile ? 1 : 2,
-  //                       mainAxisExtent: 32,
-  //                       crossAxisSpacing: 16,
-  //                       mainAxisSpacing: 8,
-  //                     ),
-  //                     itemBuilder: (context, index) {
-  //                       return Row(
-  //                         mainAxisSize: MainAxisSize.min,
-  //                         children: [
-  //                           Container(
-  //                             padding: const EdgeInsets.all(2),
-  //                             decoration: BoxDecoration(
-  //                               color: Colors.blue.shade50,
-  //                               shape: BoxShape.circle,
-  //                             ),
-  //                             child: Icon(
-  //                               Icons.check,
-  //                               size: 12,
-  //                               color: Colors.blue.shade600,
-  //                             ),
-  //                           ),
-  //                           const SizedBox(width: 10),
-  //                           Expanded(
-  //                             child: Text(
-  //                               items[index],
-  //                               style: const TextStyle(
-  //                                 fontSize: 14,
-  //                                 color: Colors.black87,
-  //                               ),
-  //                             ),
-  //                           ),
-  //                         ],
-  //                       );
-  //                     },
-  //                   );
-  //                 },
-  //               ),
-
-  //               const SizedBox(height: 12),
-  //               Divider(height: 32, color: Colors.grey.shade200),
-
-  //               // Bottom Footer Text
-  //               RichText(
-  //                 text: TextSpan(
-  //                   text: 'Need to make a change? ',
-  //                   style: TextStyle(fontSize: 14, color: Colors.grey.shade600),
-  //                   children: [
-  //                     TextSpan(
-  //                       text: 'Start a new submission',
-  //                       style: TextStyle(
-  //                         fontSize: 14,
-  //                         color: Colors.blue.shade600,
-  //                         fontWeight: FontWeight.w600,
-  //                       ),
-  //                     ),
-  //                   ],
-  //                 ),
-  //               ),
-  //             ],
-  //           ),
-  //         ),
-  //       ],
-  //     ),
-  //   );
-  // }
+  Widget _buildNoticeItems(String lable) {
+    return Row(
+      children: [
+        const Icon(Icons.check_circle_rounded, color: Colors.blue),
+        const SizedBox(width: 10),
+        Expanded(child: Text(lable, style: const TextStyle(fontSize: 18))),
+      ],
+    );
+  }
 }
