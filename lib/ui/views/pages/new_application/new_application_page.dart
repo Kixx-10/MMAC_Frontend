@@ -38,7 +38,7 @@ class _NewApplicationState extends ConsumerState<NewApplication>
   bool get wantKeepAlive => true;
   // STATE VARIABLES
   int currentStep = 1;
-  final int totalSteps = 4;
+  final int totalSteps = 4;   
   bool _isSessionLoading = true;
 
   final GlobalKey<FormState> _step1FormKey = GlobalKey<FormState>();
