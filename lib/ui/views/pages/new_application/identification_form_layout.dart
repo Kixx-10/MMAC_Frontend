@@ -223,11 +223,15 @@ class _IdentificationFormLayoutState
           setState(() {
             _rawCountryObjects.clear();
 
-          _rawCountryObjects.addAll(allCountriesState.countryList);
-        
-          _ICAOcountryNameList = ICAOMemberState.countryList.map((c) => c.countryName).toList();
-          
-          _AllCountryNameList = allCountriesState.countryList.map((c) => c.countryName).toList();
+            _rawCountryObjects.addAll(allCountriesState.countryList);
+
+            _ICAOcountryNameList = ICAOMemberState.countryList
+                .map((c) => c.countryName)
+                .toList();
+
+            _AllCountryNameList = allCountriesState.countryList
+                .map((c) => c.countryName)
+                .toList();
 
             _resolveCountryCodeToName('nationalityCode', 'country');
             _resolveCountryCodeToName('issuedCountryCode', 'issuedCountry');
