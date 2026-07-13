@@ -2,6 +2,7 @@ import 'dart:convert';
 import 'dart:developer';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:mmac/core/constants/app_fonts.dart';
 import 'package:mmac/data/controllers/submit_provider.dart';
 import 'package:mmac/data/models/submit_request_model.dart';
 import 'package:mmac/ui/views/pages/new_application/declaration_layout.dart';
@@ -38,7 +39,7 @@ class _NewApplicationState extends ConsumerState<NewApplication>
   bool get wantKeepAlive => true;
   // STATE VARIABLES
   int currentStep = 1;
-  final int totalSteps = 4;   
+  final int totalSteps = 4;
   bool _isSessionLoading = true;
 
   final GlobalKey<FormState> _step1FormKey = GlobalKey<FormState>();
@@ -568,7 +569,10 @@ class _NewApplicationState extends ConsumerState<NewApplication>
             const SizedBox(width: 10),
             const Text(
               'Submission Failed',
-              style: TextStyle(fontWeight: FontWeight.bold),
+              style: TextStyle(
+                fontWeight: FontWeight.bold,
+                fontFamily: AppFonts.primaryFont,
+              ),
             ),
           ],
         ),
@@ -578,7 +582,10 @@ class _NewApplicationState extends ConsumerState<NewApplication>
             onPressed: () => Navigator.of(context).pop(),
             child: const Text(
               'OK',
-              style: TextStyle(fontWeight: FontWeight.bold),
+              style: TextStyle(
+                fontWeight: FontWeight.bold,
+                fontFamily: AppFonts.primaryFont,
+              ),
             ),
           ),
         ],
@@ -623,7 +630,10 @@ class _NewApplicationState extends ConsumerState<NewApplication>
             ),
             child: const Text(
               'Back',
-              style: TextStyle(fontWeight: FontWeight.bold),
+              style: TextStyle(
+                fontWeight: FontWeight.bold,
+                fontFamily: AppFonts.primaryFont,
+              ),
             ),
           )
         else
@@ -652,7 +662,10 @@ class _NewApplicationState extends ConsumerState<NewApplication>
                   currentStep == totalSteps
                       ? (widget.isUpdateMode ? 'Update' : 'Confirm & Submit')
                       : 'Next',
-                  style: const TextStyle(fontWeight: FontWeight.bold),
+                  style: const TextStyle(
+                    fontWeight: FontWeight.bold,
+                    fontFamily: AppFonts.primaryFont,
+                  ),
                 ),
         ),
       ],
@@ -744,6 +757,7 @@ class _NewApplicationState extends ConsumerState<NewApplication>
                     style: TextStyle(
                       color: Colors.grey,
                       fontWeight: FontWeight.w500,
+                      fontFamily: AppFonts.primaryFont,
                     ),
                   ),
                 ],
@@ -758,6 +772,7 @@ class _NewApplicationState extends ConsumerState<NewApplication>
                 style: const TextStyle(
                   color: Colors.red,
                   fontWeight: FontWeight.bold,
+                  fontFamily: AppFonts.primaryFont,
                 ),
               ),
             ),
@@ -778,7 +793,11 @@ class _NewApplicationState extends ConsumerState<NewApplication>
           child: Text(
             'Please enter your information exactly as shown on official identity records.',
             textAlign: TextAlign.center,
-            style: TextStyle(fontSize: 15, color: Colors.grey),
+            style: TextStyle(
+              fontSize: 15,
+              color: Colors.grey,
+              fontFamily: AppFonts.primaryFont,
+            ),
           ),
         ),
         const SizedBox(height: 30),
@@ -810,6 +829,7 @@ class _NewApplicationState extends ConsumerState<NewApplication>
                   style: const TextStyle(
                     fontSize: 18,
                     fontWeight: FontWeight.bold,
+                    fontFamily: AppFonts.primaryFont,
                   ),
                 ),
                 const SizedBox(height: 20),

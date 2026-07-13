@@ -1,4 +1,7 @@
+// lib/ui/views/pages/new_application/residency_layout.dart
+
 import 'package:flutter/material.dart';
+import 'package:mmac/core/constants/app_fonts.dart';
 import 'package:mmac/ui/views/widgets/footer.dart';
 
 class ResidencyLayout extends StatelessWidget {
@@ -6,66 +9,11 @@ class ResidencyLayout extends StatelessWidget {
 
   const ResidencyLayout({super.key, required this.onResidencySelected});
 
-  Widget _buildHeader(bool isMobile) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Text(
-          "Select Residency Type",
-          style: TextStyle(
-            fontSize: isMobile ? 18 : 26,
-            fontWeight: FontWeight.bold,
-            color: const Color(0xFF0F172A),
-            letterSpacing: -0.5,
-          ),
-        ),
-        const SizedBox(height: 8),
-        Text(
-          "Please select your appropriate residency status to continue the application.",
-          style: const TextStyle(fontSize: 14, color: Colors.grey),
-          textAlign: isMobile ? TextAlign.center : TextAlign.start,
-        ),
-      ],
-    );
-  }
-
-  Widget _buildSelectionGrid(BuildContext context) {
-    return LayoutBuilder(
-      builder: (context, constraints) {
-        final bool isDesktopCard = constraints.maxWidth > 650;
-
-        // 🎯 DRY Principle: Define cards once, use dynamically
-        final Widget myanmarCard = ResidencySelectorCard(
-          title: "Myanmar Citizen /\nPermanent Resident",
-          imagePath: "assets/images/nrc.jpg",
-          onTap: () => onResidencySelected('Myanmar'),
-        );
-
-        final Widget foreignerCard = ResidencySelectorCard(
-          title: "Foreigner \nPass Holder",
-          imagePath: "assets/images/passport.jpg",
-          onTap: () => onResidencySelected('Foreigner'),
-        );
-
-        if (isDesktopCard) {
-          return Row(
-            mainAxisAlignment: MainAxisAlignment.center,
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [myanmarCard, const SizedBox(width: 32), foreignerCard],
-          );
-        } else {
-          return Column(
-            children: [myanmarCard, const SizedBox(height: 20), foreignerCard],
-          );
-        }
-      },
-    );
-  }
-
   @override
   Widget build(BuildContext context) {
-    final double screenSize = MediaQuery.of(context).size.width;
-    final isMobile = screenSize < 500;
+    final double screenWidth = MediaQuery.of(context).size.width;
+    final bool isMobile =
+        screenWidth < 800; // Switch to column earlier for large cards
 
     return SafeArea(
       child: SingleChildScrollView(
@@ -74,32 +22,75 @@ class ResidencyLayout extends StatelessWidget {
             children: [
               if (!isMobile) const SizedBox(height: 40),
 
-              //  --- MAIN SELECTION BOX ---
+              // MAIN CONTAINER
               Container(
-                width: 950,
-                padding: const EdgeInsets.symmetric(
-                  horizontal: 24,
-                  vertical: 32,
-                ),
-                margin: const EdgeInsets.symmetric(horizontal: 24),
+                constraints: const BoxConstraints(maxWidth: 1100),
+                margin: const EdgeInsets.symmetric(horizontal: 20),
                 decoration: BoxDecoration(
                   color: Colors.white,
                   borderRadius: BorderRadius.circular(16),
                   border: Border.all(color: Colors.grey.shade200),
-                ),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    _buildHeader(isMobile),
-                    SizedBox(height: isMobile ? 18 : 32),
-                    _buildSelectionGrid(context),
+                  boxShadow: [
+                    BoxShadow(
+                      color: Colors.black.withOpacity(0.03),
+                      blurRadius: 20,
+                      offset: const Offset(0, 10),
+                    ),
                   ],
+                ),
+                child: Padding(
+                  padding: EdgeInsets.all(isMobile ? 24.0 : 40.0),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      // Header Section
+                      Text(
+                        "Select Residency Type",
+                        style: TextStyle(
+                          fontSize: isMobile ? 24 : 30,
+                          fontWeight: FontWeight.bold,
+                          fontFamily: AppFonts.primaryFont,
+                          color: const Color(0xFF0F172A),
+                        ),
+                      ),
+                      const SizedBox(height: 12),
+                      Container(
+                        constraints: const BoxConstraints(maxWidth: 600),
+                        child: Text(
+                          "Choose the status that matches your situation. This determines which documents you will need to provide in the next steps.",
+                          style: TextStyle(
+                            fontSize: isMobile ? 15 : 16,
+                            color: Colors.grey.shade600,
+                            fontFamily: AppFonts.primaryFont,
+                            height: 1.5,
+                          ),
+                        ),
+                      ),
+                      const SizedBox(height: 32),
+
+                      // Responsive Cards Section
+                      isMobile
+                          ? Column(
+                              children: [
+                                _buildMyanmarCard(),
+                                const SizedBox(height: 24),
+                                _buildForeignerCard(),
+                              ],
+                            )
+                          : Row(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Expanded(child: _buildMyanmarCard()),
+                                const SizedBox(width: 24),
+                                Expanded(child: _buildForeignerCard()),
+                              ],
+                            ),
+                    ],
+                  ),
                 ),
               ),
 
               const SizedBox(height: 40),
-
-              // Footer
               const FormFooter(),
             ],
           ),
@@ -107,25 +98,72 @@ class ResidencyLayout extends StatelessWidget {
       ),
     );
   }
+
+  Widget _buildMyanmarCard() {
+    return _DetailedResidencyCard(
+      img:
+          "assets/images/residency_img1.jpg", // Using your original working asset
+      icon: Icons.badge_outlined,
+      subtitle: "CITIZEN / PERMANENT RESIDENT",
+      header: "Myanmar Citizen",
+      para:
+          "For applicants holding a National Registration Card (NRC) or Permanent Residency in Myanmar.",
+      iconColor: Colors.brown.shade600,
+      requiredData: const ["NRC Number", "Mobile Number", "Father Name"],
+      onTap: () => onResidencySelected('Myanmar'),
+    );
+  }
+
+  Widget _buildForeignerCard() {
+    return _DetailedResidencyCard(
+      img:
+          "assets/images/residency_img2.jpg", // Using your original working asset
+      icon: Icons.language_outlined,
+      subtitle: "PASS / PERMIT HOLDER",
+      header: "Foreigner",
+      para:
+          "For foreign nationals applying with a valid passport and an entry or stay permit.",
+      iconColor: Colors.brown.shade700,
+      requiredData: const [
+        "Valid Passport",
+        "Accommodation Info",
+        "Nationality",
+      ],
+      onTap: () => onResidencySelected('Foreigner'),
+    );
+  }
 }
 
-class ResidencySelectorCard extends StatefulWidget {
-  final String title;
-  final String imagePath;
+// ---------------------------------------------------------------------------
+// NEW ANIMATED HOVER CARD
+// ---------------------------------------------------------------------------
+
+class _DetailedResidencyCard extends StatefulWidget {
+  final String img;
+  final IconData icon;
+  final String subtitle;
+  final String header;
+  final String para;
+  final Color iconColor;
+  final List<String> requiredData;
   final VoidCallback onTap;
 
-  const ResidencySelectorCard({
-    super.key,
-    required this.title,
-    required this.imagePath,
+  const _DetailedResidencyCard({
+    required this.img,
+    required this.icon,
+    required this.subtitle,
+    required this.header,
+    required this.para,
+    required this.iconColor,
+    required this.requiredData,
     required this.onTap,
   });
 
   @override
-  State<ResidencySelectorCard> createState() => _ResidencySelectorCardState();
+  State<_DetailedResidencyCard> createState() => _DetailedResidencyCardState();
 }
 
-class _ResidencySelectorCardState extends State<ResidencySelectorCard> {
+class _DetailedResidencyCardState extends State<_DetailedResidencyCard> {
   bool _isHovered = false;
   bool _isActive = false;
 
@@ -137,30 +175,29 @@ class _ResidencySelectorCardState extends State<ResidencySelectorCard> {
     return AnimatedContainer(
       duration: const Duration(milliseconds: 200),
       curve: Curves.easeInOut,
-      transform: Matrix4.identity()..translate(0.0, _isHovered ? -4.0 : 0.0),
-      constraints: const BoxConstraints(maxWidth: 290),
+      transform: Matrix4.identity()..translate(0.0, _isHovered ? -6.0 : 0.0),
       decoration: BoxDecoration(
         color: Colors.white,
-        borderRadius: BorderRadius.circular(12),
+        borderRadius: BorderRadius.circular(16),
         border: Border.all(
-          color: _isHovered ? const Color(0xFF0F2942) : Colors.transparent,
-          width: 1.5,
+          color: _isHovered ? Colors.blue.shade300 : Colors.grey.shade200,
+          width: _isHovered ? 2.0 : 1.0,
         ),
         boxShadow: [
           BoxShadow(
-            // 🎯 Fixed: Replaced deprecated withAlpha with modern withOpacity
             color: _isActive
                 ? Colors.black.withOpacity(0.04)
                 : (_isHovered
-                      ? Colors.black.withOpacity(0.10)
-                      : Colors.black.withOpacity(0.06)),
-            blurRadius: _isHovered ? 24 : 16,
-            offset: _isHovered ? const Offset(0, 10) : const Offset(0, 6),
+                      ? Colors.black.withOpacity(0.12)
+                      : Colors.black.withOpacity(0.04)),
+            blurRadius: _isHovered ? 24 : 10,
+            offset: _isHovered ? const Offset(0, 12) : const Offset(0, 4),
           ),
         ],
       ),
+      // ClipRRect ensures the image doesn't overflow the rounded borders
       child: ClipRRect(
-        borderRadius: BorderRadius.circular(10),
+        borderRadius: BorderRadius.circular(15),
         child: InkWell(
           onTap: widget.onTap,
           onHover: _setHovered,
@@ -168,31 +205,137 @@ class _ResidencySelectorCardState extends State<ResidencySelectorCard> {
           onTapUp: (_) => _setActive(false),
           onTapCancel: () => _setActive(false),
           child: Column(
-            crossAxisAlignment: CrossAxisAlignment.stretch,
+            crossAxisAlignment: CrossAxisAlignment.start,
             children: [
+              // Image Section
               Container(
-                height: 190,
-                color: _isHovered
-                    ? const Color(0xFF0A1424)
-                    : const Color(0xFF0F1E36),
-                padding: const EdgeInsets.all(20),
-                child: Image.asset(widget.imagePath, fit: BoxFit.contain),
-              ),
-              Container(
-                padding: const EdgeInsets.all(20),
-                color: Colors.white,
-                child: Text(
-                  widget.title,
-                  style: const TextStyle(
-                    fontSize: 18,
-                    fontWeight: FontWeight.w800,
-                    color: Color(0xFF0F2942),
-                    height: 1.4,
+                height: 220,
+                width: double.infinity,
+                decoration: BoxDecoration(
+                  image: DecorationImage(
+                    image: AssetImage(widget.img),
+                    fit: BoxFit.cover,
                   ),
+                ),
+              ),
+
+              // Content Section
+              Padding(
+                padding: const EdgeInsets.all(24.0),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    // Subtitle & Icon
+                    Row(
+                      children: [
+                        Container(
+                          padding: const EdgeInsets.all(6),
+                          decoration: BoxDecoration(
+                            color: widget.iconColor.withOpacity(0.1),
+                            shape: BoxShape.circle,
+                          ),
+                          child: Icon(
+                            widget.icon,
+                            size: 16,
+                            color: widget.iconColor,
+                          ),
+                        ),
+                        const SizedBox(width: 10),
+                        Text(
+                          widget.subtitle,
+                          style: TextStyle(
+                            fontSize: 13,
+                            color: widget.iconColor,
+                            fontWeight: FontWeight.w700,
+                            fontFamily: AppFonts.primaryFont,
+                            letterSpacing: 0.5,
+                          ),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 12),
+
+                    // Main Header
+                    Text(
+                      widget.header,
+                      style: const TextStyle(
+                        fontSize: 24,
+                        fontWeight: FontWeight.w800,
+                        fontFamily: AppFonts.primaryFont,
+                        color: Color(0xFF0F172A),
+                      ),
+                    ),
+                    const SizedBox(height: 8),
+
+                    // Paragraph
+                    Text(
+                      widget.para,
+                      style: TextStyle(
+                        fontSize: 14,
+                        color: Colors.grey.shade600,
+                        fontFamily: AppFonts.primaryFont,
+                        height: 1.5,
+                      ),
+                    ),
+
+                    const SizedBox(height: 20),
+                    const Divider(height: 1),
+                    const SizedBox(height: 20),
+
+                    // Required Data Title
+                    Row(
+                      children: [
+                        Icon(
+                          Icons.edit_document,
+                          color: Colors.grey.shade500,
+                          size: 18,
+                        ),
+                        const SizedBox(width: 8),
+                        Text(
+                          "REQUIRED DATA",
+                          style: TextStyle(
+                            fontSize: 12,
+                            color: Colors.grey.shade600,
+                            fontWeight: FontWeight.w700,
+                            letterSpacing: 0.5,
+                          ),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 16),
+
+                    // 🎯 Wrap is used here so the chips drop to the next line on narrow mobile screens!
+                    Wrap(
+                      spacing: 8,
+                      runSpacing: 8,
+                      children: widget.requiredData
+                          .map((data) => _buildDataChip(data))
+                          .toList(),
+                    ),
+                  ],
                 ),
               ),
             ],
           ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildDataChip(String text) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
+      decoration: BoxDecoration(
+        color: Colors.blue.shade50,
+        borderRadius: BorderRadius.circular(20),
+        border: Border.all(color: Colors.blue.shade100, width: 1),
+      ),
+      child: Text(
+        text,
+        style: TextStyle(
+          fontSize: 13,
+          color: Colors.blue.shade700,
+          fontWeight: FontWeight.w600,
         ),
       ),
     );

@@ -83,6 +83,7 @@ class _ReviewLayoutState extends State<ReviewLayout> {
                     fontSize: 14,
                     fontWeight: FontWeight.bold,
                     color: Color(0xFF003366),
+                    fontFamily: AppFonts.primaryFont,
                   ),
                 ),
                 SizedBox(height: 2),
@@ -92,6 +93,7 @@ class _ReviewLayoutState extends State<ReviewLayout> {
                     fontSize: 12,
                     color: Color(0xFF335577),
                     height: 1.3,
+                    fontFamily: AppFonts.primaryFont,
                   ),
                 ),
               ],
@@ -246,9 +248,7 @@ class _ReviewLayoutState extends State<ReviewLayout> {
         ),
         if (widget.values['hasSymptoms'] == 'Yes' &&
             widget.values['healthRecordFileName'] != null)
-          _AttachmentCard(
-            fileName: widget.values['healthRecordFileName']!,
-          ),
+          _AttachmentCard(fileName: widget.values['healthRecordFileName']!),
       ],
     );
   }
@@ -505,6 +505,7 @@ class _ReviewTile extends StatelessWidget {
             fontSize: 15,
             fontWeight: FontWeight.w600,
             color: Colors.black87,
+            fontFamily: AppFonts.primaryFont,
           ),
           maxLines: 2,
           overflow: TextOverflow.ellipsis,
@@ -574,6 +575,7 @@ class _ReviewSectionCard extends StatelessWidget {
                     fontSize: 15,
                     fontWeight: FontWeight.bold,
                     color: Colors.black87,
+                    fontFamily: AppFonts.primaryFont,
                   ),
                 ),
                 const Spacer(),
@@ -589,7 +591,11 @@ class _ReviewSectionCard extends StatelessWidget {
                   icon: const Icon(Icons.edit_outlined, size: 14),
                   label: const Text(
                     "Edit",
-                    style: TextStyle(fontSize: 13, fontWeight: FontWeight.w600),
+                    style: TextStyle(
+                      fontSize: 13,
+                      fontWeight: FontWeight.w600,
+                      fontFamily: AppFonts.primaryFont,
+                    ),
                   ),
                 ),
               ],
@@ -654,6 +660,7 @@ class _DeclarationCard extends StatelessWidget {
                 fontWeight: FontWeight.w500,
                 color: Colors.black87,
                 height: 1.4,
+                fontFamily: AppFonts.primaryFont,
               ),
             ),
           ),
@@ -672,6 +679,7 @@ class _DeclarationCard extends StatelessWidget {
                 fontWeight: FontWeight.bold,
                 color: color,
                 letterSpacing: 0.5,
+                fontFamily: AppFonts.primaryFont,
               ),
             ),
           ),
@@ -709,6 +717,7 @@ class _AttachmentCard extends StatelessWidget {
                 fontWeight: FontWeight.w600,
                 color: Colors.blue.shade900,
                 height: 1.4,
+                fontFamily: AppFonts.primaryFont,
               ),
               maxLines: 1,
               overflow: TextOverflow.ellipsis,

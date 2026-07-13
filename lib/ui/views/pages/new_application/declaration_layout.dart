@@ -1,6 +1,7 @@
 import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:mmac/core/constants/app_fonts.dart';
 import 'package:mmac/data/controllers/file_upload_provider.dart';
 import '../../../../utils/form_validators.dart';
 
@@ -77,36 +78,37 @@ class _DeclarationLayoutState extends ConsumerState<DeclarationLayout>
   }
 
   Future<void> _pickAndUpload() async {
-  final result = await FilePicker.platform.pickFiles(
-    type: FileType.custom,
-    allowedExtensions: ['jpg', 'jpeg', 'png', 'pdf', 'doc', 'docx'],
-  );
-
-  // ignore: unnecessary_null_comparison
-  if (result == null || result.files.single.name == null) return;
-
-  final platformFile = result.files.single;
-
-  if (platformFile.bytes == null) {
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(content: Text("Unable to read selected file.")),
+    final result = await FilePicker.platform.pickFiles(
+      type: FileType.custom,
+      allowedExtensions: ['jpg', 'jpeg', 'png', 'pdf', 'doc', 'docx'],
     );
-    return;
+
+    // ignore: unnecessary_null_comparison
+    if (result == null || result.files.single.name == null) return;
+
+    final platformFile = result.files.single;
+
+    if (platformFile.bytes == null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text("Unable to read selected file.")),
+      );
+      return;
+    }
+
+    final uploadResult = await ref
+        .read(fileUploadProvider.notifier)
+        .upload(platformFile.bytes!, platformFile.name);
+
+    if (uploadResult != null) {
+      widget.onValueChanged("healthRecordUrl", uploadResult['fileUrl']);
+      widget.onValueChanged(
+        "healthRecordFileName",
+        uploadResult['originalFileName'],
+      );
+      setState(() {});
+    }
   }
 
-  final uploadResult = await ref
-      .read(fileUploadProvider.notifier)
-      .upload(platformFile.bytes!, platformFile.name);
-
-  if (uploadResult != null) {
-    widget.onValueChanged("healthRecordUrl", uploadResult['fileUrl']);
-    widget.onValueChanged(
-      "healthRecordFileName",
-      uploadResult['originalFileName'],
-    );
-    setState(() {});
-  }
-}
   void _clearHealthRecord() {
     ref.read(fileUploadProvider.notifier).clear();
     widget.onValueChanged('healthRecordUrl', null);
@@ -147,15 +149,15 @@ class _DeclarationLayoutState extends ConsumerState<DeclarationLayout>
         ),
 
         if (widget.values['hasSymptoms'] == 'Yes') ...[
-  const SizedBox(height: 16),
-  _HealthRecordUploadSection(
-    uploadState: uploadState,
-    fallbackUrl: widget.values['healthRecordUrl'] as String?,
-    fallbackFileName: widget.values['healthRecordFileName'] as String?,
-    onPickAndUpload: _pickAndUpload,
-    onClear: _clearHealthRecord,
-  ),
-],
+          const SizedBox(height: 16),
+          _HealthRecordUploadSection(
+            uploadState: uploadState,
+            fallbackUrl: widget.values['healthRecordUrl'] as String?,
+            fallbackFileName: widget.values['healthRecordFileName'] as String?,
+            onPickAndUpload: _pickAndUpload,
+            onClear: _clearHealthRecord,
+          ),
+        ],
 
         const SizedBox(height: 20),
         Divider(color: Colors.grey.shade200),
@@ -219,7 +221,11 @@ class _HealthRecordUploadSection extends StatelessWidget {
             Expanded(
               child: Text(
                 displayFileName ?? 'File uploaded',
-                style: TextStyle(fontSize: 13, color: Colors.green.shade800),
+                style: TextStyle(
+                  fontSize: 13,
+                  color: Colors.green.shade800,
+                  fontFamily: AppFonts.primaryFont,
+                ),
                 overflow: TextOverflow.ellipsis,
               ),
             ),
@@ -248,7 +254,13 @@ class _HealthRecordUploadSection extends StatelessWidget {
               child: CircularProgressIndicator(strokeWidth: 2),
             ),
             const SizedBox(width: 10),
-            Text('Uploading...', style: TextStyle(color: Colors.blue.shade700)),
+            Text(
+              'Uploading...',
+              style: TextStyle(
+                color: Colors.blue.shade700,
+                fontFamily: AppFonts.primaryFont,
+              ),
+            ),
           ],
         ),
       );
@@ -271,7 +283,11 @@ class _HealthRecordUploadSection extends StatelessWidget {
               const Expanded(
                 child: Text(
                   "If you have any symptoms, please upload your medical record or test result file using the button below.",
-                  style: TextStyle(fontSize: 13, color: Colors.black87),
+                  style: TextStyle(
+                    fontSize: 13,
+                    color: Colors.black87,
+                    fontFamily: AppFonts.primaryFont,
+                  ),
                 ),
               ),
             ],
@@ -280,12 +296,20 @@ class _HealthRecordUploadSection extends StatelessWidget {
         const SizedBox(height: 12),
         const Text(
           'Health Record Document',
-          style: TextStyle(fontSize: 14, fontWeight: FontWeight.w600),
+          style: TextStyle(
+            fontSize: 14,
+            fontWeight: FontWeight.w600,
+            fontFamily: AppFonts.primaryFont,
+          ),
         ),
         const SizedBox(height: 4),
         Text(
           'Upload supporting document (jpg, png, pdf, doc, docx — max 5 MB)',
-          style: TextStyle(fontSize: 12, color: Colors.grey.shade600),
+          style: TextStyle(
+            fontSize: 12,
+            color: Colors.grey.shade600,
+            fontFamily: AppFonts.primaryFont,
+          ),
         ),
         const SizedBox(height: 10),
         OutlinedButton.icon(
@@ -303,7 +327,11 @@ class _HealthRecordUploadSection extends StatelessWidget {
           const SizedBox(height: 8),
           Text(
             uploadState.error!,
-            style: const TextStyle(fontSize: 12, color: Colors.red),
+            style: const TextStyle(
+              fontSize: 12,
+              color: Colors.red,
+              fontFamily: AppFonts.primaryFont,
+            ),
           ),
         ],
       ],
@@ -335,6 +363,7 @@ class _WarningBanner extends StatelessWidget {
                 fontSize: 13,
                 color: Colors.black87,
                 fontWeight: FontWeight.w500,
+                fontFamily: AppFonts.primaryFont,
               ),
             ),
           ),
@@ -370,6 +399,7 @@ class _DeclarationQuestion extends StatelessWidget {
             fontSize: 16,
             fontWeight: FontWeight.bold,
             color: Colors.blue,
+            fontFamily: AppFonts.primaryFont,
           ),
         ),
         const SizedBox(height: 6),
@@ -379,6 +409,7 @@ class _DeclarationQuestion extends StatelessWidget {
             fontSize: 14,
             color: Colors.grey.shade800,
             height: 1.4,
+            fontFamily: AppFonts.primaryFont,
           ),
         ),
         const SizedBox(height: 10),
@@ -393,7 +424,11 @@ class _DeclarationQuestion extends StatelessWidget {
           const SizedBox(height: 4),
           Text(
             errorText!,
-            style: const TextStyle(color: Colors.red, fontSize: 12),
+            style: const TextStyle(
+              color: Colors.red,
+              fontSize: 12,
+              fontFamily: AppFonts.primaryFont,
+            ),
           ),
         ],
       ],
@@ -413,7 +448,11 @@ class _DeclarationQuestion extends StatelessWidget {
         ),
         Text(
           targetValue,
-          style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w500),
+          style: const TextStyle(
+            fontSize: 14,
+            fontWeight: FontWeight.w500,
+            fontFamily: AppFonts.primaryFont,
+          ),
         ),
       ],
     );

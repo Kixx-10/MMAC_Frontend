@@ -1,5 +1,6 @@
 // lib/ui/views/widgets/form_progress_bar.dart
 import 'package:flutter/material.dart';
+import 'package:mmac/core/constants/app_fonts.dart';
 
 class FormProgressBar extends StatelessWidget {
   final int currentStep;
@@ -9,7 +10,7 @@ class FormProgressBar extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final steps = [
-      {"number": 1, "label": "Personal Informations"},
+      {"number": 1, "label": "Personal Information"},
       {"number": 2, "label": "Itinerary"},
       {"number": 3, "label": "Declarations"},
       {"number": 4, "label": "Review"},
@@ -73,6 +74,7 @@ class FormProgressBar extends StatelessWidget {
                                   fontSize: numberSize,
                                   fontWeight: FontWeight.bold,
                                   color: isActive ? Colors.white : Colors.grey,
+                                  fontFamily: AppFonts.primaryFont,
                                 ),
                               ),
                       ),
@@ -87,6 +89,7 @@ class FormProgressBar extends StatelessWidget {
                             ? FontWeight.bold
                             : FontWeight.normal,
                         color: isActive ? Colors.blue : Colors.grey,
+                        fontFamily: AppFonts.primaryFont,
                       ),
                     ),
                   ],

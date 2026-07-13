@@ -2,6 +2,7 @@
 
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:mmac/core/constants/app_fonts.dart';
 
 class CustomTextField extends StatelessWidget {
   final String label;
@@ -49,6 +50,7 @@ class CustomTextField extends StatelessWidget {
               fontSize: 16,
               fontWeight: FontWeight.bold,
               color: Colors.black87,
+              fontFamily: AppFonts.primaryFont,
             ),
             children: [
               if (isRequired)
@@ -57,6 +59,7 @@ class CustomTextField extends StatelessWidget {
                   style: TextStyle(
                     color: Colors.red,
                     fontWeight: FontWeight.bold,
+                    fontFamily: AppFonts.primaryFont,
                   ),
                 ),
             ],
@@ -82,6 +85,7 @@ class CustomTextField extends StatelessWidget {
       style: TextStyle(
         fontWeight: FontWeight.w500,
         color: readonly ? Colors.grey.shade500 : Colors.black87,
+        fontFamily: AppFonts.primaryFont,
       ),
       decoration: InputDecoration(
         counterText: "",
@@ -91,13 +95,18 @@ class CustomTextField extends StatelessWidget {
           horizontal: 16,
           vertical: 12,
         ),
-        errorStyle: const TextStyle(fontSize: 12, color: Colors.red),
+        errorStyle: const TextStyle(
+          fontSize: 12,
+          color: Colors.red,
+          fontFamily: AppFonts.primaryFont,
+        ),
         suffixIcon: suffixIcon,
         hintText: hintText,
         hintStyle: TextStyle(
           fontSize: 14,
           fontWeight: FontWeight.normal,
           color: Colors.grey.shade400,
+          fontFamily: AppFonts.primaryFont,
         ),
         enabledBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(8),
@@ -121,10 +130,7 @@ class CustomTextField extends StatelessWidget {
     //  3. The Responsive Switcher
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        labelWidget,
-        inputWidget,
-      ],
+      children: [labelWidget, inputWidget],
     );
   }
 }
