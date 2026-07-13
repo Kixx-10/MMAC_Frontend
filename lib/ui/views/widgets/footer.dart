@@ -1,6 +1,7 @@
 // ignore_for_file: deprecated_member_use
 
 import 'package:flutter/material.dart';
+import 'package:mmac/core/constants/app_fonts.dart';
 
 class FormFooter extends StatelessWidget {
   const FormFooter({super.key});
@@ -33,6 +34,7 @@ class FormFooter extends StatelessWidget {
                             color: Color(0xffE1F0FA),
                             fontWeight: FontWeight.bold,
                             fontSize: 14,
+                            fontFamily: AppFonts.primaryFont,
                           ),
                         ),
                         SizedBox(height: 12),
@@ -42,6 +44,7 @@ class FormFooter extends StatelessWidget {
                             color: Colors.white70,
                             fontSize: 12,
                             height: 1.5,
+                            fontFamily: AppFonts.primaryFont,
                           ),
                         ),
                       ],
@@ -56,6 +59,7 @@ class FormFooter extends StatelessWidget {
                           color: Color(0xffE1F0FA),
                           fontWeight: FontWeight.bold,
                           fontSize: 14,
+                          fontFamily: AppFonts.primaryFont,
                         ),
                       ),
                       SizedBox(height: 12),
@@ -65,6 +69,7 @@ class FormFooter extends StatelessWidget {
                           color: Colors.white70,
                           fontSize: 12,
                           height: 1.5,
+                          fontFamily: AppFonts.primaryFont,
                         ),
                       ),
                     ],
@@ -79,6 +84,7 @@ class FormFooter extends StatelessWidget {
                 style: TextStyle(
                   color: Colors.white.withOpacity(0.4),
                   fontSize: 12,
+                  fontFamily: AppFonts.primaryFont,
                 ),
                 textAlign: TextAlign.center,
               ),

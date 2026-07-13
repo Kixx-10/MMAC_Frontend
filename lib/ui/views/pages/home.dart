@@ -3,6 +3,7 @@
 // ignore_for_file: deprecated_member_use
 
 import 'package:flutter/material.dart';
+import 'package:mmac/core/constants/app_fonts.dart';
 import 'package:mmac/ui/views/widgets/footer.dart';
 
 class Home extends StatelessWidget {
@@ -95,6 +96,7 @@ class _HeroBanner extends StatelessWidget {
             style: TextStyle(
               fontSize: isMobile ? 26 : 36,
               fontWeight: FontWeight.bold,
+              fontFamily: AppFonts.primaryFont,
               color: Colors.white,
               letterSpacing: -0.5,
             ),
@@ -108,6 +110,7 @@ class _HeroBanner extends StatelessWidget {
               style: TextStyle(
                 color: Colors.white.withOpacity(0.85),
                 fontSize: isMobile ? 13 : 15,
+                fontFamily: AppFonts.primaryFont,
                 height: 1.5,
               ),
               textAlign: TextAlign.center,
@@ -134,6 +137,7 @@ class _HeroBanner extends StatelessWidget {
                   ),
                   textStyle: const TextStyle(
                     fontWeight: FontWeight.bold,
+                    fontFamily: AppFonts.primaryFont,
                     fontSize: 16,
                   ),
                   shape: RoundedRectangleBorder(
@@ -156,6 +160,7 @@ class _HeroBanner extends StatelessWidget {
                   ),
                   textStyle: const TextStyle(
                     fontWeight: FontWeight.bold,
+                    fontFamily: AppFonts.primaryFont,
                     fontSize: 16,
                   ),
                   shape: RoundedRectangleBorder(
@@ -216,13 +221,18 @@ class _ProcessTimeline extends StatelessWidget {
             style: TextStyle(
               fontSize: 20,
               fontWeight: FontWeight.bold,
+              fontFamily: AppFonts.primaryFont,
               color: Color(0xff1A1A1A),
             ),
           ),
           const SizedBox(height: 6),
           const Text(
             'Review the core procedural checklist segments required to secure your compliance tokens.',
-            style: TextStyle(color: Color(0xff6B7280), fontSize: 14),
+            style: TextStyle(
+              color: Color(0xff6B7280),
+              fontSize: 14,
+              fontFamily: AppFonts.primaryFont,
+            ),
             textAlign: TextAlign.center,
           ),
           const SizedBox(height: 32),
@@ -391,6 +401,7 @@ class _StepCard extends StatelessWidget {
                   style: const TextStyle(
                     fontWeight: FontWeight.bold,
                     fontSize: 15,
+                    fontFamily: AppFonts.primaryFont,
                     color: Color(0xff1A1A1A),
                   ),
                   textAlign: TextAlign.center,
@@ -401,6 +412,7 @@ class _StepCard extends StatelessWidget {
                   style: const TextStyle(
                     color: Color(0xff6B7280),
                     fontSize: 13,
+                    fontFamily: AppFonts.primaryFont,
                     height: 1.4,
                   ),
                   textAlign: TextAlign.center,

@@ -201,7 +201,11 @@ class _NoticePageState extends State<NoticePage> {
           Expanded(
             child: Text(
               text,
-              style: const TextStyle(fontSize: 16, height: 1.5),
+              style: const TextStyle(
+                fontSize: 16,
+                height: 1.5,
+                fontFamily: AppFonts.primaryFont,
+              ),
             ),
           ),
         ],

@@ -42,6 +42,8 @@ flutter:
     - assets/data/accommodations.json
     - assets/data/country_codes.json
     - assets/images/
+    - assets/images/residency_img1.jpg
+    - assets/images/residency_img2.jpg
     - assets/images/department_logo.jpg
     - assets/images/department_logo2.png
     - assets/images/national_flag.jpg

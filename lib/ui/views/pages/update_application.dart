@@ -1,11 +1,12 @@
 // lib/ui/views/pages/update_application/update_application_page.dart
 
-// ignore_for_file: prefer_function_declarations_over_variables, deprecated_member_use, unused_field, empty_catches
+// ignore_for_file: curly_braces_in_flow_control_structures, prefer_function_declarations_over_variables, deprecated_member_use, unused_field, empty_catches
 
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:mmac/core/constants/api_endpoints.dart';
+import 'package:mmac/core/constants/app_fonts.dart';
 import 'package:mmac/data/models/search_request_model.dart';
 import 'package:mmac/data/models/submit_request_model.dart';
 import 'package:mmac/data/controllers/update_application_provider.dart';
@@ -179,7 +180,7 @@ class _UpdateApplicationState extends ConsumerState<UpdateApplication> {
       _showInfoDialog(displayTitle, displayMessage, isError: true);
     };
 
-    // 🎯 2. Success Interceptor
+    // Success Interceptor
     final VoidCallback onSuccessCallback = () {
       Future.microtask(() {
         final fetchedData = ref.read(updateApplicationProvider).value;
@@ -196,7 +197,7 @@ class _UpdateApplicationState extends ConsumerState<UpdateApplication> {
       });
     };
 
-    // 🎯 3. Dispatch appropriate API Request
+    // Dispatch appropriate API Request
     if (isMyanmar) {
       String fullNrc = _generateFullNrcString();
       if (fullNrc.isEmpty) {
@@ -254,7 +255,7 @@ class _UpdateApplicationState extends ConsumerState<UpdateApplication> {
               color: isError ? Colors.red.shade600 : Colors.blue.shade700,
             ),
             const SizedBox(width: 10),
-            // 🎯 1. Wrap title in Expanded to prevent stretching/overflow
+            // Wrap title in Expanded to prevent stretching/overflow
             Expanded(
               child: Text(
                 title,
@@ -266,7 +267,7 @@ class _UpdateApplicationState extends ConsumerState<UpdateApplication> {
             ),
           ],
         ),
-        // 🎯 2. Use SizedBox to constrain the maximum width of the dialog
+        // Use SizedBox to constrain the maximum width of the dialog
         content: SizedBox(
           width: 400, // Forces the dialog to be a normal, readable width
           child: Text(
@@ -293,9 +294,10 @@ class _UpdateApplicationState extends ConsumerState<UpdateApplication> {
       child: Text(
         label,
         style: const TextStyle(
-          fontSize: 13,
+          fontSize: 18,
           fontWeight: FontWeight.w600,
           color: Colors.black87,
+          fontFamily: AppFonts.primaryFont,
         ),
       ),
     );
@@ -694,7 +696,10 @@ class _UpdateApplicationState extends ConsumerState<UpdateApplication> {
             )
           : const Text(
               'Find & Edit Application',
-              style: TextStyle(fontWeight: FontWeight.bold),
+              style: TextStyle(
+                fontWeight: FontWeight.bold,
+                fontFamily: AppFonts.primaryFont,
+              ),
             ),
     );
 
@@ -713,7 +718,7 @@ class _UpdateApplicationState extends ConsumerState<UpdateApplication> {
       padding: const EdgeInsets.all(16),
       child: Center(
         child: Container(
-          constraints: const BoxConstraints(maxWidth: 800),
+          constraints: const BoxConstraints(maxWidth: 1100),
           padding: const EdgeInsets.all(24),
           decoration: BoxDecoration(
             color: Colors.white,
@@ -733,15 +738,11 @@ class _UpdateApplicationState extends ConsumerState<UpdateApplication> {
               children: [
                 const SizedBox(height: 16),
                 _buildNoticeBox(isMyanmar),
-                const SizedBox(height: 24),
+                const SizedBox(height: 30),
 
                 const Text(
                   "Verify Identity Details to Modify Record",
-                  style: TextStyle(
-                    fontSize: 16,
-                    fontWeight: FontWeight.bold,
-                    color: Colors.blueGrey,
-                  ),
+                  style: AppFonts.pageTitle,
                 ),
                 const SizedBox(height: 24),
 
@@ -774,9 +775,10 @@ class _UpdateApplicationState extends ConsumerState<UpdateApplication> {
 
   Widget _buildNoticeBox(bool isMyanmar) {
     final isMobile = MediaQuery.of(context).size.width < 500;
+    final isDesktop = MediaQuery.of(context).size.width > 600;
 
     return Container(
-      width: 800,
+      width: 1100,
       decoration: BoxDecoration(
         borderRadius: BorderRadius.circular(12),
         color: Colors.white,
@@ -804,11 +806,11 @@ class _UpdateApplicationState extends ConsumerState<UpdateApplication> {
           ),
           Container(
             width: double.infinity,
-            height: 120,
+            height: 80,
             alignment: Alignment.center,
             decoration: const BoxDecoration(color: Colors.white54),
             child: Padding(
-              padding: const EdgeInsets.all(40.0),
+              padding: const EdgeInsets.all(10.0),
               child: Row(
                 mainAxisAlignment: MainAxisAlignment.start,
                 crossAxisAlignment: CrossAxisAlignment.center,
@@ -842,48 +844,93 @@ class _UpdateApplicationState extends ConsumerState<UpdateApplication> {
           const Divider(),
           const SizedBox(height: 5),
           Padding(
-            padding: const EdgeInsets.all(30),
+            padding: const EdgeInsets.all(20.0),
             child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 const Text(
                   "Please note that the following Details cannot be edited after submission:",
-                  style: TextStyle(fontSize: 18, color: Colors.grey),
+                  style: TextStyle(
+                    fontSize: 18,
+                    fontFamily: AppFonts.primaryFont,
+                    color: Colors.grey,
+                  ),
                 ),
                 const SizedBox(height: 40),
-                Wrap(
-                  spacing: 20,
-                  runSpacing: 20,
-                  children: [
-                    SizedBox(
-                      width: 250,
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
+                isDesktop
+                    ? Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceAround,
                         children: [
-                          _buildNoticeItems("Full Name"),
-                          const SizedBox(height: 20),
-                          _buildNoticeItems("Date of Birth"),
-                          const SizedBox(height: 20),
-                          _buildNoticeItems("Nationality"),
-                        ],
-                      ),
-                    ),
-                    SizedBox(
-                      width: 250,
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          _buildNoticeItems(
-                            isMyanmar ? "Passport Number" : "NRC Number",
+                          SizedBox(
+                            width: 250,
+                            child: Column(
+                              children: [
+                                _buildNoticeItems("Full Name"),
+                                const SizedBox(height: 20),
+                                _buildNoticeItems("Date of Birth"),
+                                const SizedBox(height: 20),
+                                _buildNoticeItems("Nationality"),
+                              ],
+                            ),
                           ),
-                          const SizedBox(height: 20),
-                          _buildNoticeItems("Passport Expiry Date"),
-                          const SizedBox(height: 20),
-                          _buildNoticeItems("Date of Arrival"),
+                          isDesktop
+                              ? const SizedBox(width: 50)
+                              : const SizedBox(),
+                          SizedBox(
+                            width: 250,
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                _buildNoticeItems(
+                                  isMyanmar ? "Passport Number" : "NRC Number",
+                                ),
+                                const SizedBox(height: 20),
+                                _buildNoticeItems("Passport Expiry Date"),
+                                const SizedBox(height: 20),
+                                _buildNoticeItems("Date of Arrival"),
+                              ],
+                            ),
+                          ),
+                          isDesktop
+                              ? const SizedBox(width: 50)
+                              : const SizedBox(),
+                        ],
+                      )
+                    : Wrap(
+                        spacing: 20,
+                        runSpacing: 20,
+                        alignment: WrapAlignment.spaceBetween,
+                        runAlignment: WrapAlignment.spaceBetween,
+                        children: [
+                          SizedBox(
+                            width: 250,
+                            child: Column(
+                              children: [
+                                _buildNoticeItems("Full Name"),
+                                const SizedBox(height: 20),
+                                _buildNoticeItems("Date of Birth"),
+                                const SizedBox(height: 20),
+                                _buildNoticeItems("Nationality"),
+                              ],
+                            ),
+                          ),
+                          SizedBox(
+                            width: 250,
+                            child: Column(
+                              children: [
+                                _buildNoticeItems(
+                                  isMyanmar ? "Passport Number" : "NRC Number",
+                                ),
+                                const SizedBox(height: 20),
+                                _buildNoticeItems("Passport Expiry Date"),
+                                const SizedBox(height: 20),
+                                _buildNoticeItems("Date of Arrival"),
+                              ],
+                            ),
+                          ),
                         ],
                       ),
-                    ),
-                  ],
-                ),
+
                 const SizedBox(height: 20),
                 const Divider(),
                 const SizedBox(height: 10),
@@ -892,7 +939,11 @@ class _UpdateApplicationState extends ConsumerState<UpdateApplication> {
                   children: [
                     const Text(
                       "Need to make a change?",
-                      style: TextStyle(fontSize: 18, color: Colors.grey),
+                      style: TextStyle(
+                        fontSize: 18,
+                        color: Colors.grey,
+                        fontFamily: AppFonts.primaryFont,
+                      ),
                     ),
                     const SizedBox(width: 10),
                     InkWell(
@@ -903,6 +954,7 @@ class _UpdateApplicationState extends ConsumerState<UpdateApplication> {
                           fontSize: 18,
                           color: Color.fromRGBO(1, 156, 244, 1),
                           fontWeight: FontWeight.bold,
+                          fontFamily: AppFonts.primaryFont,
                         ),
                       ),
                     ),

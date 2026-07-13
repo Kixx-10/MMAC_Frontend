@@ -4,6 +4,7 @@ import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:mmac/core/constants/app_fonts.dart';
 import 'package:mmac/data/controllers/location_provider.dart';
 import 'package:mmac/data/controllers/port_of_arrival_provider.dart';
 import 'package:mmac/ui/views/widgets/custom_dropdown_field.dart';
@@ -281,10 +282,12 @@ class _TripFormLayoutState extends ConsumerState<TripFormLayout>
     if (_getSafeController('previousCity').text.trim().isEmpty) {
       errors.add("Previous City is missing.");
     }
-    if (widget.values['purposeOfVisit'] == null || widget.values['purposeOfVisit'].toString().isEmpty) {
+    if (widget.values['purposeOfVisit'] == null ||
+        widget.values['purposeOfVisit'].toString().isEmpty) {
       errors.add("Purpose of Visit is missing.");
     }
-    if (widget.values['accommodation'] == null || widget.values['accommodation'].toString().isEmpty) {
+    if (widget.values['accommodation'] == null ||
+        widget.values['accommodation'].toString().isEmpty) {
       errors.add("Accommodation Type is missing.");
     }
     if (widget.values['stateRegion'] == null) {
@@ -391,7 +394,11 @@ class _TripFormLayoutState extends ConsumerState<TripFormLayout>
             const SizedBox(width: 10),
             Text(
               title,
-              style: const TextStyle(fontSize: 20, fontWeight: FontWeight.w800),
+              style: const TextStyle(
+                fontSize: 20,
+                fontWeight: FontWeight.w800,
+                fontFamily: AppFonts.primaryFont,
+              ),
             ),
           ],
         ),
@@ -416,7 +423,11 @@ class _TripFormLayoutState extends ConsumerState<TripFormLayout>
           Expanded(
             child: Text(
               message,
-              style: TextStyle(color: Colors.red.shade700, fontSize: 13),
+              style: TextStyle(
+                color: Colors.red.shade700,
+                fontSize: 13,
+                fontFamily: AppFonts.primaryFont,
+              ),
             ),
           ),
           TextButton.icon(

@@ -8,6 +8,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:mmac/core/constants/api_endpoints.dart';
+import 'package:mmac/core/constants/app_fonts.dart';
 import 'package:mmac/data/controllers/country_provider.dart';
 import 'package:mmac/data/controllers/nrc_provider.dart';
 import 'package:mmac/data/models/country_model.dart';
@@ -576,6 +577,7 @@ class _IdentificationFormLayoutState
                   style: TextStyle(
                     fontSize: 16,
                     fontWeight: FontWeight.bold,
+                    fontFamily: AppFonts.primaryFont,
                     color: Colors.black87,
                   ),
                   children: [
@@ -602,7 +604,11 @@ class _IdentificationFormLayoutState
                 padding: const EdgeInsets.only(top: 6),
                 child: Text(
                   state.errorText!,
-                  style: const TextStyle(fontSize: 12, color: Colors.red),
+                  style: const TextStyle(
+                    fontSize: 12,
+                    color: Colors.red,
+                    fontFamily: AppFonts.primaryFont,
+                  ),
                 ),
               ),
           ],
@@ -633,7 +639,11 @@ class _IdentificationFormLayoutState
           const SizedBox(width: 4),
           Text(
             title,
-            style: const TextStyle(fontSize: 14, color: Colors.black87),
+            style: const TextStyle(
+              fontSize: 14,
+              color: Colors.black87,
+              fontFamily: AppFonts.primaryFont,
+            ),
           ),
         ],
       ),
@@ -778,6 +788,7 @@ class _IdentificationFormLayoutState
             style: TextStyle(
               fontSize: 16,
               fontWeight: FontWeight.bold,
+              fontFamily: AppFonts.primaryFont,
               color: Colors.black87,
             ),
             children: [
@@ -845,6 +856,7 @@ class _IdentificationFormLayoutState
                             ? Colors.black87
                             : Colors.grey.shade400,
                         fontWeight: FontWeight.w500,
+                        fontFamily: AppFonts.primaryFont,
                       ),
                       overflow: TextOverflow.ellipsis,
                     ),
@@ -868,12 +880,20 @@ class _IdentificationFormLayoutState
               FilteringTextInputFormatter.digitsOnly,
               LengthLimitingTextInputFormatter(20),
             ],
-            style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w500),
+            style: const TextStyle(
+              fontSize: 13,
+              fontWeight: FontWeight.w500,
+              fontFamily: AppFonts.primaryFont,
+            ),
             decoration: InputDecoration(
               filled: true,
               fillColor: Colors.white,
               hintText: "Enter phone number",
-              hintStyle: TextStyle(color: Colors.grey.shade400, fontSize: 13),
+              hintStyle: TextStyle(
+                color: Colors.grey.shade400,
+                fontSize: 13,
+                fontFamily: AppFonts.primaryFont,
+              ),
               contentPadding: const EdgeInsets.symmetric(
                 horizontal: 10,
                 vertical: 16,
@@ -894,7 +914,10 @@ class _IdentificationFormLayoutState
                 borderRadius: BorderRadius.circular(8),
                 borderSide: const BorderSide(color: Colors.red, width: 1.5),
               ),
-              errorStyle: const TextStyle(color: Colors.red),
+              errorStyle: const TextStyle(
+                color: Colors.red,
+                fontFamily: AppFonts.primaryFont,
+              ),
             ),
             onChanged: (_) => _updateMobileControllerValue(),
             validator: (v) {
@@ -1103,6 +1126,7 @@ class _IdentificationFormLayoutState
               style: TextStyle(
                 fontSize: 13,
                 fontWeight: FontWeight.w500,
+                fontFamily: AppFonts.primaryFont,
                 color: (widget.isUpdateMode && isMyanmar)
                     ? Colors.grey.shade500
                     : Colors.black87,
@@ -1111,7 +1135,11 @@ class _IdentificationFormLayoutState
                 fillColor: Colors.grey.shade200,
                 filled: widget.isUpdateMode && isMyanmar,
                 hintText: "၁၂၃၄၅၆",
-                hintStyle: TextStyle(color: Colors.grey.shade400, fontSize: 13),
+                hintStyle: TextStyle(
+                  color: Colors.grey.shade400,
+                  fontSize: 13,
+                  fontFamily: AppFonts.primaryFont,
+                ),
                 isDense: true,
                 border: InputBorder.none,
                 enabledBorder: InputBorder.none,
@@ -1192,6 +1220,7 @@ class _IdentificationFormLayoutState
                   fontSize: 16,
                   fontWeight: FontWeight.bold,
                   color: Colors.black87,
+                  fontFamily: AppFonts.primaryFont,
                 ),
                 children: [
                   TextSpan(
@@ -1229,7 +1258,10 @@ class _IdentificationFormLayoutState
           ),
           child: const Text(
             'Back',
-            style: TextStyle(fontWeight: FontWeight.bold),
+            style: TextStyle(
+              fontWeight: FontWeight.bold,
+              fontFamily: AppFonts.primaryFont,
+            ),
           ),
         ),
       ],
@@ -1251,7 +1283,11 @@ class _IdentificationFormLayoutState
             const SizedBox(width: 10),
             Text(
               title,
-              style: const TextStyle(fontSize: 20, fontWeight: FontWeight.w800),
+              style: const TextStyle(
+                fontSize: 20,
+                fontWeight: FontWeight.w800,
+                fontFamily: AppFonts.primaryFont,
+              ),
             ),
           ],
         ),
@@ -1470,6 +1506,7 @@ class _HoverInfoIconState extends State<HoverInfoIcon> {
                   widget.message,
                   style: const TextStyle(
                     color: Colors.white,
+                    fontFamily: AppFonts.primaryFont,
                     fontSize: 13,
                     height: 1.4,
                   ),

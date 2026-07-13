@@ -436,13 +436,18 @@ class _MainLayoutState extends State<MainLayout>
                                             // ),
                                           ],
                                         ),
-                                      const Text(
+                                      Text(
                                         "Official Myanmar eArrival Card",
                                         style: TextStyle(
                                           fontFamily: AppFonts.primaryFont,
-                                          fontSize: 21,
+                                          fontSize: isMobile ? 16 : 21,
                                           fontWeight: FontWeight.w600,
-                                          color: Color.fromRGBO(9, 156, 244, 1),
+                                          color: const Color.fromRGBO(
+                                            9,
+                                            156,
+                                            244,
+                                            1,
+                                          ),
                                         ),
                                       ),
                                     ],
@@ -468,7 +473,7 @@ class _MainLayoutState extends State<MainLayout>
                                       2,
                                     ),
                                     _buildExpandableMenuItem("FAQS", 3),
-                                   // _buildExpandableMenuItem("QRSCAN", 4),
+                                    // _buildExpandableMenuItem("QRSCAN", 4),
                                   ],
                                 ),
                               ),

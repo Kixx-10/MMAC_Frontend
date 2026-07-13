@@ -1,6 +1,7 @@
 // lib/ui/views/pages/faqs.dart
 
 import 'package:flutter/material.dart';
+import 'package:mmac/core/constants/app_fonts.dart';
 import 'package:mmac/ui/views/widgets/footer.dart';
 
 class FAQS extends StatefulWidget {
@@ -102,6 +103,7 @@ class _FAQSState extends State<FAQS> {
                           hintStyle: TextStyle(
                             color: Color(0xff94A3B8),
                             fontSize: 14,
+                            fontFamily: AppFonts.primaryFont,
                           ),
                           border: InputBorder.none,
                         ),
@@ -119,6 +121,7 @@ class _FAQSState extends State<FAQS> {
                             style: TextStyle(
                               color: Color(0xff64748B),
                               fontSize: 14,
+                              fontFamily: AppFonts.primaryFont,
                             ),
                           ),
                         ),
@@ -155,6 +158,7 @@ class _FAQSState extends State<FAQS> {
                                     fontSize: 14.5,
                                     fontWeight: FontWeight.w600,
                                     color: Color(0xff0F172A),
+                                    fontFamily: AppFonts.primaryFont,
                                   ),
                                 ),
                                 subtitle: Text(
@@ -164,6 +168,7 @@ class _FAQSState extends State<FAQS> {
                                     fontWeight: FontWeight.bold,
                                     color: Color(0xff64748B),
                                     letterSpacing: 0.5,
+                                    fontFamily: AppFonts.primaryFont,
                                   ),
                                 ),
                                 childrenPadding: const EdgeInsets.only(
@@ -179,6 +184,7 @@ class _FAQSState extends State<FAQS> {
                                       fontSize: 13.5,
                                       color: Color(0xff334155),
                                       height: 1.5,
+                                      fontFamily: AppFonts.primaryFont,
                                     ),
                                   ),
                                 ],
@@ -244,6 +250,7 @@ class FormHeader extends StatelessWidget {
             fontWeight: FontWeight.bold,
             color: Color(0xff0078D4),
             letterSpacing: 1.0,
+            fontFamily: AppFonts.primaryFont,
           ),
         ),
         const SizedBox(height: 8),
@@ -253,6 +260,7 @@ class FormHeader extends StatelessWidget {
             fontSize: 24,
             fontWeight: FontWeight.bold,
             color: Color(0xff0F172A),
+            fontFamily: AppFonts.primaryFont,
           ),
         ),
         const SizedBox(height: 8),
@@ -262,6 +270,7 @@ class FormHeader extends StatelessWidget {
             fontSize: 14,
             color: Color(0xff64748B),
             height: 1.4,
+            fontFamily: AppFonts.primaryFont,
           ),
         ),
       ],
