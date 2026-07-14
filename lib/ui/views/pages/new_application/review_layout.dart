@@ -128,10 +128,10 @@ class _ReviewLayoutState extends State<ReviewLayout> {
           value: widget.values['placeOfBirth'],
         ),
         _ReviewTile(label: 'Email', value: widget.controllers['email']?.text),
-        _ReviewTile(
-          label: 'Place of Residence',
-          value: widget.controllers['address']?.text,
-        ),
+        // _ReviewTile(
+        //   label: 'Place of Residence',
+        //   value: widget.controllers['placeOfResidence']?.text,
+        // ),
         _ReviewTile(
           label: 'Mobile Number',
           value: widget.controllers['mobile']?.text,

@@ -21,7 +21,7 @@ class SubmitRequestModel {
   final String? visaNo;
   final String? nrc;
   final String? fatherName;
-  final String addressInMyanmar;
+  final String? addressInMyanmar;
   final String stateRegionId;
   final String districtId;
   final String townshipId;
@@ -30,7 +30,7 @@ class SubmitRequestModel {
   final String previousCity;
   final String healthDeclaration;
   final String? healthRecordUrl;
-  final String? healthRecordFileName; 
+  final String? healthRecordFileName;
   final String digitalDeclarations;
   final String? modeOfTravelName;
   final String? portOfArrivalName;
@@ -66,7 +66,7 @@ class SubmitRequestModel {
     required this.portOfArrivalId,
     required this.vehicleNumber,
     this.accommodation,
-    required this.addressInMyanmar,
+    this.addressInMyanmar,
     required this.stateRegionId,
     required this.districtId,
     required this.townshipId,
@@ -156,7 +156,7 @@ class SubmitRequestModel {
       previousCity: json['previousCity'],
       healthDeclaration: json['healthDeclaration'],
       healthRecordUrl: json['healthRecordUrl'],
-      healthRecordFileName: json['healthRecordFileName'], 
+      healthRecordFileName: json['healthRecordFileName'],
       digitalDeclarations: json['digitalDeclarations'],
       modeOfTravelName: json['modeOfTravelName'],
       portOfArrivalName: json['portOfArrivalName'],

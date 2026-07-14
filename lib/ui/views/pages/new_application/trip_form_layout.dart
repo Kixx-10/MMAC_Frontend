@@ -299,7 +299,6 @@ class _TripFormLayoutState extends ConsumerState<TripFormLayout>
     if (widget.values['township'] == null) {
       errors.add("Township is missing.");
     }
-
     return errors;
   }
 
@@ -379,8 +378,9 @@ class _TripFormLayoutState extends ConsumerState<TripFormLayout>
     );
   }
 
-  Widget _buildSectionHeader(String title) {
+  Widget _buildSectionHeader(String title, String? subtitle, bool isNeeded) {
     return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Row(
           children: [
@@ -402,6 +402,20 @@ class _TripFormLayoutState extends ConsumerState<TripFormLayout>
             ),
           ],
         ),
+        isNeeded ? const SizedBox(height: 5) : const SizedBox(),
+        isNeeded
+            ? Padding(
+                padding: const EdgeInsets.only(left: 15.0),
+                child: Text(
+                  "$subtitle",
+                  style: const TextStyle(
+                    fontSize: 12,
+                    color: Colors.grey,
+                    fontFamily: AppFonts.primaryFont,
+                  ),
+                ),
+              )
+            : const SizedBox(height: 16),
         const Divider(),
         const SizedBox(height: 16),
       ],
@@ -699,9 +713,10 @@ class _TripFormLayoutState extends ConsumerState<TripFormLayout>
 
   Widget _buildAddressInMyanmarField() {
     return CustomTextField(
-      label: "Address in Myanmar",
+      label: "Full Address in Myanmar",
       maxLength: 100,
       isRequired: false,
+      hintText: "eg. No. 123, Bogyoke Road, Downtown",
       controller: _getSafeController('addressInMyanmar'),
       validator: (v) => null,
       onChanged: (v) => widget.onValueChanged('addressInMyanmar', v),
@@ -827,7 +842,7 @@ class _TripFormLayoutState extends ConsumerState<TripFormLayout>
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              _buildSectionHeader("Trip Information"),
+              _buildSectionHeader("Trip Information", "", false),
               //  Row 1: Arrival Date | Mode of Travel
               _buildPair(
                 _buildArrivalDateField(),
@@ -859,9 +874,15 @@ class _TripFormLayoutState extends ConsumerState<TripFormLayout>
                 _buildPreviousCityField(),
                 isDesktop,
               ),
-              const SizedBox(height: 24),
+              const SizedBox(height: 50),
 
-              _buildSectionHeader("Address Detail"),
+              _buildSectionHeader(
+                "Accommodation",
+                isMyanmar
+                    ? "Where will you be staying?"
+                    : "Where will you be staying during your visit?",
+                true,
+              ),
               //  Row 4: State/Region | District | Township
               _buildTriple(
                 _buildStateRegionField(locationState),
@@ -872,13 +893,37 @@ class _TripFormLayoutState extends ConsumerState<TripFormLayout>
               const SizedBox(height: 16),
 
               //  Row 5: Address in Myanmar | Accommodation Type (or Mobile)
-              _buildPair(
-                _buildAddressInMyanmarField(),
-                isMyanmar
-                    ? _buildMobileNumberMMField()
-                    : _buildAccommodationField(),
-                isDesktop,
-              ),
+              isDesktop
+                  ? Row(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Expanded(
+                          flex: 2, //Makes Address twice as wide!
+                          child: _buildAddressInMyanmarField(),
+                        ),
+                        const SizedBox(
+                          width: 20,
+                        ), // Reduced gap slightly to match _buildTriple
+                        Expanded(
+                          flex: 1, // Keeps Accommodation/Mobile smaller
+                          child: Padding(
+                            padding: const EdgeInsets.only(left: 8.0),
+                            child: isMyanmar
+                                ? _buildMobileNumberMMField()
+                                : _buildAccommodationField(),
+                          ),
+                        ),
+                      ],
+                    )
+                  : Column(
+                      children: [
+                        _buildAddressInMyanmarField(),
+                        const SizedBox(height: 16),
+                        isMyanmar
+                            ? _buildMobileNumberMMField()
+                            : _buildAccommodationField(),
+                      ],
+                    ),
               const SizedBox(height: 30),
 
               // Action Buttons

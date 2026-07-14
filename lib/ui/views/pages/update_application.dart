@@ -174,7 +174,7 @@ class _UpdateApplicationState extends ConsumerState<UpdateApplication> {
       if (errorMessage.toLowerCase().contains("not found")) {
         displayTitle = "Application Uneditable";
         displayMessage =
-            "We could not find a pending application with these details. The application may have already been Approved or Rejected, or the details are incorrect. \n\nApproved applications cannot be modified.";
+            "We could not find a submitted application with these details. The application may have already been expired, or the details are incorrect. ";
       }
 
       _showInfoDialog(displayTitle, displayMessage, isError: true);
@@ -740,9 +740,14 @@ class _UpdateApplicationState extends ConsumerState<UpdateApplication> {
                 _buildNoticeBox(isMyanmar),
                 const SizedBox(height: 30),
 
-                const Text(
+                Text(
                   "Verify Identity Details to Modify Record",
-                  style: AppFonts.pageTitle,
+                  style: TextStyle(
+                    fontSize: isMobile ? 16 : 20,
+                    fontWeight: FontWeight.bold,
+                    color: Colors.black87,
+                    fontFamily: AppFonts.primaryFont,
+                  ),
                 ),
                 const SizedBox(height: 24),
 
@@ -882,7 +887,7 @@ class _UpdateApplicationState extends ConsumerState<UpdateApplication> {
                               crossAxisAlignment: CrossAxisAlignment.start,
                               children: [
                                 _buildNoticeItems(
-                                  isMyanmar ? "Passport Number" : "NRC Number",
+                                  isMyanmar ? "NRC Number" : "Passport Number",
                                 ),
                                 const SizedBox(height: 20),
                                 _buildNoticeItems("Passport Expiry Date"),
@@ -919,7 +924,7 @@ class _UpdateApplicationState extends ConsumerState<UpdateApplication> {
                             child: Column(
                               children: [
                                 _buildNoticeItems(
-                                  isMyanmar ? "Passport Number" : "NRC Number",
+                                  isMyanmar ? "NRC Number" : "Passport Number",
                                 ),
                                 const SizedBox(height: 20),
                                 _buildNoticeItems("Passport Expiry Date"),

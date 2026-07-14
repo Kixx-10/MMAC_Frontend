@@ -38,7 +38,7 @@ class CustomTextField extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    // 🎯 1. Define the Label once
+    // Define the Label once
     final Widget labelWidget = Padding(
       padding: const EdgeInsets.only(bottom: 8),
       child: SizedBox(
@@ -68,7 +68,7 @@ class CustomTextField extends StatelessWidget {
       ),
     );
 
-    // 🎯 2. Define the exact Input Box once
+    // Define the exact Input Box once
     final Widget inputWidget = TextFormField(
       readOnly: readonly,
       controller: controller,

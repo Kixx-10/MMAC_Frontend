@@ -267,7 +267,7 @@ class _NewApplicationState extends ConsumerState<NewApplication>
       _step2Controllers['accommodation']?.text =
           fetchedData.accommodation ?? '';
       _step2Controllers['addressInMyanmar']?.text =
-          fetchedData.addressInMyanmar;
+          fetchedData.addressInMyanmar!;
       _step2Controllers['mobileNumberMM']?.text =
           fetchedData.mobileNumberMM ?? '';
       _step2Controllers['previousCity']?.text = fetchedData.previousCity;
