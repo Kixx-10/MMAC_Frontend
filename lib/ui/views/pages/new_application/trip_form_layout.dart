@@ -456,7 +456,7 @@ class _TripFormLayoutState extends ConsumerState<TripFormLayout>
 
   Widget _buildArrivalDateField() {
     return CustomDateField(
-      label: "Arrival Date",
+      label: "Arrival Date (UTC +6:30)",
       value: widget.values['arrivalDate'],
       firstDate: DateTime.now(),
       readOnly: widget.isUpdateMode,
