@@ -114,8 +114,8 @@ class _NoticePageState extends State<NoticePage> {
                     ),
                     const SizedBox(height: 10),
                     _buildBullet(
-                      'Please submit your eArrival Card at least 72 hours (or 3 days) prior to your arrival date in Myanmar, calculated using Myanmar Standard Time (GMT+6:30).',
-                      false,
+                      'Please submit your eArrival Card at least 72 hours (or 3 days) prior to your arrival date in Myanmar, calculated using Myanmar Standard Time (UTC+6:30).',
+                      true,
                     ),
                     // _buildBullet(
                     //   'A correct email address is mandatory. Please ensure that you provide a valid and active email address, as your completed eArrival Card and QR code PDF will be sent to this email for your records',
