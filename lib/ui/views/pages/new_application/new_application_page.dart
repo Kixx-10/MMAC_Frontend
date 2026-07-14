@@ -604,7 +604,7 @@ class _NewApplicationState extends ConsumerState<NewApplication>
       case 4:
         return "Review Application";
       case 5:
-        return "Application Registered (QR Code)";
+        return " ";
       default:
         return "";
     }
