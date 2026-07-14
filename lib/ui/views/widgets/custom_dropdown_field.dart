@@ -73,7 +73,7 @@ class _CustomDropdownFieldState extends State<CustomDropdownField> {
     return OverlayEntry(
       builder: (context) => Stack(
         children: [
-          // 🎯 Dismisses the dropdown panel instantly if user clicks outside of it
+          // Dismisses the dropdown panel instantly if user clicks outside of it
           Positioned.fill(
             child: GestureDetector(
               behavior: HitTestBehavior.translucent,
@@ -243,10 +243,7 @@ class _CustomDropdownFieldState extends State<CustomDropdownField> {
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        lableWidget,
-        dropDownField,
-      ],
+      children: [lableWidget, dropDownField],
     );
   }
 }

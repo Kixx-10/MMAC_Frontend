@@ -45,6 +45,37 @@ class _FAQSState extends State<FAQS> {
       'answer':
           'Flagged health conditions trigger automated quarantine interlocks. If this was a clerical error, navigate back to Step 3 using the step indicator matrix before making your final submission.',
     },
+    {
+      'category': 'Application Amendments',
+      'question': 'When should I submit my eArrival Card?',
+      'answer':
+          'You must submit the eArrival application at least 72 hours (3 days) before your scheduled arrival time in Myanmar.',
+    },
+    {
+      'category': 'Technical & Health Protocols',
+      'question': 'What happens after I successfully submit my application?',
+      'answer':
+          'The system will review your information and automatically generate a unique, one-time-use QR Code. You must present this QR Code to the immigration officer at the airport or border gate.',
+    },
+    {
+      'category': 'Application Amendments',
+      'question': 'Who is required to submit the eArrival Card?',
+      'answer':
+          'All travelers—including both foreign visitors and Myanmar nationals—entering Myanmar are required to complete and submit the eArrival Card before arrival.',
+    },
+    {
+      'category': 'Identity & Passport Validation',
+      'question': 'What specific details must Myanmar citizens provide?',
+      'answer':
+          'Myanmar nationals must provide their National Registration Card (NRC) number and their Father’s name during the application process.',
+    },
+    {
+      'category': 'Application Amendments',
+      'question':
+          'What documents and information do I need to prepare before starting?',
+      'answer':
+          'A valid passport, Visa details (for foreign visitors), Travel itinerary (boarding country, next destination, flight/vehicle number, purpose of visit), Mandatory accommodation address in Myanmar (hotel or residential), An active email address are needed to be prepared',
+    },
   ];
 
   @override

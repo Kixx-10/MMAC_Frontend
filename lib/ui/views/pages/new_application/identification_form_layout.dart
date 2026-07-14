@@ -520,7 +520,7 @@ class _IdentificationFormLayoutState
       maxLength: 10,
       labelWidth: lw,
       isRequired: false,
-      readonly: widget.isUpdateMode,
+      readonly: false,
       onChanged: (value) => widget.onValueChanged('uid', value),
     );
   }
@@ -531,7 +531,7 @@ class _IdentificationFormLayoutState
       controller: widget.controllers['occupation']!,
       maxLength: 50,
       labelWidth: lw,
-      readonly: widget.isUpdateMode,
+      readonly: false,
       validator: (v) => FormValidators.required(v, 'Occupation'),
       onChanged: (value) => widget.onValueChanged('occupation', value),
     );
@@ -657,7 +657,7 @@ class _IdentificationFormLayoutState
       labelWidth: lw,
       readOnly: widget.isUpdateMode,
       firstDate: DateTime(1900),
-      lastDate: DateTime.now(),
+      lastDate: DateTime.now().subtract(const Duration(days: 1)),
       errorText: _showDateErrors && widget.values['dateOfBirth'] == null
           ? 'Date of Birth is required'
           : null,
@@ -755,7 +755,7 @@ class _IdentificationFormLayoutState
           hintText: "Active Email Required",
           labelWidth: lw,
           maxLength: 30,
-          readonly: widget.isUpdateMode && isMyanmar,
+          readonly: false,
           validator: FormValidators.email,
           onChanged: (value) => widget.onValueChanged('email', value),
           suffixIcon: const HoverInfoIcon(
@@ -784,7 +784,7 @@ class _IdentificationFormLayoutState
         width: double.infinity,
         child: RichText(
           text: const TextSpan(
-            text: "Contact",
+            text: "Mobile Number",
             style: TextStyle(
               fontSize: 16,
               fontWeight: FontWeight.bold,
@@ -1022,7 +1022,7 @@ class _IdentificationFormLayoutState
       labelWidth: lw,
       firstDate: minExpiryDate,
       lastDate: DateTime(2100),
-      readOnly: (widget.isUpdateMode && !isMyanmar),
+      readOnly: (widget.isUpdateMode),
       errorText: getExpiryErrorText(),
       onPicked: (d) {
         widget.onValueChanged('expiryDate', d);
@@ -1363,7 +1363,7 @@ class _IdentificationFormLayoutState
                 ],
               )
             : _buildOccupationField(lw),
-        const SizedBox(height: 24),
+        const SizedBox(height: 50),
 
         _buildSectionHeader("Contact and location"),
         _buildPair(
@@ -1377,7 +1377,7 @@ class _IdentificationFormLayoutState
           _buildEmailField(lw, isMyanmar),
           isDesktop,
         ),
-        const SizedBox(height: 24),
+        const SizedBox(height: 50),
 
         _buildSectionHeader("Passport Information"),
         _buildPair(
@@ -1419,7 +1419,7 @@ class _IdentificationFormLayoutState
                 ],
               )
             : _buildOccupationField(lw),
-        const SizedBox(height: 24),
+        const SizedBox(height: 50),
 
         _buildSectionHeader("Contact and location"),
         _buildPair(
@@ -1433,7 +1433,7 @@ class _IdentificationFormLayoutState
           _buildEmailField(lw, isMyanmar),
           isDesktop,
         ),
-        const SizedBox(height: 24),
+        const SizedBox(height: 50),
 
         _buildSectionHeader("Passport Information"),
         _buildPair(
