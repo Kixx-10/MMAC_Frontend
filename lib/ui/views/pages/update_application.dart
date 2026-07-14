@@ -288,16 +288,29 @@ class _UpdateApplicationState extends ConsumerState<UpdateApplication> {
     );
   }
 
-  Widget _buildLabel(String label) {
+  Widget _buildLabel(String label, bool isRequired) {
     return Padding(
       padding: const EdgeInsets.only(bottom: 8),
-      child: Text(
-        label,
-        style: const TextStyle(
-          fontSize: 18,
-          fontWeight: FontWeight.w600,
-          color: Colors.black87,
-          fontFamily: AppFonts.primaryFont,
+      child: RichText(
+        text: TextSpan(
+          text: label,
+          style: const TextStyle(
+            fontSize: 16,
+            fontWeight: FontWeight.bold,
+            color: Colors.black87,
+            fontFamily: AppFonts.primaryFont,
+          ),
+          children: [
+            if (isRequired)
+              const TextSpan(
+                text: ' *',
+                style: TextStyle(
+                  color: Colors.red,
+                  fontWeight: FontWeight.bold,
+                  fontFamily: AppFonts.primaryFont,
+                ),
+              ),
+          ],
         ),
       ),
     );
@@ -380,7 +393,7 @@ class _UpdateApplicationState extends ConsumerState<UpdateApplication> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        _buildLabel("DE Number *"),
+        _buildLabel("DE Number ", true),
         TextFormField(
           controller: _searchControllers['qrReference'],
           decoration: _inputDecoration(
@@ -399,7 +412,7 @@ class _UpdateApplicationState extends ConsumerState<UpdateApplication> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        _buildLabel("NRC Number *"),
+        _buildLabel("NRC Number", true),
         (() {
           final nrcAsync = ref.watch(nrcProvider);
           final nrcState = nrcAsync.valueOrNull;
@@ -497,7 +510,7 @@ class _UpdateApplicationState extends ConsumerState<UpdateApplication> {
               ),
         const SizedBox(height: 20),
 
-        _buildLabel("Expected Date of Arrival *"),
+        _buildLabel("Expected Date of Arrival ", true),
         isMobile
             ? Column(
                 children: [
@@ -535,7 +548,7 @@ class _UpdateApplicationState extends ConsumerState<UpdateApplication> {
     final passportField = Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        _buildLabel("Passport Number *"),
+        _buildLabel("Passport Number ", true),
         TextFormField(
           controller: _searchControllers['passportNumber'],
           textCapitalization: TextCapitalization.characters,
@@ -550,7 +563,7 @@ class _UpdateApplicationState extends ConsumerState<UpdateApplication> {
     final countryField = Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        _buildLabel("Country *"),
+        _buildLabel("Country ", true),
         _isLoadingCountries
             ? const LinearProgressIndicator()
             : Container(
@@ -597,7 +610,7 @@ class _UpdateApplicationState extends ConsumerState<UpdateApplication> {
     final dobField = Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        _buildLabel("Date of Birth *"),
+        _buildLabel("Date of Birth", true),
         TextFormField(
           controller: _searchControllers['dob'],
           readOnly: true,
@@ -616,7 +629,7 @@ class _UpdateApplicationState extends ConsumerState<UpdateApplication> {
     final expiryField = Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        _buildLabel("Passport Expiry Date *"),
+        _buildLabel("Passport Expiry Date", true),
         TextFormField(
           controller: _searchControllers['passportExpiry'],
           readOnly: true,
