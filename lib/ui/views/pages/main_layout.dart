@@ -9,7 +9,6 @@ import 'package:mmac/ui/views/pages/new_application/residency_layout.dart';
 import 'package:mmac/ui/views/pages/faqs.dart';
 //import 'package:mmac/ui/views/pages/qr_scan_page.dart';
 import 'package:mmac/ui/views/pages/update_application.dart';
-import 'package:mmac/ui/views/pages/notice_page.dart';
 import 'package:mmac/ui/views/widgets/national_header.dart';
 import 'package:mmac/utils/form_session_service.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -29,7 +28,6 @@ class _MainLayoutState extends State<MainLayout>
   SubmitRequestModel? _fetchedUpdateData;
   bool _isSessionLoading = true;
   bool _isMenuExpanded = false;
-  bool _hasAcceptedNotice = false;
 
   @override
   void initState() {
@@ -59,12 +57,10 @@ class _MainLayoutState extends State<MainLayout>
     try {
       final prefs = await SharedPreferences.getInstance();
       final int savedTabIndex = prefs.getInt('last_active_tab') ?? 0;
-      final bool noticeAccepted = prefs.getBool('hasAcceptedNotice') ?? false;
 
       if (mounted) {
         WidgetsBinding.instance.addPostFrameCallback((_) {
           if (mounted) _tabController.index = savedTabIndex;
-          setState(() => _hasAcceptedNotice = noticeAccepted);
         });
       }
 
@@ -222,15 +218,6 @@ class _MainLayoutState extends State<MainLayout>
   }
 
   Widget _buildNewApplicationTab() {
-    if (!_hasAcceptedNotice) {
-      return NoticePage(
-        onAccepted: () {
-          setState(() {
-            _hasAcceptedNotice = true;
-          });
-        },
-      );
-    }
     if (_selectedResidency == null) {
       return ResidencyLayout(onResidencySelected: _handleResidencySelection);
     }
