@@ -253,172 +253,6 @@ class _ReviewLayoutState extends State<ReviewLayout> {
     );
   }
 
-  //Legal Declaration Section
-  Widget _buildLegalDeclarationSection() {
-    return Container(
-      margin: const EdgeInsets.only(bottom: 24),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(16),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withOpacity(0.03),
-            blurRadius: 15,
-            offset: const Offset(0, 4),
-          ),
-        ],
-        border: Border.all(
-          color: _isAgreed ? Colors.blue.shade300 : Colors.red.shade200,
-          width: 1.5,
-        ),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          // Header
-          Container(
-            width: double.infinity,
-            padding: const EdgeInsets.all(16),
-            decoration: BoxDecoration(
-              color: _isAgreed ? Colors.blue.shade50 : Colors.red.shade50,
-              borderRadius: const BorderRadius.only(
-                topLeft: Radius.circular(14),
-                topRight: Radius.circular(14),
-              ),
-            ),
-            child: Row(
-              children: [
-                Icon(
-                  Icons.gavel_rounded,
-                  color: _isAgreed ? Colors.blue.shade700 : Colors.red.shade700,
-                  size: 20,
-                ),
-                const SizedBox(width: 12),
-                Text(
-                  'Legal Declaration and Consent',
-                  style: TextStyle(
-                    fontSize: 15,
-                    fontFamily: AppFonts.primaryFont,
-                    fontWeight: FontWeight.bold,
-                    color: _isAgreed
-                        ? Colors.blue.shade900
-                        : Colors.red.shade900,
-                  ),
-                ),
-              ],
-            ),
-          ),
-          const Divider(height: 1, thickness: 1, color: Color(0xFFF5F5F7)),
-
-          // Text Content
-          Padding(
-            padding: const EdgeInsets.all(20),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                const Text(
-                  'I hereby confirm that all information I have provided in this application—including my core identity, contact details, travel itinerary, health status, and customs declarations—is true, accurate, and complete to the best of my knowledge and belief.',
-                  style: TextStyle(
-                    fontSize: 13,
-                    color: Colors.black87,
-                    height: 1.5,
-                    fontFamily: AppFonts.primaryFont,
-                  ),
-                ),
-                const SizedBox(height: 12),
-                const Text(
-                  'I fully understand and agree to the following terms:',
-                  style: TextStyle(
-                    fontSize: 13,
-                    fontWeight: FontWeight.bold,
-                    color: Colors.black87,
-                    fontFamily: AppFonts.primaryFont,
-                  ),
-                ),
-                const SizedBox(height: 12),
-                _buildLegalBullet(
-                  'Responsibility for Accuracy:',
-                  'I am solely responsible for the truthfulness and accuracy of all submitted data. If any of my travel or itinerary information changes prior to arrival, I pledge to immediately correct it using the "Update Application" function on this platform using my assigned DE Number. I commit to updating any incomplete or incorrect information immediately in accordance with the regulations of the Ministry of Immigration and Population.',
-                ),
-                _buildLegalBullet(
-                  'Submissions on Behalf of Others:',
-                  'If I am filling out and submitting this eArrival declaration on behalf of accompanying travelers or dependents, I affirm that each traveler has clearly reviewed and acknowledged the information I have entered. I certify that I am legally authorized to submit this data on their behalf as if it were submitted by the traveler personally.',
-                ),
-                _buildLegalBullet(
-                  'Penalties for False Statements:',
-                  'I understand that if the information submitted is incomplete, unclear, inaccurate, fraudulent, or conceals material facts, I may be subject to an immediate prohibition on entry into the Republic of the Union of Myanmar, and I will bear full legal and criminal responsibility for the unlawful act.',
-                ),
-                _buildLegalBullet(
-                  'Shared Liability for Dependents:',
-                  'If I submit fraudulent or inaccurate information on behalf of an accompanying traveler, that traveler may also be denied entry. In such cases, both the traveler and I will bear joint legal responsibility under the applicable laws of Myanmar.',
-                ),
-              ],
-            ),
-          ),
-
-          // Checkbox Toggle
-          Container(
-            decoration: BoxDecoration(
-              color: Colors.grey.shade50,
-              borderRadius: const BorderRadius.only(
-                bottomLeft: Radius.circular(14),
-                bottomRight: Radius.circular(14),
-              ),
-              border: Border(top: BorderSide(color: Colors.grey.shade200)),
-            ),
-            child: CheckboxListTile(
-              value: _isAgreed,
-              activeColor: Colors.blue.shade700,
-              contentPadding: const EdgeInsets.symmetric(
-                horizontal: 16,
-                vertical: 8,
-              ),
-              onChanged: (val) {
-                widget.onValueChanged('isAgreed', val ?? false);
-              },
-              title: const Text(
-                'I have read, fully understood, and explicitly agree to this declaration, and I accept full legal responsibility.',
-                style: TextStyle(
-                  fontSize: 13,
-                  fontWeight: FontWeight.w600,
-                  color: Colors.black87,
-                  fontFamily: AppFonts.primaryFont,
-                ),
-              ),
-              controlAffinity: ListTileControlAffinity.leading,
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildLegalBullet(String title, String desc) {
-    return Padding(
-      padding: const EdgeInsets.only(bottom: 12),
-      child: RichText(
-        text: TextSpan(
-          style: const TextStyle(
-            fontSize: 13,
-            color: Colors.black87,
-            height: 1.5,
-            fontFamily: AppFonts.primaryFont,
-          ),
-          children: [
-            TextSpan(
-              text: '$title ',
-              style: const TextStyle(
-                fontWeight: FontWeight.bold,
-                fontFamily: AppFonts.primaryFont,
-              ),
-            ),
-            TextSpan(text: desc),
-          ],
-        ),
-      ),
-    );
-  }
-
   // MAIN BUILD METHOD
   @override
   Widget build(BuildContext context) {
@@ -431,42 +265,39 @@ class _ReviewLayoutState extends State<ReviewLayout> {
         _buildTripDetailsSection(),
         _buildHealthDeclarationsSection(),
 
-        // 🎯 NEW: Legal Declaration Section added here
-        _buildLegalDeclarationSection(),
-
-        // 🎯 INTERCEPTOR TRICK: Protects the submit button
-        Stack(
-          children: [
-            widget.actionButtons,
-            if (!_isAgreed)
-              Positioned(
-                right: 0,
-                top: 0,
-                bottom: 0,
-                width:
-                    MediaQuery.of(context).size.width *
-                    0.4, // Covers the right side (Submit button)
-                child: GestureDetector(
-                  behavior: HitTestBehavior.opaque,
-                  onTap: () {
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      SnackBar(
-                        content: const Text(
-                          'Please check the agreement box in the Legal Declaration to submit your application.',
-                        ),
-                        backgroundColor: Colors.red.shade600,
-                        behavior: SnackBarBehavior.floating,
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(8),
-                        ),
-                      ),
-                    );
-                  },
-                  child: Container(color: Colors.transparent),
-                ),
-              ),
-          ],
-        ),
+        widget.actionButtons,
+        // Stack(
+        //   children: [
+        //     widget.actionButtons,
+        //     if (!_isAgreed)
+        //       Positioned(
+        //         right: 0,
+        //         top: 0,
+        //         bottom: 0,
+        //         width:
+        //             MediaQuery.of(context).size.width *
+        //             0.4, // Covers the right side (Submit button)
+        //         child: GestureDetector(
+        //           behavior: HitTestBehavior.opaque,
+        //           onTap: () {
+        //             ScaffoldMessenger.of(context).showSnackBar(
+        //               SnackBar(
+        //                 content: const Text(
+        //                   'Please check the agreement box in the Legal Declaration to submit your application.',
+        //                 ),
+        //                 backgroundColor: Colors.red.shade600,
+        //                 behavior: SnackBarBehavior.floating,
+        //                 shape: RoundedRectangleBorder(
+        //                   borderRadius: BorderRadius.circular(8),
+        //                 ),
+        //               ),
+        //             );
+        //           },
+        //           child: Container(color: Colors.transparent),
+        //         ),
+        //       ),
+        //   ],
+        // ),
       ],
     );
   }
