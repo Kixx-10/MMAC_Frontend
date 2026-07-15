@@ -35,7 +35,7 @@ class _ReviewLayoutState extends State<ReviewLayout> {
     // _isAgreed = widget.values['isAgreed'] == true;
   }
 
-  bool get _isAgreed => widget.values['isAgreed'] == true;
+  // bool get _isAgreed => widget.values['isAgreed'] == true;
 
   bool get _isMyanmar =>
       widget.values['country'] == 'Myanmar' ||

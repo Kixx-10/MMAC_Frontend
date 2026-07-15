@@ -1,0 +1,147 @@
+[
+{
+"city": "Bangkok",
+"port": "Suvarnabhumi",
+"country": "Thailand"
+},
+{
+"city": "Bangkok",
+"port": "Don Mueang",
+"country": "Thailand"
+},
+{
+"city": "Chiang Mai",
+"port": "",
+"country": "Thailand"
+},
+{
+"city": "Phuket",
+"port": "",
+"country": "Thailand"
+},
+{
+"city": "Singapore",
+"port": "",
+"country": "Singapore"
+},
+{
+"city": "Kuala Lumpur",
+"port": "",
+"country": "Malaysia"
+},
+{
+"city": "Penang",
+"port": "",
+"country": "Malaysia"
+},
+{
+"city": "Hanoi",
+"port": "",
+"country": "Vietnam"
+},
+{
+"city": "Ho Chi Minh City",
+"port": "",
+"country": "Vietnam"
+},
+{
+"city": "Da Nang",
+"port": "",
+"country": "Vietnam"
+},
+{
+"city": "Guangzhou",
+"port": "",
+"country": "China"
+},
+{
+"city": "Kunming",
+"port": "",
+"country": "China"
+},
+{
+"city": "Nanning",
+"port": "",
+"country": "China"
+},
+{
+"city": "Changsha",
+"port": "",
+"country": "China"
+},
+{
+"city": "Shanghai",
+"port": "",
+"country": "China"
+},
+{
+"city": "Taipei",
+"port": "",
+"country": "Taiwan"
+},
+{
+"city": "New Delhi",
+"port": "",
+"country": "India"
+},
+{
+"city": "Kolkata",
+"port": "",
+"country": "India"
+},
+{
+"city": "Chennai",
+"port": "",
+"country": "India"
+},
+{
+"city": "Seoul",
+"port": "Incheon",
+"country": "South Korea"
+},
+{
+"city": "Vientiane",
+"port": "",
+"country": "Laos"
+},
+{
+"city": "Dubai",
+"port": "",
+"country": "United Arab Emirates"
+},
+{
+"city": "Lincang",
+"port": "",
+"country": "China"
+},
+{
+"city": "Novosibirsk",
+"port": "",
+"country": "Russia"
+},
+{
+"city": "Mae Sot",
+"port": "",
+"country": "Thailand"
+},
+{
+"city": "Mae Sai",
+"port": "",
+"country": "Thailand"
+},
+{
+"city": "Ranong",
+"port": "",
+"country": "Thailand"
+},
+{
+"city": "Ruili",
+"port": "",
+"country": "China"
+},
+{
+"city": "Moreh",
+"port": "",
+"country": "India"
+}
+]
