@@ -267,6 +267,10 @@ class _TripFormLayoutState extends ConsumerState<TripFormLayout>
   List<String> getValidationErrors() {
     List<String> errors = [];
 
+    final bool isMyanmar =
+        widget.values['country'] == 'Myanmar' ||
+        widget.values['country'] == 'MMR';
+
     if (widget.values['modeOfTravel'] == null) {
       errors.add("Mode of Travel is missing.");
     }
@@ -286,9 +290,15 @@ class _TripFormLayoutState extends ConsumerState<TripFormLayout>
         widget.values['purposeOfVisit'].toString().isEmpty) {
       errors.add("Purpose of Visit is missing.");
     }
-    if (widget.values['accommodation'] == null ||
-        widget.values['accommodation'].toString().isEmpty) {
-      errors.add("Accommodation Type is missing.");
+    if (isMyanmar) {
+      if (_getSafeController('mobileNumberMM').text.trim().isEmpty) {
+        errors.add("Mobile Number (MM) is missing.");
+      }
+    } else {
+      if (widget.values['accommodation'] == null ||
+          widget.values['accommodation'].toString().isEmpty) {
+        errors.add("Accommodation Type is missing.");
+      }
     }
     if (widget.values['stateRegion'] == null) {
       errors.add("State/Region is missing.");
