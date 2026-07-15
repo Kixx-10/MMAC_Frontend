@@ -5,6 +5,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:mmac/core/constants/app_fonts.dart';
 import 'package:mmac/data/controllers/file_upload_provider.dart';
+import 'package:mmac/ui/views/widgets/file_viewer_widget.dart';
 import '../../../../utils/form_validators.dart';
 
 abstract class DeclarationLayoutInterface {
@@ -83,7 +84,7 @@ class _DeclarationLayoutState extends ConsumerState<DeclarationLayout>
   Future<void> _pickAndUpload() async {
     final result = await FilePicker.platform.pickFiles(
       type: FileType.custom,
-      allowedExtensions: ['jpg', 'jpeg', 'png', 'pdf', 'doc', 'docx'],
+      allowedExtensions: ['jpg', 'jpeg', 'png', 'pdf'],
     );
 
     if (result == null || result.files.single.name == null) return;
@@ -115,7 +116,7 @@ class _DeclarationLayoutState extends ConsumerState<DeclarationLayout>
   Future<void> _pickAndUploadGoods() async {
     final result = await FilePicker.platform.pickFiles(
       type: FileType.custom,
-      allowedExtensions: ['jpg', 'jpeg', 'png', 'pdf', 'doc', 'docx'],
+      allowedExtensions: ['jpg', 'jpeg', 'png', 'pdf'],
     );
 
     if (result == null || result.files.single.name == null) return;
@@ -198,7 +199,7 @@ class _DeclarationLayoutState extends ConsumerState<DeclarationLayout>
             fallbackFileName: widget.values['healthRecordFileName'] as String?,
             onPickAndUpload: _pickAndUpload,
             onClear: _clearHealthRecord,
-            infoText: '',
+            infoText: 'If you have any symptoms, please upload your medical record or test result file using the button below.',
           ),
         ],
 
@@ -230,8 +231,7 @@ class _DeclarationLayoutState extends ConsumerState<DeclarationLayout>
             fallbackUrl: widget.values['restrictedGoodsUrl'] as String?,
             fallbackFileName:
                 widget.values['restrictedGoodsFileName'] as String?,
-            infoText:
-                "Please upload supporting documents for your restricted items.",
+            infoText:"Please upload supporting documents for your restricted items.",
             onPickAndUpload: _pickAndUploadGoods,
             onClear: _clearRestrictedRecord,
           ),
@@ -265,38 +265,53 @@ class _RecordUploadSection extends StatelessWidget {
   Widget build(BuildContext context) {
     final displayUrl = uploadState.uploadedUrl ?? fallbackUrl;
     final displayFileName = uploadState.localFileName ?? fallbackFileName;
+    
     if (displayUrl != null) {
-      return Container(
-        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
-        decoration: BoxDecoration(
-          color: Colors.green.shade50,
+      return Material(
+        color: Colors.transparent,
+        child: InkWell(
           borderRadius: BorderRadius.circular(8),
-          border: Border.all(color: Colors.green.shade200),
-        ),
-        child: Row(
-          children: [
-            Icon(Icons.check_circle, color: Colors.green.shade600, size: 20),
-            const SizedBox(width: 8),
-            Expanded(
-              child: Text(
-                displayFileName ?? 'File uploaded',
-                style: TextStyle(
-                  fontSize: 13,
-                  color: Colors.green.shade800,
-                  fontFamily: AppFonts.primaryFont,
-                ),
-                overflow: TextOverflow.ellipsis,
+          onTap: () {
+            showDialog(
+              context: context,
+              builder: (_) => FileViewerDialog(
+                fileUrl: displayUrl,
+                fileName: displayFileName ?? 'File',
               ),
+            );
+          },
+          child: Container(
+            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+            decoration: BoxDecoration(
+              color: Colors.green.shade50,
+              borderRadius: BorderRadius.circular(8),
+              border: Border.all(color: Colors.green.shade200),
             ),
-            IconButton(
-              icon: const Icon(Icons.close, size: 18, color: Colors.red),
-              onPressed: onClear,
+            child: Row(
+              children: [
+                Icon(Icons.check_circle, color: Colors.green.shade600, size: 20),
+                const SizedBox(width: 8),
+                Expanded(
+                  child: Text(
+                    displayFileName ?? 'File uploaded',
+                    style: TextStyle(
+                      fontSize: 13,
+                      color: Colors.green.shade800,
+                      fontFamily: AppFonts.primaryFont,
+                    ),
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                ),
+                IconButton(
+                  icon: const Icon(Icons.close, size: 18, color: Colors.red),
+                  onPressed: onClear,
+                ),
+              ],
             ),
-          ],
+          ),
         ),
       );
     }
-
     if (uploadState.isUploading) {
       return Container(
         padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 14),
@@ -307,19 +322,9 @@ class _RecordUploadSection extends StatelessWidget {
         ),
         child: Row(
           children: [
-            const SizedBox(
-              width: 18,
-              height: 18,
-              child: CircularProgressIndicator(strokeWidth: 2),
-            ),
+            const SizedBox(width: 18, height: 18, child: CircularProgressIndicator(strokeWidth: 2)),
             const SizedBox(width: 10),
-            Text(
-              'Uploading...',
-              style: TextStyle(
-                color: Colors.blue.shade700,
-                fontFamily: AppFonts.primaryFont,
-              ),
-            ),
+            Text('Uploading...', style: TextStyle(color: Colors.blue.shade700, fontFamily: AppFonts.primaryFont)),
           ],
         ),
       );
@@ -339,10 +344,10 @@ class _RecordUploadSection extends StatelessWidget {
             children: [
               Icon(Icons.info_outline, color: Colors.blue.shade700, size: 20),
               const SizedBox(width: 8),
-              const Expanded(
+              Expanded(
                 child: Text(
-                  "If you have any symptoms, please upload your medical record or test result file using the button below.",
-                  style: TextStyle(
+                  infoText, 
+                  style: const TextStyle(
                     fontSize: 13,
                     color: Colors.black87,
                     fontFamily: AppFonts.primaryFont,
@@ -353,45 +358,20 @@ class _RecordUploadSection extends StatelessWidget {
           ),
         ),
         const SizedBox(height: 12),
-        const Text(
-          'Health Record Document',
-          style: TextStyle(
-            fontSize: 14,
-            fontWeight: FontWeight.w600,
-            fontFamily: AppFonts.primaryFont,
-          ),
-        ),
+
+        const Text('Health Record Document', style: TextStyle(fontSize: 14, fontWeight: FontWeight.w600, fontFamily: AppFonts.primaryFont)),
         const SizedBox(height: 4),
-        Text(
-          'Upload supporting document (jpg, png, pdf, doc, docx — max 5 MB)',
-          style: TextStyle(
-            fontSize: 12,
-            color: Colors.grey.shade600,
-            fontFamily: AppFonts.primaryFont,
-          ),
-        ),
+        Text('Upload supporting file types (jpg, png, jpeg ,pdf — max 5 MB)', style: TextStyle(fontSize: 12, color: Colors.grey.shade600, fontFamily: AppFonts.primaryFont)),
         const SizedBox(height: 10),
         OutlinedButton.icon(
           onPressed: onPickAndUpload,
           icon: const Icon(Icons.upload_file, size: 18),
           label: const Text('Choose File'),
-          style: OutlinedButton.styleFrom(
-            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(8),
-            ),
-          ),
+          style: OutlinedButton.styleFrom(padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12), shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8))),
         ),
         if (uploadState.error != null) ...[
           const SizedBox(height: 8),
-          Text(
-            uploadState.error!,
-            style: const TextStyle(
-              fontSize: 12,
-              color: Colors.red,
-              fontFamily: AppFonts.primaryFont,
-            ),
-          ),
+          Text(uploadState.error!, style: const TextStyle(fontSize: 12, color: Colors.red, fontFamily: AppFonts.primaryFont)),
         ],
       ],
     );
