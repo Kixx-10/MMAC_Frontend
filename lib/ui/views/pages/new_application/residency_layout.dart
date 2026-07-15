@@ -109,7 +109,8 @@ class ResidencyLayout extends StatelessWidget {
       para:
           "For applicants holding a National Registration Card (NRC) or Permanent Residency in Myanmar.",
       iconColor: Colors.brown.shade600,
-      requiredData: const ["NRC Number", "Mobile Number", "Father Name"],
+      requiredTextData:
+          "Returning citizens and permanent residents must accurately declare their National Registration Card (NRC) or identity details. Travelers are required to provide their exact local residential address and an active contact number to facilitate secure border clearance and health protocols upon arrival.",
       onTap: () => onResidencySelected('Myanmar'),
     );
   }
@@ -124,11 +125,8 @@ class ResidencyLayout extends StatelessWidget {
       para:
           "For foreign nationals applying with a valid passport and an entry or stay permit.",
       iconColor: Colors.brown.shade700,
-      requiredData: const [
-        "Valid Passport",
-        "Accommodation Info",
-        "Nationality",
-      ],
+      requiredTextData:
+          "Foreign nationals must hold a valid passport with a minimum of six (6) months validity remaining. In accordance with Myanmar immigration laws, travelers must possess a valid visa or entry permit and provide the exact address of their registered hotel, guest house, or legal accommodation during their stay in the Republic of the Union of Myanmar.",
       onTap: () => onResidencySelected('Foreigner'),
     );
   }
@@ -145,7 +143,8 @@ class _DetailedResidencyCard extends StatefulWidget {
   final String header;
   final String para;
   final Color iconColor;
-  final List<String> requiredData;
+  // final List<String> requiredData;
+  final String requiredTextData;
   final VoidCallback onTap;
 
   const _DetailedResidencyCard({
@@ -155,7 +154,7 @@ class _DetailedResidencyCard extends StatefulWidget {
     required this.header,
     required this.para,
     required this.iconColor,
-    required this.requiredData,
+    required this.requiredTextData,
     required this.onTap,
   });
 
@@ -308,9 +307,18 @@ class _DetailedResidencyCardState extends State<_DetailedResidencyCard> {
                     Wrap(
                       spacing: 8,
                       runSpacing: 8,
-                      children: widget.requiredData
-                          .map((data) => _buildDataChip(data))
-                          .toList(),
+                      children: [
+                        Text(
+                          widget.requiredTextData,
+                          style: const TextStyle(
+                            fontFamily: AppFonts.primaryFont,
+                            fontSize: 16,
+                          ),
+                        ),
+                      ],
+                      // children: widget.requiredData
+                      //     .map((data) => _buildDataChip(data))
+                      //     .toList(),
                     ),
                   ],
                 ),
@@ -322,22 +330,22 @@ class _DetailedResidencyCardState extends State<_DetailedResidencyCard> {
     );
   }
 
-  Widget _buildDataChip(String text) {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
-      decoration: BoxDecoration(
-        color: Colors.blue.shade50,
-        borderRadius: BorderRadius.circular(20),
-        border: Border.all(color: Colors.blue.shade100, width: 1),
-      ),
-      child: Text(
-        text,
-        style: TextStyle(
-          fontSize: 13,
-          color: Colors.blue.shade700,
-          fontWeight: FontWeight.w600,
-        ),
-      ),
-    );
-  }
+  // Widget _buildDataChip(String text) {
+  //   return Container(
+  //     padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
+  //     decoration: BoxDecoration(
+  //       color: Colors.blue.shade50,
+  //       borderRadius: BorderRadius.circular(20),
+  //       border: Border.all(color: Colors.blue.shade100, width: 1),
+  //     ),
+  //     child: Text(
+  //       text,
+  //       style: TextStyle(
+  //         fontSize: 13,
+  //         color: Colors.blue.shade700,
+  //         fontWeight: FontWeight.w600,
+  //       ),
+  //     ),
+  //   );
+  // }
 }

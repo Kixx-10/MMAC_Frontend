@@ -31,6 +31,8 @@ class SubmitRequestModel {
   final String healthDeclaration;
   final String? healthRecordUrl;
   final String? healthRecordFileName;
+  final String? goodsRecordUrl;
+  final String? goodsRecordFileName;
   final String digitalDeclarations;
   final String? modeOfTravelName;
   final String? portOfArrivalName;
@@ -81,6 +83,8 @@ class SubmitRequestModel {
     this.uid,
     this.occupation,
     this.placeOfBirthCode,
+    this.goodsRecordUrl,
+    this.goodsRecordFileName,
   });
 
   Map<String, dynamic> toJson() {
@@ -121,6 +125,8 @@ class SubmitRequestModel {
       'uid': uid,
       'occupation': occupation,
       'placeOfBirthCode': placeOfBirthCode,
+      'goodsRecordUrl': goodsRecordUrl,
+      'goodsRecordFileName': goodsRecordFileName,
     };
   }
 
@@ -158,6 +164,8 @@ class SubmitRequestModel {
       healthRecordUrl: json['healthRecordUrl'],
       healthRecordFileName: json['healthRecordFileName'],
       digitalDeclarations: json['digitalDeclarations'],
+      goodsRecordUrl: json['goodsRecordUrl'],
+      goodsRecordFileName: json['goodsRecordFileName'],
       modeOfTravelName: json['modeOfTravelName'],
       portOfArrivalName: json['portOfArrivalName'],
       stateRegionName: json['stateRegionName'],
