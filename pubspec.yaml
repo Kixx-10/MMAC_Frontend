@@ -39,6 +39,7 @@ dev_dependencies:
 flutter:
   assets:
     - assets/data/purposes.json
+    - assets/data/previous_city.json
     - assets/data/accommodations.json
     - assets/data/country_codes.json
     - assets/images/

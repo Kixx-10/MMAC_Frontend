@@ -236,8 +236,8 @@ class _IdentificationFormLayoutState
 
             _resolveCountryCodeToName('nationalityCode', 'country');
             _resolveCountryCodeToName('issuedCountryCode', 'issuedCountry');
-            _resolveCountryCodeToName('placeOfResidenceCode', 'placeOfBirth');
-            _resolveCountryCodeToName('placeOfBirthCode', 'placeOfResidence');
+            _resolveCountryCodeToName('placeOfBirthCode', 'placeOfBirth');
+            // _resolveCountryCodeToName('placeOfBirthCode', 'placeOfResidence');
 
             _isLoading = false;
           });
@@ -381,9 +381,15 @@ class _IdentificationFormLayoutState
         widget.values['country'] == 'MMR';
 
     // Text Fields
-    if (widget.controllers['fullName']?.text.trim().isEmpty ?? true) {
-      errors.add("Full Name is missing.");
+    if (_firstNameController.text.trim().isEmpty) {
+      errors.add("First Name is missing.");
     }
+    if (_lastNameController.text.trim().isEmpty) {
+      errors.add("Last Name is missing.");
+    }
+    // if (widget.controllers['fullName']?.text.trim().isEmpty ?? true) {
+    //   errors.add("Full Name is missing.");
+    // }
     if (widget.controllers['email']?.text.trim().isEmpty ?? true) {
       errors.add("Email is missing.");
     } else if (FormValidators.email(widget.controllers['email']!.text.trim()) !=
@@ -423,8 +429,8 @@ class _IdentificationFormLayoutState
     if (widget.values['issuedDate'] == null) {
       errors.add("Passport Issue Date is missing.");
     }
-    if (widget.values['placeOfResidence'] == null) {
-      errors.add("Place Of Residence is missing");
+    if (widget.controllers['placeOfResidence']?.text.trim().isEmpty ?? true) {
+      errors.add("Place of Residence is missing.");
     }
     if (widget.values['expiryDate'] == null) {
       errors.add("Passport Expiry Date is missing.");
@@ -1059,32 +1065,18 @@ class _IdentificationFormLayoutState
     );
   }
 
-  Widget _buildPlaceOfResidenceField(double lw, List<String> availableCountry) {
-    return CustomDropdownField(
+  Widget _buildPlaceOfResidenceField(double lw) {
+    return CustomTextField(
       label: "Place of Residence",
-      hint: "Select Country",
+      controller: widget.controllers['placeOfResidence']!,
+      hintText: "Enter City / Address",
+      maxLength: 255,
+      filter: [UpperCaseTextFormatter()],
       labelWidth: lw,
-      dialogWidth: 250,
-      dialogHeight: 250,
-      value: widget.values['placeOfResidence'],
-      items: _AllCountryNameList,
-      validator: (v) =>
-          FormValidators.requiredDropdown(v, 'Place of Residence'),
-      onChanged: (value) {
-        widget.onValueChanged('placeOfResidence', value);
-
-        if (value != null && value.isNotEmpty) {
-          try {
-            final matched = _rawCountryObjects.firstWhere(
-              (c) => c.countryName == value,
-            );
-            widget.onValueChanged('placeOfResidenceCode', matched.countryCode);
-          } catch (e) {
-            debugPrint("Country match not found: $e");
-          }
-        }
-      },
-      spacing: 8,
+      readonly: false,
+      validator: (v) => FormValidators.required(v, 'Place of Residence'),
+      onChanged: (value) =>
+          widget.onValueChanged('placeOfResidenceCode', value),
     );
   }
 
@@ -1368,7 +1360,7 @@ class _IdentificationFormLayoutState
         _buildSectionHeader("Contact and location"),
         _buildPair(
           _buildPlaceOfBirthField(lw, availableCountry),
-          _buildPlaceOfResidenceField(lw, _AllCountryNameList),
+          _buildPlaceOfResidenceField(lw),
           isDesktop,
         ),
         const SizedBox(height: 20),
@@ -1424,7 +1416,7 @@ class _IdentificationFormLayoutState
         _buildSectionHeader("Contact and location"),
         _buildPair(
           _buildPlaceOfBirthField(lw, availableCountry),
-          _buildPlaceOfResidenceField(lw, _AllCountryNameList),
+          _buildPlaceOfResidenceField(lw),
           isDesktop,
         ),
         const SizedBox(height: 20),
