@@ -1,3 +1,5 @@
+// ignore_for_file: unnecessary_null_comparison, use_build_context_synchronously
+
 import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -77,14 +79,14 @@ class _DeclarationLayoutState extends ConsumerState<DeclarationLayout>
 
     return errors;
   }
-// for health decleration
+
+  // for health decleration
   Future<void> _pickAndUpload() async {
     final result = await FilePicker.platform.pickFiles(
       type: FileType.custom,
       allowedExtensions: ['jpg', 'jpeg', 'png', 'pdf'],
     );
 
-    // ignore: unnecessary_null_comparison
     if (result == null || result.files.single.name == null) return;
 
     final platformFile = result.files.single;
@@ -109,44 +111,45 @@ class _DeclarationLayoutState extends ConsumerState<DeclarationLayout>
       setState(() {});
     }
   }
-// for restrict goods 
+
+  // for restrict goods
   Future<void> _pickAndUploadGoods() async {
-  final result = await FilePicker.platform.pickFiles(
-    type: FileType.custom,
-    allowedExtensions: ['jpg', 'jpeg', 'png', 'pdf'],
-  );
-
-  if (result == null || result.files.single.name == null) return;
-
-  final platformFile = result.files.single;
-
-  if (platformFile.bytes == null) {
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(content: Text("Unable to read selected file.")),
+    final result = await FilePicker.platform.pickFiles(
+      type: FileType.custom,
+      allowedExtensions: ['jpg', 'jpeg', 'png', 'pdf'],
     );
-    return;
-  }
 
-  final uploadResult = await ref
-      .read(digitalUploadProvider.notifier)   
-      .upload(platformFile.bytes!, platformFile.name);
+    if (result == null || result.files.single.name == null) return;
 
-  if (uploadResult != null) {
-    widget.onValueChanged("goodsRecordUrl", uploadResult['fileUrl']);
-    widget.onValueChanged(
-      "goodsRecordFileName",
-      uploadResult['originalFileName'],
-    );
-    setState(() {});
+    final platformFile = result.files.single;
+
+    if (platformFile.bytes == null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text("Unable to read selected file.")),
+      );
+      return;
+    }
+
+    final uploadResult = await ref
+        .read(digitalUploadProvider.notifier)
+        .upload(platformFile.bytes!, platformFile.name);
+
+    if (uploadResult != null) {
+      widget.onValueChanged("goodsRecordUrl", uploadResult['fileUrl']);
+      widget.onValueChanged(
+        "goodsRecordFileName",
+        uploadResult['originalFileName'],
+      );
+      setState(() {});
+    }
   }
-}
 
   void _clearRestrictedRecord() {
-  ref.read(digitalUploadProvider.notifier).clear();   
-  widget.onValueChanged('goodsRecordUrl', null);
-  widget.onValueChanged('goodsRecordFileName', null);
-  setState(() {});
-}
+    ref.read(digitalUploadProvider.notifier).clear();
+    widget.onValueChanged('goodsRecordUrl', null);
+    widget.onValueChanged('goodsRecordFileName', null);
+    setState(() {});
+  }
 
   void _clearHealthRecord() {
     ref.read(fileUploadProvider.notifier).clear();

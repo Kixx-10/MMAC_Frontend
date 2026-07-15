@@ -54,7 +54,7 @@ class _NewApplicationState extends ConsumerState<NewApplication>
     'visaNumber': TextEditingController(),
     'passportNumber': TextEditingController(),
     'address': TextEditingController(),
-
+    'placeOfResidence': TextEditingController(),
     'nrc': TextEditingController(),
     'fatherName': TextEditingController(),
     'uid': TextEditingController(),
@@ -66,7 +66,7 @@ class _NewApplicationState extends ConsumerState<NewApplication>
     'accommodation': TextEditingController(),
     'addressInMyanmar': TextEditingController(),
     'mobileNumberMM': TextEditingController(),
-    'previousCity': TextEditingController(),
+    // 'previousCity': TextEditingController(),
     'purposeOfVisitDetail': TextEditingController(),
   };
 
@@ -86,6 +86,7 @@ class _NewApplicationState extends ConsumerState<NewApplication>
     'modeOfTravelId': null,
     'portOfArrival': null,
     'portOfArrivalId': null,
+    'previousCity': null,
     'stateRegion': null,
     'stateRegionId': null,
     'district': null,
@@ -264,6 +265,8 @@ class _NewApplicationState extends ConsumerState<NewApplication>
       _step1Controllers['passportNumber']?.text = fetchedData.passportNo;
       _step1Controllers['fatherName']?.text = fetchedData.fatherName ?? '';
       _step1Controllers['occupation']?.text = fetchedData.occupation ?? '';
+      _step1Controllers['placeOfResidence']?.text =
+          fetchedData.placeOfResidenceCode;
 
       _step2Controllers['vehicleNumber']?.text = fetchedData.vehicleNumber;
       _step2Controllers['accommodation']?.text =
@@ -272,7 +275,7 @@ class _NewApplicationState extends ConsumerState<NewApplication>
           fetchedData.addressInMyanmar!;
       _step2Controllers['mobileNumberMM']?.text =
           fetchedData.mobileNumberMM ?? '';
-      _step2Controllers['previousCity']?.text = fetchedData.previousCity;
+      // _step2Controllers['previousCity']?.text = fetchedData.previousCity;
       _step2Controllers['purposeOfVisitDetail']?.text =
           fetchedData.purposeOfVisit;
 
@@ -296,9 +299,10 @@ class _NewApplicationState extends ConsumerState<NewApplication>
         _formValues['arrivalDate'] = DateTime.parse(fetchedData.arrivalDate);
       }
 
+      _formValues['previousCity'] = fetchedData.previousCity;
       _formValues['nationalityCode'] = fetchedData.nationalityCode;
       _formValues['issuedCountryCode'] = fetchedData.issuedCountryCode;
-      _formValues['placeOfResidenceCode'] = fetchedData.placeOfResidenceCode;
+      // _formValues['enceCode'] = fetchedData.placeOfResidenceCode;
       _formValues['placeOfBirthCode'] = fetchedData.placeOfBirthCode;
       _formValues['modeOfTravel'] = fetchedData.modeOfTravelName;
       _formValues['portOfArrival'] = fetchedData.portOfArrivalName;
@@ -477,7 +481,8 @@ class _NewApplicationState extends ConsumerState<NewApplication>
       nationalityCode: _safeString(_formValues['nationalityCode']),
       email: _text('email'),
       mobileNumber: _text('mobile'),
-      placeOfResidenceCode: _safeString(_formValues['placeOfResidenceCode']),
+      // placeOfResidenceCode: _safeString(_formValues['placeOfResidenceCode']),
+      placeOfResidenceCode: _text('placeOfResidence'),
       visaNo: _text('visaNumber'),
       nrc: _isMyanmar ? _text('nrc') : '',
       fatherName: _isMyanmar ? _text('fatherName') : '',
@@ -496,7 +501,7 @@ class _NewApplicationState extends ConsumerState<NewApplication>
       addressInMyanmar: _text('addressInMyanmar'),
       vehicleNumber: _text('vehicleNumber'),
       accommodation: _text('accommodation'),
-      previousCity: _text('previousCity'),
+      previousCity: _safeString(_formValues['previousCity']),
       healthDeclaration: _safeString(_formValues['hasSymptoms']),
       healthRecordUrl: _formValues['healthRecordUrl'],
       healthRecordFileName: _formValues['healthRecordFileName'],

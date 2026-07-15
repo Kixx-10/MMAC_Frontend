@@ -46,6 +46,7 @@ class _TripFormLayoutState extends ConsumerState<TripFormLayout>
   bool _showDateErrors = false;
   List<String> _purposeList = [];
   List<String> _accommodationList = [];
+  List<String> _previousCityList = [];
 
   final TextEditingController _otherPurposeController = TextEditingController();
   final TextEditingController _otherAccommodationController =
@@ -68,6 +69,7 @@ class _TripFormLayoutState extends ConsumerState<TripFormLayout>
       await _loadPurposeFromJson();
       await _loadAccommodationFromJson();
       await _restoreWaterfallData();
+      await _loadPreviousCityFromJson();
     });
   }
 
@@ -124,6 +126,46 @@ class _TripFormLayoutState extends ConsumerState<TripFormLayout>
       if (mounted) {
         setState(() {
           _purposeList = ["Visit", "Business", "Education", "Health", "Others"];
+        });
+      }
+    }
+  }
+
+  Future<void> _loadPreviousCityFromJson() async {
+    try {
+      final String response = await rootBundle.loadString(
+        'assets/data/previous_city.json',
+      );
+
+      if (mounted) {
+        // 1. Decode the JSON into a List of dynamic maps
+        final List<dynamic> parsedData = jsonDecode(response);
+
+        // 2. Map the objects into a List of formatted Strings
+        List<String> cities = parsedData.map<String>((item) {
+          final String city = item['city']?.toString() ?? '';
+          final String port = item['port']?.toString() ?? '';
+
+          // If a port exists, append it to avoid duplicates (e.g., "Bangkok (Suvarnabhumi)")
+          if (port.isNotEmpty) {
+            return "$city ($port)";
+          }
+          return city;
+        }).toList();
+
+        setState(() {
+          _previousCityList = cities;
+          // 3. Ensure "Others" is cleanly added at the bottom
+          _previousCityList.remove("Others");
+          _previousCityList.add("Others");
+        });
+      }
+    } catch (e) {
+      debugPrint("Error loading previous cities: $e");
+      if (mounted) {
+        setState(() {
+          // Safe fallback if the JSON file is missing or broken
+          _previousCityList = ["Others"];
         });
       }
     }
@@ -734,17 +776,50 @@ class _TripFormLayoutState extends ConsumerState<TripFormLayout>
   }
 
   Widget _buildPreviousCityField() {
-    return CustomTextField(
+    return CustomDropdownField(
       label: "Previous City",
-      controller: _getSafeController('previousCity'),
-      maxLength: 50,
-      filter: [
-        FilteringTextInputFormatter.singleLineFormatter,
-        LengthLimitingTextInputFormatter(50),
-      ],
-      validator: (v) => FormValidators.required(v, 'Previous City'),
-      onChanged: (v) => widget.onValueChanged('previousCity', v),
+      dialogWidth: 300,
+      dialogHeight: 250,
+      // Use 'selectedPreviousCityDropdown' to track the dropdown state securely
+      value:
+          widget.values['selectedPreviousCityDropdown'] ??
+          (_previousCityList.contains(widget.values['previousCity'])
+              ? widget.values['previousCity']
+              : null),
+      hint: "Select Previous City",
+      items: _previousCityList, // FIXED: Using correct list
+      validator: (v) =>
+          FormValidators.requiredDropdown(v, 'Previous City'), // FIXED: Label
+      onChanged: (v) {
+        if (v != null) {
+          widget.onValueChanged('selectedPreviousCityDropdown', v);
+          if (v != "Others") {
+            widget.onValueChanged(
+              'previousCity',
+              v,
+            ); // FIXED: Saving to correct key
+            _getSafeController('previousCity').text = v;
+          } else {
+            widget.onValueChanged('previousCity', '');
+            _getSafeController('previousCity').text = '';
+          }
+          setState(() {});
+        }
+      },
+      spacing: 16,
     );
+
+    // CustomTextField(
+    //   label: "Previous City",
+    //   controller: _getSafeController('previousCity'),
+    //   maxLength: 50,
+    //   filter: [
+    //     FilteringTextInputFormatter.singleLineFormatter,
+    //     LengthLimitingTextInputFormatter(50),
+    //   ],
+    //   validator: (v) => FormValidators.required(v, 'Previous City'),
+    //   onChanged: (v) => widget.onValueChanged('previousCity', v),
+    // );
   }
 
   Widget _buildMobileNumberMMField() {
