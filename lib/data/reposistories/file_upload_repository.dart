@@ -30,5 +30,25 @@ Future<Map<String, String>?> uploadHealthRecord(Uint8List bytes, String fileName
     return null;
   }
 }
+Future<Map<String, String>?> uploadDigitalRecord(Uint8List bytes, String fileName) async {
+  try {
+    final formData = FormData.fromMap({
+      'file': MultipartFile.fromBytes(bytes, filename: fileName),
+    });
+
+    final response = await _apiClient.post(ApiEndpoints.digitalRecord, data: formData);
+
+    if (response.statusCode == 200 && response.data != null) {
+      return {
+        'fileUrl': response.data['fileUrl'] as String,
+        'originalFileName': (response.data['originalFileName'] as String?) ?? fileName,
+      };
+    }
+    return null;
+  } catch (e) {
+    debugPrint("Digital Upload Error: $e");
+    return null;
+  }
+}
 }
 

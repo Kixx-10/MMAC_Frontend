@@ -1,3 +1,4 @@
+
 import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -76,7 +77,7 @@ class _DeclarationLayoutState extends ConsumerState<DeclarationLayout>
 
     return errors;
   }
-
+// for health decleration
   Future<void> _pickAndUpload() async {
     final result = await FilePicker.platform.pickFiles(
       type: FileType.custom,
@@ -108,45 +109,44 @@ class _DeclarationLayoutState extends ConsumerState<DeclarationLayout>
       setState(() {});
     }
   }
-
+// for restrict goods 
   Future<void> _pickAndUploadGoods() async {
-    final result = await FilePicker.platform.pickFiles(
-      type: FileType.custom,
-      allowedExtensions: ['jpg', 'jpeg', 'png', 'pdf', 'doc', 'docx'],
+  final result = await FilePicker.platform.pickFiles(
+    type: FileType.custom,
+    allowedExtensions: ['jpg', 'jpeg', 'png', 'pdf', 'doc', 'docx'],
+  );
+
+  if (result == null || result.files.single.name == null) return;
+
+  final platformFile = result.files.single;
+
+  if (platformFile.bytes == null) {
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(content: Text("Unable to read selected file.")),
     );
-
-    if (result == null || result.files.single.name == null) return;
-
-    final platformFile = result.files.single;
-
-    if (platformFile.bytes == null) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text("Unable to read selected file.")),
-      );
-      return;
-    }
-
-    // Note: You might want a separate fileUploadProvider for this if they upload simultaneously
-    final uploadResult = await ref
-        .read(fileUploadProvider.notifier)
-        .upload(platformFile.bytes!, platformFile.name);
-
-    if (uploadResult != null) {
-      widget.onValueChanged("restrictedGoodsUrl", uploadResult['fileUrl']);
-      widget.onValueChanged(
-        "restrictedGoodsFileName",
-        uploadResult['originalFileName'],
-      );
-      setState(() {});
-    }
+    return;
   }
 
-  void _clearRestrictedRecord() {
-    ref.read(fileUploadProvider.notifier).clear();
-    widget.onValueChanged('restrictedGoodsUrl', null);
-    widget.onValueChanged('restrictedGoodsFileName', null);
+  final uploadResult = await ref
+      .read(digitalUploadProvider.notifier)   
+      .upload(platformFile.bytes!, platformFile.name);
+
+  if (uploadResult != null) {
+    widget.onValueChanged("goodsRecordUrl", uploadResult['fileUrl']);
+    widget.onValueChanged(
+      "goodsRecordFileName",
+      uploadResult['originalFileName'],
+    );
     setState(() {});
   }
+}
+
+  void _clearRestrictedRecord() {
+  ref.read(digitalUploadProvider.notifier).clear();   
+  widget.onValueChanged('goodsRecordUrl', null);
+  widget.onValueChanged('goodsRecordFileName', null);
+  setState(() {});
+}
 
   void _clearHealthRecord() {
     ref.read(fileUploadProvider.notifier).clear();
@@ -157,7 +157,8 @@ class _DeclarationLayoutState extends ConsumerState<DeclarationLayout>
 
   @override
   Widget build(BuildContext context) {
-    final uploadState = ref.watch(fileUploadProvider);
+    final healthUploadState = ref.watch(fileUploadProvider);
+    final digitalUploadState = ref.watch(digitalUploadProvider);
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -190,7 +191,7 @@ class _DeclarationLayoutState extends ConsumerState<DeclarationLayout>
         if (widget.values['hasSymptoms'] == 'Yes') ...[
           const SizedBox(height: 16),
           _RecordUploadSection(
-            uploadState: uploadState,
+            uploadState: healthUploadState,
             fallbackUrl: widget.values['healthRecordUrl'] as String?,
             fallbackFileName: widget.values['healthRecordFileName'] as String?,
             onPickAndUpload: _pickAndUpload,
@@ -223,8 +224,7 @@ class _DeclarationLayoutState extends ConsumerState<DeclarationLayout>
         if (widget.values['carryingRestricted'] == 'Yes') ...[
           const SizedBox(height: 16),
           _RecordUploadSection(
-            uploadState:
-                uploadState, // Consider using a separate provider instance here
+            uploadState: digitalUploadState,
             fallbackUrl: widget.values['restrictedGoodsUrl'] as String?,
             fallbackFileName:
                 widget.values['restrictedGoodsFileName'] as String?,

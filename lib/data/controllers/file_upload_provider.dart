@@ -1,3 +1,4 @@
+
 // lib/data/controllers/file_upload_provider.dart
 import 'dart:typed_data';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -29,34 +30,35 @@ class FileUploadState {
   );
 }
 
+// ── Health Record Upload ──────────────────────────────
 class FileUploadNotifier extends Notifier<FileUploadState> {
   final _repo = FileUploadRepository();
 
   @override
   FileUploadState build() => const FileUploadState();
 
-Future<Map<String, String>?> upload(Uint8List bytes, String fileName) async {
-  state = state.copyWith(isUploading: true, error: null);
+  Future<Map<String, String>?> upload(Uint8List bytes, String fileName) async {
+    state = state.copyWith(isUploading: true, error: null);
 
-  try {
-    final result = await _repo.uploadHealthRecord(bytes, fileName);
+    try {
+      final result = await _repo.uploadHealthRecord(bytes, fileName);
 
-    if (result != null) {
-      state = state.copyWith(
-        isUploading: false,
-        uploadedUrl: result['fileUrl'],
-        localFileName: result['originalFileName'] ?? fileName,
-      );
-    } else {
-      state = state.copyWith(isUploading: false, error: "Upload failed");
+      if (result != null) {
+        state = state.copyWith(
+          isUploading: false,
+          uploadedUrl: result['fileUrl'],
+          localFileName: result['originalFileName'] ?? fileName,
+        );
+      } else {
+        state = state.copyWith(isUploading: false, error: "Upload failed");
+      }
+
+      return result;
+    } catch (e) {
+      state = state.copyWith(isUploading: false, error: e.toString());
+      return null;
     }
-
-    return result;
-  } catch (e) {
-    state = state.copyWith(isUploading: false, error: e.toString());
-    return null;
   }
-}
 
   void clear() => state = const FileUploadState();
 }
@@ -64,4 +66,41 @@ Future<Map<String, String>?> upload(Uint8List bytes, String fileName) async {
 final fileUploadProvider =
     NotifierProvider<FileUploadNotifier, FileUploadState>(
   FileUploadNotifier.new,
+);
+
+class DigitalUploadNotifier extends Notifier<FileUploadState> {
+  final _repo = FileUploadRepository();
+
+  @override
+  FileUploadState build() => const FileUploadState();
+
+  Future<Map<String, String>?> upload(Uint8List bytes, String fileName) async {
+    state = state.copyWith(isUploading: true, error: null);
+
+    try {
+      final result = await _repo.uploadDigitalRecord(bytes, fileName);
+
+      if (result != null) {
+        state = state.copyWith(
+          isUploading: false,
+          uploadedUrl: result['fileUrl'],
+          localFileName: result['originalFileName'] ?? fileName,
+        );
+      } else {
+        state = state.copyWith(isUploading: false, error: "Upload failed");
+      }
+
+      return result;
+    } catch (e) {
+      state = state.copyWith(isUploading: false, error: e.toString());
+      return null;
+    }
+  }
+
+  void clear() => state = const FileUploadState();
+}
+
+final digitalUploadProvider =
+    NotifierProvider<DigitalUploadNotifier, FileUploadState>(
+  DigitalUploadNotifier.new,
 );

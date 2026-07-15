@@ -878,7 +878,7 @@ class _IdentificationFormLayoutState
             keyboardType: TextInputType.phone,
             inputFormatters: [
               FilteringTextInputFormatter.digitsOnly,
-              LengthLimitingTextInputFormatter(20),
+              LengthLimitingTextInputFormatter(16),
             ],
             style: const TextStyle(
               fontSize: 13,

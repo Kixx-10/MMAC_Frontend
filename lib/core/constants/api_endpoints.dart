@@ -11,6 +11,7 @@ class ApiEndpoints {
   static const String findForeigner = "searchDetails/foreignerDetails";
   static const String sendEmail="Application/SendApplicationEmail";
   static const String healthRecord="FileUpload/HealthRecord";
+  static const String digitalRecord="FileUpload/DigitalRecord";
   // ignore: non_constant_identifier_names
   static String searchApplicationByQRCode(String AppNo) => 
       "Application/SearchApplicationByQRCode$AppNo";
