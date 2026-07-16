@@ -535,7 +535,7 @@ class _IdentificationFormLayoutState
     return CustomTextField(
       label: "Occupation",
       controller: widget.controllers['occupation']!,
-      maxLength: 50,
+      maxLength: 30,
       labelWidth: lw,
       readonly: false,
       validator: (v) => FormValidators.required(v, 'Occupation'),
@@ -760,7 +760,7 @@ class _IdentificationFormLayoutState
           controller: widget.controllers['email']!,
           hintText: "Active Email Required",
           labelWidth: lw,
-          maxLength: 30,
+          maxLength: 50,
           readonly: false,
           validator: FormValidators.email,
           onChanged: (value) => widget.onValueChanged('email', value),
@@ -1075,8 +1075,7 @@ class _IdentificationFormLayoutState
       labelWidth: lw,
       readonly: false,
       validator: (v) => FormValidators.required(v, 'Place of Residence'),
-      onChanged: (value) =>
-          widget.onValueChanged('placeOfResidenceCode', value),
+      onChanged: (value) => widget.onValueChanged('placeOfResidence', value),
     );
   }
 

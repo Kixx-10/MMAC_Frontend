@@ -76,7 +76,7 @@ class _NewApplicationState extends ConsumerState<NewApplication>
     'dateOfBirth': null,
     'nationalityCode': null,
     'placeOfBirthCode': null,
-    'placeOfResidenceCode': null,
+    'placeOfResidence': null,
     'issuedCountry': null,
     'issuedCountryCode': null,
     'issuedDate': null,
@@ -266,7 +266,7 @@ class _NewApplicationState extends ConsumerState<NewApplication>
       _step1Controllers['fatherName']?.text = fetchedData.fatherName ?? '';
       _step1Controllers['occupation']?.text = fetchedData.occupation ?? '';
       _step1Controllers['placeOfResidence']?.text =
-          fetchedData.placeOfResidenceCode;
+          fetchedData.placeOfResidence;
 
       _step2Controllers['vehicleNumber']?.text = fetchedData.vehicleNumber;
       _step2Controllers['accommodation']?.text =
@@ -302,7 +302,6 @@ class _NewApplicationState extends ConsumerState<NewApplication>
       _formValues['previousCity'] = fetchedData.previousCity;
       _formValues['nationalityCode'] = fetchedData.nationalityCode;
       _formValues['issuedCountryCode'] = fetchedData.issuedCountryCode;
-      // _formValues['enceCode'] = fetchedData.placeOfResidenceCode;
       _formValues['placeOfBirthCode'] = fetchedData.placeOfBirthCode;
       _formValues['modeOfTravel'] = fetchedData.modeOfTravelName;
       _formValues['portOfArrival'] = fetchedData.portOfArrivalName;
@@ -481,8 +480,7 @@ class _NewApplicationState extends ConsumerState<NewApplication>
       nationalityCode: _safeString(_formValues['nationalityCode']),
       email: _text('email'),
       mobileNumber: _text('mobile'),
-      // placeOfResidenceCode: _safeString(_formValues['placeOfResidenceCode']),
-      placeOfResidenceCode: _text('placeOfResidence'),
+      placeOfResidence: _text('placeOfResidence'),
       visaNo: _text('visaNumber'),
       nrc: _isMyanmar ? _text('nrc') : '',
       fatherName: _isMyanmar ? _text('fatherName') : '',

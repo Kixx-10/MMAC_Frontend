@@ -8,7 +8,7 @@ class SubmitRequestModel {
   final String nationalityCode;
   final String email;
   final String mobileNumber;
-  final String placeOfResidenceCode;
+  final String placeOfResidence;
   final String passportNo;
   final String issuedCountryCode;
   final String issuedDate;
@@ -50,7 +50,7 @@ class SubmitRequestModel {
     required this.nationalityCode,
     required this.email,
     required this.mobileNumber,
-    required this.placeOfResidenceCode,
+    required this.placeOfResidence,
     this.visaNo,
     this.nrc,
     this.fatherName,
@@ -96,7 +96,7 @@ class SubmitRequestModel {
       'nationalityCode': nationalityCode,
       'email': email,
       'mobileNumber': mobileNumber,
-      'placeOfResidenceCode': placeOfResidenceCode,
+      'placeOfResidenceCode': placeOfResidence,
       'passportNo': passportNo,
       'issuedCountryCode': issuedCountryCode,
       'issuedDate': issuedDate,
@@ -140,7 +140,7 @@ class SubmitRequestModel {
       nationalityCode: json['nationalityCode'] ?? '',
       email: json['email'] ?? '',
       mobileNumber: json['mobileNumber'] ?? '',
-      placeOfResidenceCode: json['placeOfResidenceCode'] ?? '',
+      placeOfResidence: json['placeOfResidence'] ?? '',
       visaNo: json['visaNo'] ?? '',
       nrc: json['nrc'] ?? '',
       fatherName: json['fatherName'] ?? '',
