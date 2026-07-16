@@ -1,5 +1,4 @@
 // lib/data/models/submit_request_model.dart
-
 class SubmitRequestModel {
   final String? qrReference;
   final String fullName;

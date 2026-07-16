@@ -18,7 +18,7 @@ class _TermsAndConditionsPageState extends State<TermsAndConditionsPage> {
 
   Widget _buildSectionTitle(String title) {
     return Padding(
-      padding: const EdgeInsets.only(top: 24, bottom: 8),
+      padding: const EdgeInsets.only(top: 12, bottom: 8),
       child: Text(
         title,
         style: const TextStyle(
@@ -33,7 +33,7 @@ class _TermsAndConditionsPageState extends State<TermsAndConditionsPage> {
 
   Widget _buildParagraph(String text) {
     return Padding(
-      padding: const EdgeInsets.only(bottom: 12),
+      padding: const EdgeInsets.only(bottom: 6),
       child: Text(
         text,
         style: const TextStyle(
@@ -115,7 +115,7 @@ class _TermsAndConditionsPageState extends State<TermsAndConditionsPage> {
                       ),
                       child: const Center(
                         child: Text(
-                          'Legal Declaration and Consent',
+                          'Myanmar eArrival Card System',
                           style: TextStyle(
                             fontSize: 20,
                             fontWeight: FontWeight.bold,
@@ -132,67 +132,51 @@ class _TermsAndConditionsPageState extends State<TermsAndConditionsPage> {
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
+                          _buildSectionTitle('Terms and Conditions'),
                           _buildParagraph(
-                            'I hereby declare that all information I have provided in this eArrival application, including my personal identity, passport or identification details, contact information, travel itinerary, accommodation details, health declaration, customs declaration, and all other submitted information, is true, accurate, complete, and provided to the best of my knowledge and belief.',
-                          ),
-                          _buildParagraph(
-                            'I fully understand and agree to the following:',
-                          ),
-                          _buildSectionTitle('1. Responsibility for Accuracy'),
-                          _buildParagraph(
-                            'I am solely responsible for the accuracy and completeness of all information submitted in this application. If any information changes before my arrival in the Republic of the Union of Myanmar, I agree to update my application promptly using the official eArrival system in accordance with the regulations of the Ministry of Immigration and Population.',
+                            'By accessing and using the Myanmar eArrival Card system, you agree to comply with and be bound by the following Terms and Conditions:',
                           ),
                           _buildSectionTitle(
-                            '2. Declaration (DE) Number and Email Responsibility',
+                            '1. Application Timeframe (Time Limitation) ',
                           ),
                           _buildParagraph(
-                            'I understand that, upon successful submission, I will receive a unique Declaration (DE) Number and that my application confirmation and QR Code will be sent to the email address I have provided.',
-                          ),
-                          _buildParagraph(
-                            'I acknowledge that it is my responsibility to:',
-                          ),
-                          _buildBullet(
-                            'Keep my DE Number secure for future reference and application updates.',
-                          ),
-                          _buildBullet(
-                            'Provide a valid, active, and accessible email address.',
-                          ),
-                          _buildBullet(
-                            'Ensure that I can access the registered email account to receive my QR Code and official communications.',
-                          ),
-                          _buildParagraph(
-                            'I understand that failure to maintain my DE Number or provide a valid email address may prevent me from updating my application or receiving important information.',
+                            'Applications for the eArrival Card must be submitted within seventy-two (72) hours (UTC+6:30) prior to your scheduled arrival in Myanmar.',
                           ),
                           _buildSectionTitle(
-                            '3. Submission on Behalf of Others',
+                            '2. Modification of Information (Core Field Protection) ',
                           ),
                           _buildParagraph(
-                            'If I submit this eArrival application on behalf of another traveler, including a dependent or accompanying traveler, I confirm that I am authorized to do so and that all information submitted on their behalf is true, accurate, and complete to the best of my knowledge.',
+                            'After successful submission of the application, only specific non-core fields (such as accommodation details or flight changes) may be updated. Core personal data, including but not limited to Name, Passport Number, Date of Birth, Nationality, and Date of Arrival—cannot be modified. If changes to core fields are required, the applicant must discard the current application and submit a completely new one.',
+                          ),
+                          _buildSectionTitle('3. QR Code Invalidation '),
+                          _buildParagraph(
+                            'If an applicant updates their permitted information, a new QR code will be generated. Upon the generation of the new QR code, any previously issued QR code(s) associated with that application will be immediately invalidated and cannot be used for entry clearance.',
                           ),
                           _buildSectionTitle(
-                            '4. Government Processing of Information',
+                            '4. Exception Handling and Information Accuracy ',
                           ),
                           _buildParagraph(
-                            'I understand that the information provided in this application may be collected, stored, verified, shared, and processed by the Ministry of Immigration and Population and other authorized government agencies for immigration, border security, customs, public health, law enforcement, and other lawful governmental purposes in accordance with the applicable laws of the Republic of the Union of Myanmar.',
+                            'The traveler is solely responsible for the accuracy of the submitted data. If the provided information is found to be incorrect, mismatched, or incomplete upon arrival, the traveler will be subjected to exception handling procedures and must undergo further verification through the designated secondary inspection channels by immigration authorities.',
                           ),
                           _buildSectionTitle(
-                            '5. False or Misleading Information',
+                            '5. Passport Validity Requirement ',
                           ),
                           _buildParagraph(
-                            'I understand that providing false, misleading, incomplete, fraudulent, or inaccurate information, or concealing material facts, may result in the refusal of entry, cancellation of permission to enter, investigation, prosecution, administrative penalties, or other actions permitted under the laws of the Republic of the Union of Myanmar.',
+                            'To be eligible for entry, the applicant${"'"} passport must have a minimum validity of six (6) months from the actual date of arrival in Myanmar. For Myanmar citizens, there is no minimum passport expiry date.',
                           ),
-                          _buildSectionTitle('6. Inspection and Verification'),
+                          _buildSectionTitle(
+                            '6. QR Code Lifecycle and Expiration',
+                          ),
                           _buildParagraph(
-                            'I understand that immigration officers and other authorized government officials may request supporting documents or additional information to verify any information submitted in this application.',
+                            'The issued eArrival Card QR code is valid for a single entry only. The QR code will automatically expire and be permanently deactivated in the system immediately after the traveler has successfully cleared immigration and entered the country.',
                           ),
-                          _buildSectionTitle('7. Final Decision on Entry'),
+                          _buildSectionTitle(
+                            '7. Declaration and Acknowledgment ',
+                          ),
                           _buildParagraph(
-                            'I understand that submitting this eArrival application, receiving a QR Code, or obtaining any acknowledgement from the eArrival system does not guarantee permission to enter the Republic of the Union of Myanmar. The final decision regarding admission into Myanmar rests solely with the authorized Immigration Officer at the port of entry in accordance with the applicable laws and regulations.',
+                            'By submitting this application, I hereby declare that I fully understand the terms stated herein and that all information provided in this form is true, accurate, and complete to the best of my knowledge. I acknowledge that providing false, fabricated, or misleading information may result in the rejection of the application, denial of entry, or other appropriate legal actions under the existing laws of Myanmar.',
                           ),
-                          _buildSectionTitle('8. Consent'),
-                          _buildParagraph(
-                            'I have carefully read and fully understood this declaration. I voluntarily confirm that all information provided is true and complete, and I agree to comply with all applicable laws, regulations, and requirements governing entry into the Republic of the Union of Myanmar.',
-                          ),
+
                           const SizedBox(height: 32),
                           const Divider(
                             height: 1,
