@@ -96,7 +96,7 @@ class SubmitRequestModel {
       'nationalityCode': nationalityCode,
       'email': email,
       'mobileNumber': mobileNumber,
-      'placeOfResidenceCode': placeOfResidence,
+      'placeOfResidence': placeOfResidence,
       'passportNo': passportNo,
       'issuedCountryCode': issuedCountryCode,
       'issuedDate': issuedDate,
