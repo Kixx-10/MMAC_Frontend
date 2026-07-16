@@ -39,7 +39,7 @@ class SubmitRequestModel {
   final String? stateRegionName;
   final String? districtName;
   final String? townshipName;
-  final String? uid;
+  final String? uID;
   final String? occupation;
   final String? placeOfBirthCode;
 
@@ -80,7 +80,7 @@ class SubmitRequestModel {
     this.healthRecordUrl,
     this.healthRecordFileName,
     required this.digitalDeclarations,
-    this.uid,
+    this.uID,
     this.occupation,
     this.placeOfBirthCode,
     this.goodsRecordUrl,
@@ -122,7 +122,7 @@ class SubmitRequestModel {
       'fatherName': (fatherName == null || fatherName!.trim().isEmpty)
           ? null
           : fatherName,
-      'uid': uid,
+      'uID': uID,
       'occupation': occupation,
       'placeOfBirthCode': placeOfBirthCode,
       'goodsRecordUrl': goodsRecordUrl,
@@ -171,7 +171,7 @@ class SubmitRequestModel {
       stateRegionName: json['stateRegionName'],
       districtName: json['districtName'],
       townshipName: json['townshipName'],
-      uid: json['uid'],
+      uID: json['uid'] ?? json['uID'],
       occupation: json['occupation'],
       placeOfBirthCode: json['placeOfBirthCode'],
     );

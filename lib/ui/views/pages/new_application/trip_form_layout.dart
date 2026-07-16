@@ -165,7 +165,7 @@ class _TripFormLayoutState extends ConsumerState<TripFormLayout>
       if (mounted) {
         setState(() {
           // Safe fallback if the JSON file is missing or broken
-          _previousCityList = ["Others"];
+          // _previousCityList = ["Others"];
         });
       }
     }

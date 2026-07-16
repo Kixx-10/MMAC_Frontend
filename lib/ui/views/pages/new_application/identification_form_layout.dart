@@ -536,6 +536,7 @@ class _IdentificationFormLayoutState
       label: "Occupation",
       controller: widget.controllers['occupation']!,
       maxLength: 30,
+      filter: [UpperCaseTextFormatter()],
       labelWidth: lw,
       readonly: false,
       validator: (v) => FormValidators.required(v, 'Occupation'),
