@@ -165,10 +165,7 @@ class _ReviewLayoutState extends State<ReviewLayout> {
         label: 'Purpose of Visit',
         value: widget.values['purposeOfVisit'],
       ),
-      _ReviewTile(
-        label: 'Previous City',
-        value: widget.controllers['previousCity']?.text,
-      ),
+      _ReviewTile(label: 'Previous City', value: widget.values['previousCity']),
     ];
   }
 

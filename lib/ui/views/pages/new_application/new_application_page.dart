@@ -262,6 +262,7 @@ class _NewApplicationState extends ConsumerState<NewApplication>
       _step1Controllers['email']?.text = fetchedData.email;
       _step1Controllers['mobile']?.text = fetchedData.mobileNumber;
       _step1Controllers['visaNumber']?.text = fetchedData.visaNo ?? '';
+      _step1Controllers['uid']?.text = fetchedData.uID ?? '';
       _step1Controllers['passportNumber']?.text = fetchedData.passportNo;
       _step1Controllers['fatherName']?.text = fetchedData.fatherName ?? '';
       _step1Controllers['occupation']?.text = fetchedData.occupation ?? '';
@@ -506,7 +507,7 @@ class _NewApplicationState extends ConsumerState<NewApplication>
       digitalDeclarations: _safeString(_formValues['carryingRestricted']),
       goodsRecordUrl: _formValues['goodsRecordUrl'],
       goodsRecordFileName: _formValues['goodsRecordFileName'],
-      uid: _text('uid'),
+      uID: _text('uid'),
       occupation: _text('occupation'),
       placeOfBirthCode: _safeString(_formValues['placeOfBirthCode']),
     );
