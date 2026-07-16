@@ -228,10 +228,10 @@ class _DeclarationLayoutState extends ConsumerState<DeclarationLayout>
           const SizedBox(height: 16),
           _RecordUploadSection(
             uploadState: digitalUploadState,
-            fallbackUrl: widget.values['restrictedGoodsUrl'] as String?,
+            fallbackUrl: widget.values['goodsRecordUrl'] as String?,
             fallbackFileName:
-                widget.values['restrictedGoodsFileName'] as String?,
-            infoText:"Please upload supporting documents for your restricted items.",
+                widget.values['goodsRecordFileName'] as String?,
+            infoText:"Please upload a detailed manifest, invoice, or supporting documents for your restricted items.",
             onPickAndUpload: _pickAndUploadGoods,
             onClear: _clearRestrictedRecord,
           ),
