@@ -118,6 +118,8 @@ class _ReviewLayoutState extends State<ReviewLayout> {
       if (_isMyanmar)
         _ReviewTile(label: 'NRC', value: widget.controllers['nrc']?.text),
       if (_isMyanmar)
+        _ReviewTile(label: 'UID', value: widget.controllers['uid']?.text),
+      if (_isMyanmar)
         _ReviewTile(
           label: 'Father Name',
           value: widget.controllers['fatherName']?.text,
