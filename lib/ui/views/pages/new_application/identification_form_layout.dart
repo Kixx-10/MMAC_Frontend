@@ -979,7 +979,6 @@ class _IdentificationFormLayoutState
       onChanged: (value) => widget.onValueChanged('passportNumber', value),
     );
   }
-
   Widget _buildIssuedDateField(double lw) {
     final DateTime today = DateTime.now();
     final DateTime? dob = widget.values['dateOfBirth'];
@@ -989,7 +988,9 @@ class _IdentificationFormLayoutState
     if (expiry != null && expiry.isBefore(today)) {
       maxIssuedDate = expiry;
     }
-    DateTime minIssuedDate = dob ?? DateTime(1900);
+    DateTime minIssuedDate = dob != null 
+      ? dob.add(const Duration(days: 1)) 
+      : DateTime(1900);
 
     return CustomDateField(
       label: "Passport Issued Date",
