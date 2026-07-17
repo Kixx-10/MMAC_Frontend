@@ -3,6 +3,7 @@ import 'dart:developer';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:mmac/core/constants/app_fonts.dart';
+import 'package:mmac/data/controllers/file_upload_provider.dart';
 import 'package:mmac/data/controllers/submit_provider.dart';
 import 'package:mmac/data/models/submit_request_model.dart';
 import 'package:mmac/ui/views/pages/new_application/declaration_layout.dart';
@@ -540,6 +541,8 @@ class _NewApplicationState extends ConsumerState<NewApplication>
 
   void _handleSuccess(dynamic response, SubmitRequestModel requestModel) {
     FormSessionService.clearDraft(isUpdateMode: widget.isUpdateMode);
+    ref.read(fileUploadProvider.notifier).clear();
+    ref.read(digitalUploadProvider.notifier).clear();
     setState(() {
       currentStep = 5;
     });

@@ -109,8 +109,12 @@ class ResidencyLayout extends StatelessWidget {
       para:
           "For applicants holding a National Registration Card (NRC) or Permanent Residency in Myanmar.",
       iconColor: Colors.brown.shade600,
-      requiredTextData:
-          "Returning citizens and permanent residents must accurately declare their National Registration Card (NRC) or identity details. Travelers are required to provide their exact local residential address and an active contact number to facilitate secure border clearance and health protocols upon arrival.",
+      requiredData: [
+        "Personal Information",
+        "Travel Information",
+        "NRC & Mobile Number(MM)",
+        "Health and Declaration informations",
+      ],
       onTap: () => onResidencySelected('Myanmar'),
     );
   }
@@ -125,8 +129,12 @@ class ResidencyLayout extends StatelessWidget {
       para:
           "For foreign nationals applying with a valid passport and an entry or stay permit.",
       iconColor: Colors.brown.shade700,
-      requiredTextData:
-          "Foreign nationals must hold a valid passport with a minimum of six (6) months validity remaining. In accordance with Myanmar immigration laws, travelers must possess a valid visa or entry permit and provide the exact address of their registered hotel, guest house, or legal accommodation during their stay in the Republic of the Union of Myanmar.",
+      requiredData: [
+        "Personal Information",
+        "Travel Information",
+        "Passport and Accommodation Information",
+        "Health and Declaration Informations",
+      ],
       onTap: () => onResidencySelected('Foreigner'),
     );
   }
@@ -143,8 +151,8 @@ class _DetailedResidencyCard extends StatefulWidget {
   final String header;
   final String para;
   final Color iconColor;
-  // final List<String> requiredData;
-  final String requiredTextData;
+  final List<String> requiredData;
+  // final String requiredTextData;
   final VoidCallback onTap;
 
   const _DetailedResidencyCard({
@@ -154,8 +162,9 @@ class _DetailedResidencyCard extends StatefulWidget {
     required this.header,
     required this.para,
     required this.iconColor,
-    required this.requiredTextData,
+    // required this.requiredTextData,
     required this.onTap,
+    required this.requiredData,
   });
 
   @override
@@ -307,18 +316,9 @@ class _DetailedResidencyCardState extends State<_DetailedResidencyCard> {
                     Wrap(
                       spacing: 8,
                       runSpacing: 8,
-                      children: [
-                        Text(
-                          widget.requiredTextData,
-                          style: const TextStyle(
-                            fontFamily: AppFonts.primaryFont,
-                            fontSize: 16,
-                          ),
-                        ),
-                      ],
-                      // children: widget.requiredData
-                      //     .map((data) => _buildDataChip(data))
-                      //     .toList(),
+                      children: widget.requiredData
+                          .map((data) => _buildBullet(data))
+                          .toList(),
                     ),
                   ],
                 ),
@@ -330,9 +330,17 @@ class _DetailedResidencyCardState extends State<_DetailedResidencyCard> {
     );
   }
 
+  // Text(
+  //   widget.requiredTextData,
+  //   style: const TextStyle(
+  //     fontFamily: AppFonts.primaryFont,
+  //     fontSize: 16,
+  //   ),
+  // ),
+
   // Widget _buildDataChip(String text) {
   //   return Container(
-  //     padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
+  //     padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 4),
   //     decoration: BoxDecoration(
   //       color: Colors.blue.shade50,
   //       borderRadius: BorderRadius.circular(20),
@@ -348,4 +356,36 @@ class _DetailedResidencyCardState extends State<_DetailedResidencyCard> {
   //     ),
   //   );
   // }
+
+  Widget _buildBullet(String text) {
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 4, left: 16),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          const Text(
+            '•',
+            style: TextStyle(
+              fontSize: 16,
+              color: Colors.black87,
+              height: 1,
+              fontWeight: FontWeight.bold,
+            ),
+          ),
+          const SizedBox(width: 12),
+          Expanded(
+            child: Text(
+              text,
+              style: const TextStyle(
+                fontSize: 14,
+                color: Color.fromRGBO(9, 155, 244, 1),
+                height: 1.5,
+                fontFamily: AppFonts.primaryFont,
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
 }
