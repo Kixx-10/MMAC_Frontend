@@ -8,6 +8,7 @@ import 'package:mmac/core/constants/app_fonts.dart';
 import 'package:mmac/data/controllers/location_provider.dart';
 import 'package:mmac/data/controllers/port_of_arrival_provider.dart';
 import 'package:mmac/ui/views/widgets/custom_dropdown_field.dart';
+import 'package:mmac/utils/upper_case_text_formatter.dart';
 import '../../../../utils/form_validators.dart';
 import '../../widgets/custom_text_field.dart';
 import '../../widgets/custom_date_field.dart';
@@ -49,6 +50,8 @@ class _TripFormLayoutState extends ConsumerState<TripFormLayout>
   List<String> _previousCityList = [];
 
   final TextEditingController _otherPurposeController = TextEditingController();
+  final TextEditingController _otherPreviousCityController =
+      TextEditingController();
   final TextEditingController _otherAccommodationController =
       TextEditingController();
 
@@ -77,6 +80,7 @@ class _TripFormLayoutState extends ConsumerState<TripFormLayout>
   void dispose() {
     _otherPurposeController.dispose();
     _otherAccommodationController.dispose();
+    _otherPreviousCityController.dispose();
     super.dispose();
   }
 
@@ -91,6 +95,13 @@ class _TripFormLayoutState extends ConsumerState<TripFormLayout>
         !["Visit", "Business", "Education", "Health"].contains(purpose) &&
         purpose.toString().isNotEmpty) {
       _otherPurposeController.text = purpose;
+    }
+
+    final previousCity = widget.values['previousCity'];
+    if (previousCity != null &&
+        !_previousCityList.contains(previousCity) &&
+        previousCity.toString().isNotEmpty) {
+      _otherPreviousCityController.text = previousCity;
     }
 
     // Accommodation Session Restore
@@ -109,6 +120,12 @@ class _TripFormLayoutState extends ConsumerState<TripFormLayout>
       _otherAccommodationController.text = accommodation;
     }
   }
+
+  bool get _isOtherPreviousCity =>
+      widget.values['selectedPreviousCityDropdown'] == "Others" ||
+      (widget.values['previousCity'] != null &&
+          widget.values['previousCity'].toString().isNotEmpty &&
+          !_previousCityList.contains(widget.values['previousCity']));
 
   Future<void> _loadPurposeFromJson() async {
     try {
@@ -776,6 +793,39 @@ class _TripFormLayoutState extends ConsumerState<TripFormLayout>
   }
 
   Widget _buildPreviousCityField() {
+    if (_isOtherPreviousCity) {
+      return CustomTextField(
+        label: "Previous City",
+        hintText: "Please specify previous city...",
+        controller: _otherPreviousCityController,
+        maxLength: 50,
+        // Optional: Force uppercase typing as requested
+        filter: [
+          FilteringTextInputFormatter.singleLineFormatter,
+          UpperCaseTextFormatter(),
+          // If you imported UpperCaseTextFormatter here, you can add it to the filter list.
+        ],
+        validator: (v) => FormValidators.required(v, 'Previous City'),
+        onChanged: (v) {
+          widget.onValueChanged('previousCity', v);
+          _getSafeController('previousCity').text = v;
+        },
+        suffixIcon: IconButton(
+          icon: const Icon(
+            Icons.arrow_drop_down_circle_outlined,
+            color: Colors.grey,
+          ),
+          tooltip: "Back to dropdown",
+          onPressed: () {
+            _otherPreviousCityController.clear();
+            _getSafeController('previousCity').clear();
+            widget.onValueChanged('selectedPreviousCityDropdown', null);
+            widget.onValueChanged('previousCity', null);
+            setState(() {});
+          },
+        ),
+      );
+    }
     return CustomDropdownField(
       label: "Previous City",
       dialogWidth: 300,
