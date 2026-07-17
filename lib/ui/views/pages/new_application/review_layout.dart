@@ -242,18 +242,43 @@ class _ReviewLayoutState extends State<ReviewLayout> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              const Padding(
-                padding: EdgeInsets.all(16.0),
-                child: Text(
-                  'Confirmation',
-                  style: TextStyle(
-                    fontSize: 18,
-                    fontWeight: FontWeight.bold,
-                    color: Colors.black87,
-                    fontFamily: AppFonts.primaryFont,
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  const Padding(
+                    padding: EdgeInsets.all(16.0),
+                    child: Text(
+                      'Confirmation',
+                      style: TextStyle(
+                        fontSize: 18,
+                        fontWeight: FontWeight.bold,
+                        color: Colors.black87,
+                        fontFamily: AppFonts.primaryFont,
+                      ),
+                    ),
                   ),
-                ),
+                  TextButton.icon(
+                    onPressed: () => widget.onEditRequested(1),
+                    icon: const Icon(Icons.edit_note, size: 30),
+                    label: const Text(
+                      'Edit',
+                      style: TextStyle(
+                        fontSize: 15,
+                        fontWeight: FontWeight.w600,
+                        fontFamily: AppFonts.primaryFont,
+                      ),
+                    ),
+                    style: TextButton.styleFrom(
+                      foregroundColor: Colors.blue.shade700,
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 16,
+                        vertical: 8,
+                      ),
+                    ),
+                  ),
+                ],
               ),
+
               const Divider(height: 1, thickness: 1, color: Color(0xFFF5F5F7)),
               Padding(
                 padding: const EdgeInsets.all(24.0),
