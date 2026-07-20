@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:mmac/core/constants/app_fonts.dart';
 
 class CustomDropdownField extends StatefulWidget {
   final double spacing;
@@ -136,6 +137,7 @@ class _CustomDropdownFieldState extends State<CustomDropdownField> {
             style: const TextStyle(
               fontSize: 16,
               fontWeight: FontWeight.bold,
+              fontFamily: AppFonts.primaryFont,
               color: Colors.black87,
             ),
             children: const [

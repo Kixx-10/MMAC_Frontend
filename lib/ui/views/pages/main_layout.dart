@@ -7,7 +7,7 @@ import 'package:mmac/ui/views/pages/home.dart';
 import 'package:mmac/ui/views/pages/new_application/new_application_page.dart';
 import 'package:mmac/ui/views/pages/new_application/residency_layout.dart';
 import 'package:mmac/ui/views/pages/faqs.dart';
-//import 'package:mmac/ui/views/pages/qr_scan_page.dart';
+import 'package:mmac/ui/views/pages/notice.dart';
 import 'package:mmac/ui/views/pages/update_application.dart';
 import 'package:mmac/ui/views/pages/terms_and_conditions_page.dart';
 import 'package:mmac/ui/views/widgets/national_header.dart';
@@ -30,11 +30,46 @@ class _MainLayoutState extends State<MainLayout>
   bool _isSessionLoading = true;
   bool _isMenuExpanded = false;
   bool _hasAcceptedTerms = false;
+  String? _activeNoticeTitle;
+
+  // Updated to match the new content provided
+  final List<String> _noticeTitles = [
+    "Before You Apply",
+    "Terms and Conditions",
+  ];
+
+  // 🎯 Desktop Dropdown Menu Builder
+  Widget _buildDesktopNoticeDropdown() {
+    return PopupMenuButton<String>(
+      offset: const Offset(0, 50),
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+      tooltip: "View Official Notices",
+      onSelected: (value) {
+        setState(() => _activeNoticeTitle = value);
+        _handleTabTap(4);
+      },
+      itemBuilder: (BuildContext context) {
+        return _noticeTitles.map((String choice) {
+          return PopupMenuItem<String>(
+            value: choice,
+            child: Text(
+              choice,
+              style: const TextStyle(
+                fontFamily: AppFonts.primaryFont,
+                fontSize: 14,
+              ),
+            ),
+          );
+        }).toList();
+      },
+      child: const _NoticeTabTrigger(),
+    );
+  }
 
   @override
   void initState() {
     super.initState();
-    _tabController = TabController(length: 4, vsync: this);
+    _tabController = TabController(length: 5, vsync: this);
 
     _tabController.addListener(() async {
       if (mounted) setState(() {});
@@ -432,14 +467,7 @@ class _MainLayoutState extends State<MainLayout>
                                               onTap: () => _handleTabTap(3),
                                             ),
 
-                                            // To be implemented in the future
-                                            // const SizedBox(width: 5),
-                                            // _CustomTabItem(
-                                            //   label: "QrScan",
-                                            //   isActive:
-                                            //       _tabController.index == 4,
-                                            //   onTap: () => _handleTabTap(4),
-                                            // ),
+                                            _buildDesktopNoticeDropdown(),
                                           ],
                                         ),
                                       Text(
@@ -479,7 +507,7 @@ class _MainLayoutState extends State<MainLayout>
                                       2,
                                     ),
                                     _buildExpandableMenuItem("FAQS", 3),
-                                    // _buildExpandableMenuItem("QRSCAN", 4),
+                                    _buildExpandableMenuItem("Notice", 4),
                                   ],
                                 ),
                               ),
@@ -493,7 +521,6 @@ class _MainLayoutState extends State<MainLayout>
               body: TabBarView(
                 controller: _tabController,
                 children: [
-                  // 1. HOME PAGE
                   Home(
                     onStartNewApplication: () async {
                       final prefs = await SharedPreferences.getInstance();
@@ -508,14 +535,10 @@ class _MainLayoutState extends State<MainLayout>
                       _tabController.animateTo(2);
                     },
                   ),
-                  // 2. NEW APPLICATION OR RESIDENCY
                   _buildNewApplicationTab(),
-                  // 3. UPDATE APPLICATION PAGE
                   _buildUpdateApplicationTab(),
-                  // 4. FAQS PAGE
                   FAQS(onReturnHome: () => _tabController.animateTo(0)),
-                  // 5. QR SCAN PAGE
-                  //const QrScanPage(),  To be implemented in the future
+                  NoticeLayout(initialNotice: _activeNoticeTitle),
                 ],
               ),
             ),
@@ -547,6 +570,61 @@ class _StickyNavBarDelegate extends SliverPersistentHeaderDelegate {
   @override
   bool shouldRebuild(covariant SliverPersistentHeaderDelegate oldDelegate) =>
       true;
+}
+
+class _NoticeTabTrigger extends StatefulWidget {
+  const _NoticeTabTrigger();
+  @override
+  State<_NoticeTabTrigger> createState() => _NoticeTabTriggerState();
+}
+
+class _NoticeTabTriggerState extends State<_NoticeTabTrigger> {
+  bool _isHovered = false;
+
+  @override
+  Widget build(BuildContext context) {
+    return MouseRegion(
+      onEnter: (_) => setState(() => _isHovered = true),
+      onExit: (_) => setState(() => _isHovered = false),
+      cursor: SystemMouseCursors.click,
+      child: Container(
+        height: double.infinity,
+        padding: const EdgeInsets.symmetric(horizontal: 16),
+        alignment: Alignment.center,
+        decoration: BoxDecoration(
+          color: Colors.transparent,
+          border: Border(
+            bottom: BorderSide(
+              color: _isHovered
+                  ? const Color.fromRGBO(1, 156, 244, 1)
+                  : Colors.transparent,
+              width: 3.0,
+            ),
+          ),
+          borderRadius: BorderRadius.circular(3),
+        ),
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Text(
+              "NOTICE",
+              style: TextStyle(
+                fontWeight: FontWeight.bold,
+                fontSize: 14,
+                color: _isHovered ? const Color(0xFFB4CEF5) : Colors.black87,
+              ),
+            ),
+            const SizedBox(width: 4),
+            Icon(
+              Icons.keyboard_arrow_down,
+              size: 16,
+              color: _isHovered ? const Color(0xFFB4CEF5) : Colors.black87,
+            ),
+          ],
+        ),
+      ),
+    );
+  }
 }
 
 class _CustomTabItem extends StatefulWidget {
