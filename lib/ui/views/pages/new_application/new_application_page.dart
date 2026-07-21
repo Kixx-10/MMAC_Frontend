@@ -801,19 +801,19 @@ class _NewApplicationState extends ConsumerState<NewApplication>
 
     return Column(
       children: [
-        const Padding(
-          padding: EdgeInsets.symmetric(horizontal: 24),
-          child: Text(
-            'Please enter your information exactly as shown on official identity records.',
-            textAlign: TextAlign.center,
-            style: TextStyle(
-              fontSize: 15,
-              color: Colors.grey,
-              fontFamily: AppFonts.primaryFont,
-            ),
-          ),
-        ),
-        const SizedBox(height: 30),
+        // const Padding(
+        //   padding: EdgeInsets.symmetric(horizontal: 24),
+        //   child: Text(
+        //     'Please enter your information exactly as shown on official identity records.',
+        //     textAlign: TextAlign.center,
+        //     style: TextStyle(
+        //       fontSize: 15,
+        //       color: Colors.grey,
+        //       fontFamily: AppFonts.primaryFont,
+        //     ),
+        //   ),
+        // ),
+        // const SizedBox(height: 30),
         FormProgressBar(currentStep: currentStep),
         const SizedBox(height: 15),
       ],
@@ -866,19 +866,31 @@ class _NewApplicationState extends ConsumerState<NewApplication>
     return Scaffold(
       backgroundColor: Colors.grey.shade50,
       body: SafeArea(
-        child: SingleChildScrollView(
-          child: Center(
-            child: Column(
-              children: [
-                const SizedBox(height: 20),
-                _buildFormHeader(),
-                const SizedBox(height: 15),
-                _buildFormCard(),
-                const SizedBox(height: 20),
-                const FormFooter(),
-              ],
+        // 🎯 FIXED: Changed SingleChildScrollView to a CustomScrollView for Sticky Footer!
+        child: CustomScrollView(
+          slivers: [
+            SliverToBoxAdapter(
+              child: Center(
+                child: Column(
+                  children: [
+                    const SizedBox(height: 20),
+                    _buildFormHeader(),
+                    const SizedBox(height: 15),
+                    _buildFormCard(),
+                    const SizedBox(height: 20),
+                  ],
+                ),
+              ),
             ),
-          ),
+            // 🎯 FIXED: This widget fills all remaining blank screen space and pushes the footer down
+            SliverFillRemaining(
+              hasScrollBody: false,
+              child: Align(
+                alignment: Alignment.bottomCenter,
+                child: const FormFooter(),
+              ),
+            ),
+          ],
         ),
       ),
     );

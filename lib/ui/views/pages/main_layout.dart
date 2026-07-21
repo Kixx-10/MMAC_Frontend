@@ -38,7 +38,7 @@ class _MainLayoutState extends State<MainLayout>
     "Terms and Conditions",
   ];
 
-  // 🎯 Desktop Dropdown Menu Builder
+  //  Desktop Dropdown Menu Builder
   Widget _buildDesktopNoticeDropdown() {
     return PopupMenuButton<String>(
       offset: const Offset(0, 50),

@@ -89,6 +89,7 @@ class _ReviewLayoutState extends State<ReviewLayout> {
     );
   }
 
+  // 🎯 LEFT COLUMN: Personal, Contact & Passport Information
   List<Widget> _buildLeftColumn() {
     return [
       _ReviewTile(
@@ -128,6 +129,33 @@ class _ReviewLayoutState extends State<ReviewLayout> {
         label: 'Place of Residence',
         value: widget.values['placeOfResidence'],
       ),
+      const SizedBox(height: 8),
+      const Divider(color: Color(0xFFF5F5F7)),
+      const SizedBox(height: 8),
+      // 🎯 Passport Info Moved to Left Column
+      _ReviewTile(
+        label: 'Passport No.',
+        value: widget.controllers['passportNumber']?.text,
+      ),
+      _ReviewTile(
+        label: 'Passport Issued Date',
+        value: _formatDate(widget.values['issuedDate']),
+      ),
+      _ReviewTile(
+        label: 'Date of Expiry',
+        value: _formatDate(widget.values['expiryDate']),
+      ),
+      _ReviewTile(
+        label: 'Passport Issuing Country/Region',
+        value: widget.values['issuedCountry'],
+      ),
+    ];
+  }
+
+  // 🎯 RIGHT COLUMN: Trip Details, Location & Declarations
+  List<Widget> _buildRightColumn() {
+    return [
+      // 🎯 Trip Details Moved to Right Column
       _ReviewTile(
         label: 'Arrival Date',
         value: _formatDate(widget.values['arrivalDate']),
@@ -166,28 +194,11 @@ class _ReviewLayoutState extends State<ReviewLayout> {
         value: widget.values['purposeOfVisit'],
       ),
       _ReviewTile(label: 'Previous City', value: widget.values['previousCity']),
-    ];
-  }
 
-  List<Widget> _buildRightColumn() {
-    return [
-      _ReviewTile(
-        label: 'Passport No.',
-        value: widget.controllers['passportNumber']?.text,
-      ),
-      _ReviewTile(
-        label: 'Passport Issued Date',
-        value: _formatDate(widget.values['issuedDate']),
-      ),
-      _ReviewTile(
-        label: 'Date of Expiry',
-        value: _formatDate(widget.values['expiryDate']),
-      ),
-      _ReviewTile(
-        label: 'Passport Issuing Country/Region',
-        value: widget.values['issuedCountry'],
-      ),
-      const SizedBox(height: 16),
+      const SizedBox(height: 8),
+      const Divider(color: Color(0xFFF5F5F7)),
+      const SizedBox(height: 8),
+
       _ReviewTile(
         label: 'Fever in past 14 days?',
         value: widget.values['hasSymptoms'] == 'Yes'
