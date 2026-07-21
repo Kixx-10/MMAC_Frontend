@@ -14,6 +14,7 @@ class FormProgressBar extends StatelessWidget {
       {"number": 2, "label": "Itinerary"},
       {"number": 3, "label": "Declarations"},
       {"number": 4, "label": "Review"},
+      {"number": 5, "label": "Arrival Form PDF"},
     ];
 
     // 🎯 1. Detect screen size dynamically

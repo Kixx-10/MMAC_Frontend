@@ -19,6 +19,7 @@ import '../../widgets/form_progress_bar.dart';
 class NewApplication extends ConsumerStatefulWidget {
   final String? initialCountry;
   final VoidCallback? onBackPressed;
+  final VoidCallback? onReturnHome;
   final bool isUpdateMode;
   final SubmitRequestModel? initialData;
 
@@ -26,6 +27,7 @@ class NewApplication extends ConsumerStatefulWidget {
     super.key,
     this.initialCountry,
     this.onBackPressed,
+    this.onReturnHome,
     this.isUpdateMode = false,
     this.initialData,
   });
@@ -40,7 +42,7 @@ class _NewApplicationState extends ConsumerState<NewApplication>
   bool get wantKeepAlive => true;
   // STATE VARIABLES
   int currentStep = 1;
-  final int totalSteps = 4;
+  final int totalSteps = 5;
   bool _isSessionLoading = true;
 
   final GlobalKey<FormState> _step1FormKey = GlobalKey<FormState>();
@@ -672,7 +674,7 @@ class _NewApplicationState extends ConsumerState<NewApplication>
                   ),
                 )
               : Text(
-                  currentStep == totalSteps
+                  currentStep == 4
                       ? (widget.isUpdateMode ? 'Update' : 'Confirm & Submit')
                       : 'Next',
                   style: const TextStyle(
@@ -743,6 +745,7 @@ class _NewApplicationState extends ConsumerState<NewApplication>
 
                 onFinish: () {
                   setState(() {
+
                     currentStep = 1;
                     _formValues.clear();
                     _step1Controllers.forEach((_, c) => c.clear());
@@ -751,6 +754,7 @@ class _NewApplicationState extends ConsumerState<NewApplication>
                   FormSessionService.clearDraft(
                     isUpdateMode: widget.isUpdateMode,
                   );
+                  widget.onReturnHome?.call();
                 },
                 email: _text('email'),
               );

@@ -18,6 +18,7 @@ class QrGenerateScreen extends ConsumerStatefulWidget {
   final SubmitRequestModel requestData; 
   final VoidCallback onFinish;
   final String email;
+  final VoidCallback? onReturnHome;
 
   const QrGenerateScreen({
     super.key,
@@ -25,6 +26,7 @@ class QrGenerateScreen extends ConsumerStatefulWidget {
     required this.requestData, 
     required this.onFinish,
     required this.email,
+    this.onReturnHome,
   });
 
   @override
@@ -172,7 +174,7 @@ class _QrGenerateScreenState extends ConsumerState<QrGenerateScreen> {
                       SizedBox(width: 8),
                       Expanded(
                         child: Text(
-                          "Notice: PDF is important",
+                          "Notice: Show this e-Arrival QR code (on your mobile or printed) to the officers upon arrival.",
                           style: TextStyle(
                             fontSize: 12,
                             fontWeight: FontWeight.bold,
@@ -219,21 +221,24 @@ class _QrGenerateScreenState extends ConsumerState<QrGenerateScreen> {
                     style: ElevatedButton.styleFrom(
                       backgroundColor: Colors.blue.shade600,
                       foregroundColor: Colors.white,
-                      padding: const EdgeInsets.symmetric(vertical: 12),
+                      padding: const EdgeInsets.symmetric(vertical: 14),
                       elevation: 0,
+                      shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(4), 
+                          ),
                     ),
                   ),
                 ),
-                const SizedBox(width: 12),
-                OutlinedButton(
-                  onPressed: () => Navigator.of(context).pop(),
-                  style: OutlinedButton.styleFrom(
-                    foregroundColor: Colors.grey.shade700,
-                    side: BorderSide(color: Colors.grey.shade400),
-                    padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 24),
-                  ),
-                  child: const Text("Close"),
-                ),
+                // const SizedBox(width: 12),
+                // OutlinedButton(
+                //   onPressed: () => Navigator.of(context).pop(),
+                //   style: OutlinedButton.styleFrom(
+                //     foregroundColor: Colors.grey.shade700,
+                //     side: BorderSide(color: Colors.grey.shade400),
+                //     padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 24),
+                //   ),
+                //   child: const Text("Close"),
+                // ),
               ],
             ),
           ],
@@ -253,8 +258,31 @@ class _QrGenerateScreenState extends ConsumerState<QrGenerateScreen> {
         title: const Text("Change File Name", style: TextStyle(fontSize: 15, fontWeight: FontWeight.bold)),
         content: TextField(controller: fileNameController, autofocus: true, decoration: const InputDecoration(border: OutlineInputBorder(), suffixText: '.pdf', isDense: true)),
         actions: [
-          TextButton(child: const Text("Cancel"), onPressed: () => Navigator.pop(context, null)),
-          ElevatedButton(child: const Text("Save"), onPressed: () => Navigator.pop(context, fileNameController.text.trim())),
+          TextButton(
+            style: TextButton.styleFrom(
+              backgroundColor: Colors.white,
+              foregroundColor: Colors.black,
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(4), 
+              ),
+            ),
+            child: const Text("Cancel"), 
+            onPressed: () => Navigator.pop(context, null),
+          ),
+          
+          ElevatedButton(
+            style: ElevatedButton.styleFrom(
+              backgroundColor: Colors.white,
+              foregroundColor: Colors.black,
+              elevation: 0, 
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(4), 
+                side: const BorderSide(color: Colors.grey), 
+              ),
+            ),
+            child: const Text("Save"), 
+            onPressed: () => Navigator.pop(context, fileNameController.text.trim()),
+          ),
         ],
       ),
     );
@@ -286,7 +314,7 @@ class _QrGenerateScreenState extends ConsumerState<QrGenerateScreen> {
       context: context,
       builder: (context) => AlertDialog(
         backgroundColor: Colors.white,
-        title: const Text("Share via Email", style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
+        title: const Text("Send to Email", style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
         content: Form(
           key: formKey,
           child: Column(
@@ -301,31 +329,56 @@ class _QrGenerateScreenState extends ConsumerState<QrGenerateScreen> {
               TextFormField(
                 controller: emailController,
                 decoration: const InputDecoration(labelText: "Email Address", border: OutlineInputBorder(), isDense: true,labelStyle: TextStyle(
-    fontSize: 12, 
-    color: Colors.grey, 
-  ),),
+                fontSize: 12, 
+                color: Colors.grey, 
+              ),),
                 validator: (val) => (val == null || val.isEmpty) ? "Required" : null,
               ),
               const SizedBox(height: 12),
               TextFormField(
                 controller: confirmEmailController,
                 decoration: const InputDecoration(labelText: "Confirm Email Address", border: OutlineInputBorder(), isDense: true,labelStyle: TextStyle(
-    fontSize: 12, 
-    color: Colors.grey, 
-  ),),
+                fontSize: 12, 
+                color: Colors.grey, 
+              ),),
                 validator: (val) => (val != emailController.text) ? "Emails do not match" : null,
               ),
             ],
           ),
         ),
         actions: [
-          TextButton(child: const Text("Cancel"), onPressed: () => Navigator.pop(context)),
-          ElevatedButton(child: const Text("Send"), onPressed: () {
-            if (formKey.currentState!.validate()) {
-              Navigator.pop(context);
-              _sendPdfToEmail(emailController.text.trim());
-            }
-          }),
+        
+          TextButton(
+            style: TextButton.styleFrom(
+              backgroundColor: Colors.white,
+              foregroundColor: Colors.black,
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(4), 
+              ),
+            ),
+            child: const Text("Cancel"), 
+            onPressed: () => Navigator.pop(context),
+          ),
+          
+        
+          ElevatedButton(
+            style: ElevatedButton.styleFrom(
+              backgroundColor: Colors.white,
+              foregroundColor: Colors.black,
+              elevation: 0, 
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(4), 
+                side: const BorderSide(color: Colors.grey),
+              ),
+            ),
+            child: const Text("Send"), 
+            onPressed: () {
+              if (formKey.currentState!.validate()) {
+                Navigator.pop(context);
+                _sendPdfToEmail(emailController.text.trim());
+              }
+            },
+          ),
         ],
       ),
     );
@@ -352,7 +405,7 @@ class _QrGenerateScreenState extends ConsumerState<QrGenerateScreen> {
     ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(msg)));
   }
 
-  @override
+ @override
   Widget build(BuildContext context) {
     final emailState = ref.watch(sendEmailServiceProvider);
     if (isProcessing || emailState.isLoading) {
@@ -366,107 +419,230 @@ class _QrGenerateScreenState extends ConsumerState<QrGenerateScreen> {
 
     String formatDuration(int secs) => '${(secs ~/ 60).toString().padLeft(2, '0')}:${(secs % 60).toString().padLeft(2, '0')}';
 
-   return Column(
-  crossAxisAlignment: CrossAxisAlignment.stretch,
-  mainAxisSize: MainAxisSize.min,
-  children: [
-    Row(
-      children: [
-        const Text(
-          "Reference No: ", 
-          style: TextStyle(fontSize: 13, color: Color(0xFF014679))
+    // 1. Build the Left Card (Application Overview - Red Box)
+    Widget buildApplicationOverviewCard() {
+      return Container(
+        decoration: BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(8),
+          border: Border.all(color: Colors.grey.shade300),
         ),
-        Text(
-          widget.responseData.referenceNo, 
-          style: const TextStyle(fontSize: 14, color: Color(0xFF014679), fontWeight: FontWeight.bold)
+        padding: const EdgeInsets.all(20),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            // const Text(
+            //   "Application Overview",
+            //   style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: Colors.black87),
+            // ),
+            // const SizedBox(height: 16),
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Expanded(
+                  child: RichText(
+                    text: TextSpan(
+                      style: const TextStyle(fontSize: 18, color: Color(0xFF014679)),
+                      children: [
+                        const TextSpan(text: "Reference No: "),
+                        TextSpan(
+                          text: widget.responseData.referenceNo,
+                          style: const TextStyle(fontWeight: FontWeight.bold),
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+                InkWell(
+                  onTap: () {
+                    // You can add Clipboard.setData logic here if you import 'package:flutter/services.dart';
+                  },
+                  child: Row(
+                    children: [
+                      Icon(Icons.copy, size: 14, color: Colors.grey.shade600),
+                      const SizedBox(width: 4),
+                      Text("Copy", style: TextStyle(fontSize: 13, color: Colors.grey.shade600)),
+                    ],
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 6),
+            const Text(
+              "(Please keep this number carefully as your application reference number)",
+              style: TextStyle(fontSize: 13, color: Colors.red),
+            ),
+            const SizedBox(height: 24),
+            
+            const Divider(height: 1, thickness: 1),
+            //const SizedBox(height: 20),
+            
+            const SizedBox(height: 12),
+           Container(
+  padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+  decoration: BoxDecoration(
+    color: const Color(0xFF099CF4).withOpacity(0.1), // အပြာရောင်ဖျော့ဖျော့ နောက်ခံ
+    borderRadius: BorderRadius.circular(6),
+    border: Border.all(
+      color: const Color(0xFF099CF4).withOpacity(0.3), // ဘောင်အတွက် အပြာနုရောင်
+      width: 1,
+    ),
+  ),
+  child: const Row(
+    children: [
+      Icon(
+        Icons.info_outline_rounded,
+        color: Color(0xFF099CF4),
+        size: 20,
+      ),
+      SizedBox(width: 10),
+      Expanded(
+        child: Text(
+          "Please carefully check your arrival PDF and download it. You can also save the file by sending it to your email.",
+          style: TextStyle(
+            color: Color(0xFF077AB8), // စာသားအတွက် အပြာရောင် အစင်း/အထိုက် (Contrast ကောင်းအောင်လို့ပါ)
+            fontWeight: FontWeight.bold,
+            fontSize: 13,
+          ),
         ),
-      ],
-    ),
-    const SizedBox(height: 4),
-    const Text(
-      "(Please keep this number carefully as your application reference number)", 
-      style: TextStyle(fontSize: 13, color: Colors.red)
-    ),
-    const SizedBox(height: 24),
-    
-    Row(
-      children: [
-        Expanded(
-          child: ElevatedButton.icon(
-            icon: const Icon(Icons.picture_as_pdf, size: 20),
-            label: const Text("View Arrival Form PDF"),
-            onPressed: _pdfBytes == null ? null : _showPdfDialog,
-            style: ElevatedButton.styleFrom(
-              // လေးထောင့်ပုံစံ (Rectangular) ပြောင်းရန်
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(8), 
+      ),
+    ],
+  ),
+),
+          ],
+        ),
+      );
+    }
+
+    // 2. Build the Right Card (Actions & Files - Green Box)
+    Widget buildActionsAndFilesCard() {
+      return Container(
+        decoration: BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(8),
+          border: Border.all(color: Colors.grey.shade300),
+        ),
+        padding: const EdgeInsets.all(20),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            ElevatedButton.icon(
+              icon: const Icon(Icons.picture_as_pdf, size: 14),
+              label: const Text("View Arrival Form PDF", style: TextStyle(fontSize: 12)),
+              onPressed: _pdfBytes == null ? null : _showPdfDialog,
+              style: ElevatedButton.styleFrom(
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(6),
+                ),
+                backgroundColor: Colors.blue.shade50,
+                foregroundColor: Colors.blue.shade800,
+                padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 12),
+                side: BorderSide(color: Colors.blue.shade200),
+                elevation: 0,
               ),
-              backgroundColor: Colors.blue.shade50,
-              foregroundColor: Colors.blue.shade800,
-              padding: const EdgeInsets.symmetric(vertical: 14),
-              side: BorderSide(color: Colors.blue.shade200),
-              elevation: 0,
             ),
-          ),
-        ),
-        const SizedBox(width: 12),
-        // Share Button အသေး
-        ElevatedButton(
-          onPressed: (_pdfBytes == null || _cooldownSeconds > 0) ? null : _showShareEmailDialog,
-          style: ElevatedButton.styleFrom(
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(8),
+            
+            const Padding(
+              padding: EdgeInsets.symmetric(vertical: 18),
+              child: Divider(height: 1, thickness: 1),
             ),
-            backgroundColor: Colors.green.shade600,
-            foregroundColor: Colors.white,
-            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
-            elevation: 0,
-          ),
-          child: _cooldownSeconds > 0 
-              // စောင့်ရမယ့် အချိန်ရှိနေရင် စာသားပြမည်
-              ? Text(formatDuration(_cooldownSeconds), style: const TextStyle(fontSize: 12)) 
-              // မရှိရင် Share Icon လေးသာ ပြမည်
-              : const Icon(Icons.share_rounded, size: 20), 
+            Row(
+              children: [
+                Expanded(
+                  flex: 2,
+                  child: ElevatedButton.icon(
+                    icon: const Icon(Icons.file_download_rounded, size: 16),
+                    label: const Text(
+                      "Save PDF",
+                      style: TextStyle(fontSize: 13, fontWeight: FontWeight.bold),
+                    ),
+                    onPressed: _pdfBytes == null ? null : _savePdfFile,
+                    style: ElevatedButton.styleFrom(
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(6),
+                      ),
+                      backgroundColor: const Color(0xFF099CF4),
+                      foregroundColor: Colors.white,
+                      padding: const EdgeInsets.symmetric(vertical: 14),
+                      elevation: 0,
+                    ),
+                  ),
+                ),
+                const SizedBox(width: 12),
+                Expanded(
+                  flex: 1,
+                  child: ElevatedButton.icon(
+                    onPressed: (_pdfBytes == null || _cooldownSeconds > 0) ? null : _showShareEmailDialog,
+                    icon: _cooldownSeconds > 0 
+                        ? const SizedBox.shrink() 
+                        : const Icon(Icons.send, size: 16),
+                    label: _cooldownSeconds > 0
+                        ? Text(formatDuration(_cooldownSeconds), style: const TextStyle(fontSize: 13, fontWeight: FontWeight.bold))
+                        : const Text("Send Email", style: TextStyle(fontSize: 13, fontWeight: FontWeight.bold)),
+                    style: ElevatedButton.styleFrom(
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(6),
+                      ),
+                      backgroundColor: const Color(0xFFEF4444),
+                      foregroundColor: Colors.white,
+                      padding: const EdgeInsets.symmetric(vertical: 14),
+                      elevation: 0,
+                    ),
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 12),
+            
+            OutlinedButton(
+              onPressed: widget.onFinish,
+              style: OutlinedButton.styleFrom(
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(6),
+                ),
+                foregroundColor: Colors.blue.shade800,
+                side: BorderSide(color: Colors.blue.shade800, width: 1),
+                padding: const EdgeInsets.symmetric(vertical: 14),
+              ),
+              child: const Text(
+                "Finish Process",
+                style: TextStyle(fontSize: 13, fontWeight: FontWeight.bold),
+              ),
+            ),
+          ],
         ),
-      ],
-    ),
-    const SizedBox(height: 16),
+      );
+    }
 
-    ElevatedButton.icon(
-      icon: const Icon(Icons.file_download_rounded, size: 20),
-      label: const Text(
-        "Save PDF",
-        style: TextStyle(fontSize: 14, fontWeight: FontWeight.bold), 
-      ),
-      onPressed: _pdfBytes == null ? null : _savePdfFile,
-      style: ElevatedButton.styleFrom(
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(8),
-        ),
-        backgroundColor: Colors.blue.shade600, 
-        foregroundColor: Colors.white, 
-        padding: const EdgeInsets.symmetric(vertical: 15),
-        elevation: 0
-      ),
-    ),
-    const SizedBox(height: 16),
-
-    OutlinedButton(
-      onPressed: widget.onFinish,
-      style: OutlinedButton.styleFrom(
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(8),
-        ),
-        foregroundColor: Colors.blue.shade800, 
-        side: BorderSide(color: Colors.blue.shade800, width: 1.5),
-        padding: const EdgeInsets.symmetric(vertical: 15), 
-      ),
-      child: const Text(
-        "Finish Process",
-        style: TextStyle(fontSize: 14, fontWeight: FontWeight.bold), 
-      ),
-    ),
-  ],
-);
-}
-}
+    // 3. Main Layout Return
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        // If screen is wide enough (web/tablet), show them side-by-side
+        if (constraints.maxWidth > 800) {
+          return  Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+             Expanded(flex: 20, child: buildApplicationOverviewCard()),
+              const SizedBox(width: 5),
+              Expanded(flex: 10, child: buildActionsAndFilesCard()),
+            ],
+          );
+        } 
+        // Otherwise, stack them vertically for mobile screens
+        else {
+          return Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              buildApplicationOverviewCard(),
+              const SizedBox(height: 16),
+              buildActionsAndFilesCard(),
+            ],
+          );
+        }
+      },
+    );
+  }
+  }

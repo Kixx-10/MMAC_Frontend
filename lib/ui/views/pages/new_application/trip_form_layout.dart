@@ -538,6 +538,7 @@ class _TripFormLayoutState extends ConsumerState<TripFormLayout>
         setState(() => _showDateErrors = false);
       },
     );
+    
   }
 
   Widget _buildModeOfTravelField() {

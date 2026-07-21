@@ -279,6 +279,7 @@ class _MainLayoutState extends State<MainLayout>
       key: _formKey,
       initialCountry: _selectedResidency,
       onBackPressed: _goBackToResidency,
+      onReturnHome: () => _handleTabTap(0),
     );
   }
 
@@ -314,6 +315,7 @@ class _MainLayoutState extends State<MainLayout>
       onBackPressed: () {
         setState(() => _fetchedUpdateData = null);
       },
+      onReturnHome: () => _handleTabTap(0),
     );
   }
 
