@@ -21,7 +21,7 @@ class FormProgressBar extends StatelessWidget {
     final bool isMobile = screenWidth < 500;
 
     // 🎯 2. Adjust dimensions based on the screen size
-    final double circleSize = isMobile ? 32.0 : 44.0;
+    final double circleSize = isMobile ? 32.0 : 40.0;
     final double columnWidth = isMobile ? 65.0 : 70.0;
     final double labelSize = isMobile ? 10.0 : 11.0;
     final double numberSize = isMobile ? 12.0 : 13.0;
@@ -83,6 +83,7 @@ class FormProgressBar extends StatelessWidget {
                     Text(
                       label,
                       textAlign: TextAlign.center,
+                      maxLines: 1,
                       style: TextStyle(
                         fontSize: labelSize,
                         fontWeight: isActive
