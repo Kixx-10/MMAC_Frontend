@@ -826,7 +826,7 @@ class _NewApplicationState extends ConsumerState<NewApplication>
 
   Widget _buildFormCard() {
     return Container(
-      width: 1200,
+      width: currentStep ==5 ?800 :1200,
       margin: const EdgeInsets.symmetric(horizontal: 24),
       child: Material(
         color: Colors.white,
@@ -836,7 +836,7 @@ class _NewApplicationState extends ConsumerState<NewApplication>
           side: BorderSide(color: Colors.grey.shade200),
         ),
         child: Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 24),
+          padding:  EdgeInsets.symmetric(horizontal: 24, vertical:24),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
@@ -849,8 +849,10 @@ class _NewApplicationState extends ConsumerState<NewApplication>
                     fontFamily: AppFonts.primaryFont,
                   ),
                 ),
-                const SizedBox(height: 20),
+                if (currentStep !=5)...[
+                const SizedBox(height: 20),]
               ],
+              
               _buildCurrentStepForm(),
             ],
           ),

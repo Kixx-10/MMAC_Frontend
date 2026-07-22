@@ -1,7 +1,6 @@
 import 'dart:async';
 import 'dart:convert';
 import 'dart:io' show File;
-import 'dart:typed_data';
 import 'package:flutter/material.dart';
 import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter_riverpod/flutter_riverpod.dart'; 
@@ -12,6 +11,7 @@ import 'package:path_provider/path_provider.dart';
 import 'package:pdfrx/pdfrx.dart'; 
 import 'package:mmac/data/models/submit_response_model.dart';
 import 'package:universal_html/html.dart' as html;
+import 'package:flutter/services.dart'; 
 
 class QrGenerateScreen extends ConsumerStatefulWidget {
   final SubmitResponseModel responseData;
@@ -42,14 +42,104 @@ class _QrGenerateScreenState extends ConsumerState<QrGenerateScreen> {
   int _sendCount = 0;
   int _cooldownSeconds = 0;
   Timer? _cooldownTimer;
-  bool _dialogShown = false; 
+  bool _isPdfExpanded = true;
 
   @override
   void initState() {
     super.initState();
     fileName = "ArrivalForm_${widget.responseData.referenceNo}.pdf";
     _convertBase64ToPdfFile();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+    _showInitialNoticeDialog();
+      });
+    }
+  void _showInitialNoticeDialog() {
+    showDialog(
+      context: context,
+      barrierDismissible: false, // Prevents closing by tapping outside
+      builder: (BuildContext context) {
+        return AlertDialog(
+          backgroundColor: Colors.white,
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(12),
+          ),
+          title: const Row(
+            children: [
+              Icon(Icons.warning_amber_rounded, color: Colors.orange, size: 28),
+              SizedBox(width: 8),
+              Text(
+                "Important Notice",
+                style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+              ),
+            ],
+          ),
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              const Text(
+                "Please make sure to perform the following steps:",
+                style: TextStyle(fontSize: 14, fontWeight: FontWeight.bold, color: Colors.black87),
+              ),
+              const SizedBox(height: 12),
+              _buildNoticeItem(
+                icon: Icons.picture_as_pdf,
+                iconColor: Colors.red,
+                text: "1. Click 'Save PDF' to download your document.",
+              ),
+              const SizedBox(height: 8),
+              _buildNoticeItem(
+                icon: Icons.pin,
+                iconColor: Colors.blue,
+                text: "2. Save or copy your (DE Number).",
+              ),
+              // const SizedBox(height: 8),
+              // _buildNoticeItem(
+              //   icon: Icons.mark_email_read,
+              //   iconColor: Colors.green,
+              //   text: "3. Enter your email address correctly before sending.",
+              // ),
+            ],
+          ),
+          actions: [
+            ElevatedButton(
+              style: ElevatedButton.styleFrom(
+                backgroundColor: const Color(0xFF014679),
+                foregroundColor: Colors.white,
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(6),
+                ),
+                padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+              ),
+              onPressed: () {
+                Navigator.of(context).pop();
+              },
+              child: const Text(
+                "I Understand", 
+                style: TextStyle(fontWeight: FontWeight.bold, fontSize: 13),
+              ),
+            ),
+          ],
+        );
+      },
+    );
   }
+  Widget _buildNoticeItem({required IconData icon, required Color iconColor, required String text}) {
+    return Row(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Icon(icon, size: 20, color: iconColor),
+        const SizedBox(width: 8),
+        Expanded(
+          child: Text(
+            text,
+            style: const TextStyle(fontSize: 13, height: 1.4, color: Colors.black87),
+          ),
+        ),
+      ],
+    );
+  }
+
 
   @override
   void dispose() {
@@ -104,14 +194,6 @@ class _QrGenerateScreenState extends ConsumerState<QrGenerateScreen> {
           });
         }
       }
-
-      if (mounted && !_dialogShown) {
-        _dialogShown = true;
-        WidgetsBinding.instance.addPostFrameCallback((_) {
-          _showPdfDialog();
-        });
-      }
-
     } catch (e) {
       _showSnackBar("Error rendering PDF: $e");
     } finally {
@@ -119,134 +201,6 @@ class _QrGenerateScreenState extends ConsumerState<QrGenerateScreen> {
     }
   }
 
-  void _showPdfDialog() {
-    if (_pdfBytes == null) return;
-
-    showDialog(
-      context: context,
-      barrierDismissible: false, 
-      builder: (context) {
-        final double screenHeight = MediaQuery.of(context).size.height;
-        final double screenWidth = MediaQuery.of(context).size.width;
-
-        return AlertDialog(
-          backgroundColor: const Color(0xFFFAFAFA), 
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-          titlePadding: const EdgeInsets.all(16),
-          contentPadding: const EdgeInsets.symmetric(horizontal: 16),
-          actionsPadding: const EdgeInsets.all(16),
-          title: Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              const Row(
-                children: [
-                  Icon(Icons.picture_as_pdf, color: Colors.red, size: 24),
-                  SizedBox(width: 8),
-                  Text(
-                    "PDF Arrival Form",
-                    style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
-                  ),
-                ],
-              ),
-              IconButton(
-                icon: const Icon(Icons.close),
-                onPressed: () => Navigator.of(context).pop(),
-              ),
-            ],
-          ),
-          content: SizedBox(
-            width: screenWidth > 600 ? 550 : screenWidth * 0.9,
-            height: screenHeight * 0.85,
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.stretch,
-              children: [
-                Container(
-                  padding: const EdgeInsets.all(10),
-                  margin: const EdgeInsets.only(bottom: 12),
-                  decoration: BoxDecoration(
-                    color: Colors.white,
-                    borderRadius: BorderRadius.circular(6),
-                    border: Border.all(color: Colors.red.shade200),
-                  ),
-                  child: const Row(
-                    children: [
-                      Icon(Icons.warning_amber_rounded, color: Colors.red, size: 18),
-                      SizedBox(width: 8),
-                      Expanded(
-                        child: Text(
-                          "Notice: Show this e-Arrival QR code (on your mobile or printed) to the officers upon arrival.",
-                          style: TextStyle(
-                            fontSize: 12,
-                            fontWeight: FontWeight.bold,
-                            color: Colors.red,
-                          ),
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-                Expanded(
-                  child: Container(
-                    decoration: BoxDecoration(
-                      color: Colors.white,
-                      borderRadius: BorderRadius.circular(8),
-                      border: Border.all(color: Colors.grey.shade300),
-                    ),
-                    child: ClipRRect(
-                      borderRadius: BorderRadius.circular(7),
-                      child: MouseRegion(
-                        opaque: true,
-                        child: PdfViewer.data(
-                          _pdfBytes!,
-                          sourceName: fileName,
-                          params: const PdfViewerParams(backgroundColor: Colors.white),
-                        ),
-                      ),
-                    ),
-                  ),
-                ),
-              ],
-            ),
-          ),
-          actions: [
-            Row(
-              children: [
-                Expanded(
-                  child: ElevatedButton.icon(
-                    icon: const Icon(Icons.file_download_rounded),
-                    label: const Text("Download"),
-                    onPressed: () {
-                      _savePdfFile();
-                    },
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: Colors.blue.shade600,
-                      foregroundColor: Colors.white,
-                      padding: const EdgeInsets.symmetric(vertical: 14),
-                      elevation: 0,
-                      shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(4), 
-                          ),
-                    ),
-                  ),
-                ),
-                // const SizedBox(width: 12),
-                // OutlinedButton(
-                //   onPressed: () => Navigator.of(context).pop(),
-                //   style: OutlinedButton.styleFrom(
-                //     foregroundColor: Colors.grey.shade700,
-                //     side: BorderSide(color: Colors.grey.shade400),
-                //     padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 24),
-                //   ),
-                //   child: const Text("Close"),
-                // ),
-              ],
-            ),
-          ],
-        );
-      },
-    );
-  }
-  
   Future<void> _savePdfFile() async {
     if (_pdfBytes == null) return;
     final TextEditingController fileNameController = TextEditingController(text: fileName.replaceAll('.pdf', ''));
@@ -269,7 +223,6 @@ class _QrGenerateScreenState extends ConsumerState<QrGenerateScreen> {
             child: const Text("Cancel"), 
             onPressed: () => Navigator.pop(context, null),
           ),
-          
           ElevatedButton(
             style: ElevatedButton.styleFrom(
               backgroundColor: Colors.white,
@@ -328,26 +281,37 @@ class _QrGenerateScreenState extends ConsumerState<QrGenerateScreen> {
               ),
               TextFormField(
                 controller: emailController,
-                decoration: const InputDecoration(labelText: "Email Address", border: OutlineInputBorder(), isDense: true,labelStyle: TextStyle(
-                fontSize: 12, 
-                color: Colors.grey, 
-              ),),
+                decoration: const InputDecoration(
+                  labelText: "Email Address", 
+                  border: OutlineInputBorder(), 
+                  isDense: true,
+                  labelStyle: TextStyle(
+                    fontSize: 12, 
+                    color: Colors.grey, 
+                  ),
+                ),
                 validator: (val) => (val == null || val.isEmpty) ? "Required" : null,
               ),
               const SizedBox(height: 12),
               TextFormField(
                 controller: confirmEmailController,
-                decoration: const InputDecoration(labelText: "Confirm Email Address", border: OutlineInputBorder(), isDense: true,labelStyle: TextStyle(
-                fontSize: 12, 
-                color: Colors.grey, 
-              ),),
+                enableInteractiveSelection: false,
+                contextMenuBuilder: (context, editableTextState) {return const SizedBox.shrink(); },
+                decoration: const InputDecoration(
+                  labelText: "Confirm Email Address", 
+                  border: OutlineInputBorder(), 
+                  isDense: true,
+                  labelStyle: TextStyle(
+                    fontSize: 12, 
+                    color: Colors.grey, 
+                  ),
+                ),
                 validator: (val) => (val != emailController.text) ? "Emails do not match" : null,
               ),
             ],
           ),
         ),
         actions: [
-        
           TextButton(
             style: TextButton.styleFrom(
               backgroundColor: Colors.white,
@@ -359,8 +323,6 @@ class _QrGenerateScreenState extends ConsumerState<QrGenerateScreen> {
             child: const Text("Cancel"), 
             onPressed: () => Navigator.pop(context),
           ),
-          
-        
           ElevatedButton(
             style: ElevatedButton.styleFrom(
               backgroundColor: Colors.white,
@@ -393,6 +355,9 @@ class _QrGenerateScreenState extends ConsumerState<QrGenerateScreen> {
         _sendCount++;
         _showSnackBar("Email sent successfully.");
         _startCooldownTimer(_sendCount == 1 ? 60 : 180);
+        if (mounted) {
+        _showEmailSuccessDialog(email);
+      }
       }
     } catch (e) {
       _showSnackBar("Error: $e");
@@ -408,151 +373,174 @@ class _QrGenerateScreenState extends ConsumerState<QrGenerateScreen> {
  @override
   Widget build(BuildContext context) {
     final emailState = ref.watch(sendEmailServiceProvider);
+
     if (isProcessing || emailState.isLoading) {
       return const Center(
-        child: Padding(
-          padding: EdgeInsets.symmetric(vertical: 10),
-          child: CircularProgressIndicator(),
-        ),
+        child: CircularProgressIndicator(),
       );
     }
 
     String formatDuration(int secs) => '${(secs ~/ 60).toString().padLeft(2, '0')}:${(secs % 60).toString().padLeft(2, '0')}';
 
-    // 1. Build the Left Card (Application Overview - Red Box)
-    Widget buildApplicationOverviewCard() {
-      return Container(
-        decoration: BoxDecoration(
-          color: Colors.white,
-          borderRadius: BorderRadius.circular(8),
-          border: Border.all(color: Colors.grey.shade300),
-        ),
-        padding: const EdgeInsets.all(20),
+    return Center(
+      child: SingleChildScrollView( 
         child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-            // const Text(
-            //   "Application Overview",
-            //   style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: Colors.black87),
-            // ),
-            // const SizedBox(height: 16),
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              crossAxisAlignment: CrossAxisAlignment.start,
+            Wrap(
+              crossAxisAlignment: WrapCrossAlignment.center,
+              alignment: WrapAlignment.spaceBetween,
               children: [
-                Expanded(
-                  child: RichText(
-                    text: TextSpan(
-                      style: const TextStyle(fontSize: 18, color: Color(0xFF014679)),
-                      children: [
-                        const TextSpan(text: "Reference No: "),
-                        TextSpan(
-                          text: widget.responseData.referenceNo,
-                          style: const TextStyle(fontWeight: FontWeight.bold),
-                        ),
-                      ],
+                Row(
+                  mainAxisSize: MainAxisSize.min, 
+                  children: [
+                    RichText(
+                      text: TextSpan(
+                        style: const TextStyle(fontSize: 18, color: Color(0xFF014679)),
+                        children: [
+                          const TextSpan(text: "DE NUMBER: "),
+                          TextSpan(
+                            text: widget.responseData.referenceNo,
+                            style: const TextStyle(fontWeight: FontWeight.bold),
+                          ),
+                        ],
+                      ),
                     ),
-                  ),
-                ),
-                InkWell(
-                  onTap: () {
-                    // You can add Clipboard.setData logic here if you import 'package:flutter/services.dart';
-                  },
-                  child: Row(
-                    children: [
-                      Icon(Icons.copy, size: 14, color: Colors.grey.shade600),
-                      const SizedBox(width: 4),
-                      Text("Copy", style: TextStyle(fontSize: 13, color: Colors.grey.shade600)),
-                    ],
-                  ),
+                    const SizedBox(width: 8), 
+                    InkWell(
+                      onTap: () {
+                        Clipboard.setData(ClipboardData(text: widget.responseData.referenceNo ?? ""));
+                        _showSnackBar("Copied to clipboard");
+                      },
+                      child: Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Icon(Icons.copy, size: 14, color: Colors.grey.shade600),
+                          const SizedBox(width: 4),
+                          Text("Copy", style: TextStyle(fontSize: 13, color: Colors.grey.shade600)),
+                        ],
+                      ),
+                    ),
+                  ],
                 ),
               ],
             ),
             const SizedBox(height: 6),
             const Text(
-              "(Please keep this number carefully as your application reference number)",
+              "(Please keep this number carefully as your application DE Number)",
               style: TextStyle(fontSize: 13, color: Colors.red),
             ),
             const SizedBox(height: 24),
-            
-            const Divider(height: 1, thickness: 1),
-            //const SizedBox(height: 20),
-            
-            const SizedBox(height: 12),
-           Container(
-  padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
-  decoration: BoxDecoration(
-    color: const Color(0xFF099CF4).withOpacity(0.1), // အပြာရောင်ဖျော့ဖျော့ နောက်ခံ
-    borderRadius: BorderRadius.circular(6),
-    border: Border.all(
-      color: const Color(0xFF099CF4).withOpacity(0.3), // ဘောင်အတွက် အပြာနုရောင်
-      width: 1,
-    ),
-  ),
-  child: const Row(
-    children: [
-      Icon(
-        Icons.info_outline_rounded,
-        color: Color(0xFF099CF4),
-        size: 20,
-      ),
-      SizedBox(width: 10),
-      Expanded(
-        child: Text(
-          "Please carefully check your arrival PDF and download it. You can also save the file by sending it to your email.",
-          style: TextStyle(
-            color: Color(0xFF077AB8), // စာသားအတွက် အပြာရောင် အစင်း/အထိုက် (Contrast ကောင်းအောင်လို့ပါ)
-            fontWeight: FontWeight.bold,
-            fontSize: 13,
-          ),
-        ),
-      ),
-    ],
-  ),
-),
-          ],
-        ),
-      );
-    }
+              
+            LayoutBuilder(
+              builder: (context, constraints) {
+                double pdfWidth = constraints.maxWidth; 
+                double pdfHeight = pdfWidth * 1.414;
+              
+                return Container(
+                  width: pdfWidth, 
+                  decoration: BoxDecoration(
+                    color: Colors.white,
+                    borderRadius: BorderRadius.circular(8),
+                    border: Border.all(color: Colors.grey.shade400, width: 1.5),
+                  ),
+                 clipBehavior: Clip.antiAlias,
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      // Header အပိုင်း
+                      Material(
+                        color: Colors.grey.shade50,
+                        child: InkWell(
+                          onTap: () {
+                            setState(() {
+                              _isPdfExpanded = !_isPdfExpanded;
+                            });
+                          },
+                          child: Padding(
+                            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+                            child: Row(
+                              children: [
+                                const Icon(Icons.picture_as_pdf, size: 20, color: Colors.redAccent),
+                                const SizedBox(width: 8),
+                                Expanded(
+                                  child: Text(
+                                    fileName,
+                                    style: TextStyle(
+                                      fontSize: 14,
+                                      fontWeight: FontWeight.bold,
+                                      color: Colors.grey.shade800,
+                                    ),
+                                    overflow: TextOverflow.ellipsis,
+                                  ),
+                                ),
+                                Icon(
+                                  _isPdfExpanded ? Icons.keyboard_arrow_up : Icons.keyboard_arrow_down,
+                                  color: Colors.grey.shade700,
+                                ),
+                              ],
+                            ),
+                          ),
+                        ),
+                      ),
+                      
+                      if (_isPdfExpanded)
+                        Divider(height: 1, thickness: 1, color: Colors.grey.shade300),
 
-    // 2. Build the Right Card (Actions & Files - Green Box)
-    Widget buildActionsAndFilesCard() {
-      return Container(
-        decoration: BoxDecoration(
-          color: Colors.white,
-          borderRadius: BorderRadius.circular(8),
-          border: Border.all(color: Colors.grey.shade300),
-        ),
-        padding: const EdgeInsets.all(20),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            ElevatedButton.icon(
-              icon: const Icon(Icons.picture_as_pdf, size: 14),
-              label: const Text("View Arrival Form PDF", style: TextStyle(fontSize: 12)),
-              onPressed: _pdfBytes == null ? null : _showPdfDialog,
-              style: ElevatedButton.styleFrom(
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(6),
-                ),
-                backgroundColor: Colors.blue.shade50,
-                foregroundColor: Colors.blue.shade800,
-                padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 12),
-                side: BorderSide(color: Colors.blue.shade200),
-                elevation: 0,
-              ),
+                      // PDF အပိုင်း
+                      AnimatedContainer(
+                        duration: const Duration(milliseconds: 300),
+                        curve: Curves.easeInOut,
+                        height: _isPdfExpanded ? pdfHeight : 0, 
+                        child: _pdfBytes == null
+                            ? const Center(child: CircularProgressIndicator())
+                            : IgnorePointer( 
+                                ignoring: false, 
+                                child: MouseRegion(
+                                  opaque: true,
+                                  child: PdfViewer.data(
+                                    _pdfBytes!,
+                                    sourceName: fileName,
+                                    params: PdfViewerParams(
+                                      backgroundColor: Colors.white,
+                                      pageDropShadow: const BoxShadow(color: Colors.transparent), 
+                                      layoutPages: (pages, params) {
+                                        double y = 0.0;
+                                        final pageLayouts = <Rect>[];
+                                        
+                                        for (final page in pages) {
+                                          final scale = pdfWidth / page.width;
+                                          final scaledWidth = page.width * scale;
+                                          final scaledHeight = page.height * scale;
+                        
+                                          pageLayouts.add(
+                                            Rect.fromLTWH(0, y, scaledWidth, scaledHeight)
+                                          );
+                                          y += scaledHeight + 10.0; 
+                                        }
+                                        return PdfPageLayout(
+                                          pageLayouts: pageLayouts,
+                                          documentSize: Size(pdfWidth, y),
+                                        );
+                                      },
+                                    ),
+                                  ),
+                                ),
+                              ),
+                      ),
+                    ],
+                  ),
+                );
+              }
             ),
             
-            const Padding(
-              padding: EdgeInsets.symmetric(vertical: 18),
-              child: Divider(height: 1, thickness: 1),
-            ),
+            const SizedBox(height: 32),
+
+            // 3. Action Buttons (Save PDF, Send Email)
             Row(
               children: [
                 Expanded(
-                  flex: 2,
+                  flex: 4, 
                   child: ElevatedButton.icon(
                     icon: const Icon(Icons.file_download_rounded, size: 16),
                     label: const Text(
@@ -573,7 +561,7 @@ class _QrGenerateScreenState extends ConsumerState<QrGenerateScreen> {
                 ),
                 const SizedBox(width: 12),
                 Expanded(
-                  flex: 1,
+                  flex: 1, 
                   child: ElevatedButton.icon(
                     onPressed: (_pdfBytes == null || _cooldownSeconds > 0) ? null : _showShareEmailDialog,
                     icon: _cooldownSeconds > 0 
@@ -595,8 +583,10 @@ class _QrGenerateScreenState extends ConsumerState<QrGenerateScreen> {
                 ),
               ],
             ),
+            
             const SizedBox(height: 12),
             
+            // 4. Finish Process Button (Bottom)
             OutlinedButton(
               onPressed: widget.onFinish,
               style: OutlinedButton.styleFrom(
@@ -605,44 +595,85 @@ class _QrGenerateScreenState extends ConsumerState<QrGenerateScreen> {
                 ),
                 foregroundColor: Colors.blue.shade800,
                 side: BorderSide(color: Colors.blue.shade800, width: 1),
-                padding: const EdgeInsets.symmetric(vertical: 14),
+                padding: const EdgeInsets.symmetric(vertical: 16),
               ),
               child: const Text(
                 "Finish Process",
-                style: TextStyle(fontSize: 13, fontWeight: FontWeight.bold),
+                style: TextStyle(fontSize: 14, fontWeight: FontWeight.bold),
               ),
             ),
           ],
         ),
-      );
-    }
-
-    // 3. Main Layout Return
-    return LayoutBuilder(
-      builder: (context, constraints) {
-        // If screen is wide enough (web/tablet), show them side-by-side
-        if (constraints.maxWidth > 800) {
-          return  Row(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-             Expanded(flex: 20, child: buildApplicationOverviewCard()),
-              const SizedBox(width: 5),
-              Expanded(flex: 10, child: buildActionsAndFilesCard()),
-            ],
-          );
-        } 
-        // Otherwise, stack them vertically for mobile screens
-        else {
-          return Column(
-            crossAxisAlignment: CrossAxisAlignment.stretch,
-            children: [
-              buildApplicationOverviewCard(),
-              const SizedBox(height: 16),
-              buildActionsAndFilesCard(),
-            ],
-          );
-        }
-      },
+      ),
     );
   }
+  
+  void _showEmailSuccessDialog(String sentEmail) {
+  showDialog(
+    context: context,
+    builder: (BuildContext context) {
+      return AlertDialog(
+        backgroundColor: Colors.white,
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(12),
+        ),
+        title: const Row(
+          children: [
+            Icon(Icons.mark_email_read_rounded, color: Colors.green, size: 28),
+            SizedBox(width: 8),
+            Text(
+              "Email Sent!",
+              style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+            ),
+          ],
+        ),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              "PDF successfully sent to $sentEmail.",
+              style: const TextStyle(fontSize: 13, color: Colors.black87),
+            ),
+            const SizedBox(height: 12),
+            Container(
+              padding: const EdgeInsets.all(10),
+              decoration: BoxDecoration(
+                color: Colors.amber.shade50,
+                borderRadius: BorderRadius.circular(8),
+                border: Border.all(color: Colors.amber.shade300),
+              ),
+              child: const Row(
+                children: [
+                  Icon(Icons.info_outline, color: Colors.orange, size: 20),
+                  SizedBox(width: 8),
+                  Expanded(
+                    child: Text(
+                      "Please check your Email Inbox or Spam / Junk folder to confirm receipt of the file.",
+                      style: TextStyle(fontSize: 13, color: Colors.black87,fontWeight: FontWeight.bold, height: 1.3),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ],
+        ),
+        actions: [
+          ElevatedButton(
+            style: ElevatedButton.styleFrom(
+              backgroundColor: const Color(0xFF014679),
+              foregroundColor: Colors.white,
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(6),
+              ),
+            ),
+            onPressed: () => Navigator.pop(context),
+            child: const Text("OK"),
+          ),
+        ],
+      );
+    },
+  );
+}
+
   }
