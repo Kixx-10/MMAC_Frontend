@@ -1,81 +1,106 @@
-import 'package:dio/dio.dart';
-import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 
-class ApiClient {
-  static final ApiClient _instance = ApiClient._internal();
-  factory ApiClient() => _instance;
-  final _storage = const FlutterSecureStorage();
-  late final Dio dio;
+// lib/data/controllers/file_upload_provider.dart
+import 'dart:typed_data';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:mmac/data/reposistories/file_upload_repository.dart';
 
-  ApiClient._internal() {
-    dio = Dio(
-      BaseOptions(
-        // Render Live Backend URL
-        baseUrl: "https://mmac-backend.onrender.com/api/",
-        connectTimeout: const Duration(seconds: 30),
-        receiveTimeout: const Duration(seconds: 30),
-        headers: {
-          'Content-Type': 'application/json',
-          'Accept': 'application/json',
-        },
-      ),
-    );
+class FileUploadState {
+  final bool isUploading;
+  final String? uploadedUrl;  // URL returned from server
+  final String? error;
+  final String? localFileName; // display name shown to user
 
-    dio.interceptors.add(
-      InterceptorsWrapper(
-        onRequest: (options, handler) async {
-          final token = await _storage.read(key: 'token');
-          if (token != null) {
-            options.headers["Authorization"] = "Bearer $token";
-          }
-          return handler.next(options);
-        },
-        onError: (DioException e, handler) {
-          if (e.type == DioExceptionType.connectionTimeout) {
-            print("Server takes too long to respond (Cold Start).");
-          }
-          return handler.next(e);
-        },
-      ),
-    );
-  }
+  const FileUploadState({
+    this.isUploading = false,
+    this.uploadedUrl,
+    this.error,
+    this.localFileName,
+  });
 
-  // GET Request
-  Future<Response> get(
-    String path, {
-    Map<String, dynamic>? queryParameters,
-  }) async {
-    try {
-      return await dio.get(path, queryParameters: queryParameters);
-    } on DioException {
-      rethrow;
-    }
-  }
-
-  // POST Request
-  Future<Response> post(String path, {dynamic data}) async {
-    try {
-      return await dio.post(path, data: data);
-    } on DioException {
-      rethrow;
-    }
-  }
-
-  // PUT Request
-  Future<Response> put(String path, {dynamic data}) async {
-    try {
-      return await dio.put(path, data: data);
-    } on DioException {
-      rethrow;
-    }
-  }
-
-  // DELETE Request
-  Future<Response> delete(String path) async {
-    try {
-      return await dio.delete(path);
-    } on DioException {
-      rethrow;
-    }
-  }
+  FileUploadState copyWith({
+    bool? isUploading,
+    String? uploadedUrl,
+    String? error,
+    String? localFileName,
+  }) => FileUploadState(
+    isUploading:   isUploading   ?? this.isUploading,
+    uploadedUrl:   uploadedUrl   ?? this.uploadedUrl,
+    error:         error         ?? this.error,
+    localFileName: localFileName ?? this.localFileName,
+  );
 }
+
+// ── Health Record Upload ──────────────────────────────
+class FileUploadNotifier extends Notifier<FileUploadState> {
+  final _repo = FileUploadRepository();
+
+  @override
+  FileUploadState build() => const FileUploadState();
+
+  Future<Map<String, String>?> upload(Uint8List bytes, String fileName) async {
+    state = state.copyWith(isUploading: true, error: null);
+
+    try {
+      final result = await _repo.uploadHealthRecord(bytes, fileName);
+
+      if (result != null) {
+        state = state.copyWith(
+          isUploading: false,
+          uploadedUrl: result['fileUrl'],
+          localFileName: result['originalFileName'] ?? fileName,
+        );
+      } else {
+        state = state.copyWith(isUploading: false, error: "Upload failed");
+      }
+
+      return result;
+    } catch (e) {
+      state = state.copyWith(isUploading: false, error: e.toString());
+      return null;
+    }
+  }
+
+  void clear() => state = const FileUploadState();
+}
+
+final fileUploadProvider =
+    NotifierProvider<FileUploadNotifier, FileUploadState>(
+  FileUploadNotifier.new,
+);
+
+class DigitalUploadNotifier extends Notifier<FileUploadState> {
+  final _repo = FileUploadRepository();
+
+  @override
+  FileUploadState build() => const FileUploadState();
+
+  Future<Map<String, String>?> upload(Uint8List bytes, String fileName) async {
+    state = state.copyWith(isUploading: true, error: null);
+
+    try {
+      final result = await _repo.uploadDigitalRecord(bytes, fileName);
+
+      if (result != null) {
+        state = state.copyWith(
+          isUploading: false,
+          uploadedUrl: result['fileUrl'],
+          localFileName: result['originalFileName'] ?? fileName,
+        );
+      } else {
+        state = state.copyWith(isUploading: false, error: "Upload failed");
+      }
+
+      return result;
+    } catch (e) {
+      state = state.copyWith(isUploading: false, error: e.toString());
+      return null;
+    }
+  }
+
+  void clear() => state = const FileUploadState();
+}
+
+final digitalUploadProvider =
+    NotifierProvider<DigitalUploadNotifier, FileUploadState>(
+  DigitalUploadNotifier.new,
+);
