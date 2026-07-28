@@ -53,6 +53,7 @@ flutter:
     - assets/images/national_logo.jpg
     - assets/images/nrc.jpg
     - assets/images/passport.jpg
+    - assets/images/home_image.jpg
 
   uses-material-design: true
 
