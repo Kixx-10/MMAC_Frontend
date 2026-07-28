@@ -889,11 +889,11 @@ class _NewApplicationState extends ConsumerState<NewApplication>
               ),
             ),
             // 🎯 FIXED: This widget fills all remaining blank screen space and pushes the footer down
-            SliverFillRemaining(
+            const SliverFillRemaining(
               hasScrollBody: false,
               child: Align(
                 alignment: Alignment.bottomCenter,
-                child: const FormFooter(),
+                child:  FormFooter(),
               ),
             ),
           ],

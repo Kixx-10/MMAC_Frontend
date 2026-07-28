@@ -290,6 +290,7 @@ class _QrGenerateScreenState extends ConsumerState<QrGenerateScreen> {
                     color: Colors.grey, 
                   ),
                 ),
+                inputFormatters: [FilteringTextInputFormatter.allow(RegExp(r'[\x00-\x7F]'))],
                 validator: (val) => (val == null || val.isEmpty) ? "Required" : null,
               ),
               const SizedBox(height: 12),
@@ -306,6 +307,7 @@ class _QrGenerateScreenState extends ConsumerState<QrGenerateScreen> {
                     color: Colors.grey, 
                   ),
                 ),
+                inputFormatters: [FilteringTextInputFormatter.allow(RegExp(r'[\x00-\x7F]'))],
                 validator: (val) => (val != emailController.text) ? "Emails do not match" : null,
               ),
             ],
@@ -333,7 +335,7 @@ class _QrGenerateScreenState extends ConsumerState<QrGenerateScreen> {
                 side: const BorderSide(color: Colors.grey),
               ),
             ),
-            child: const Text("Send"), 
+            child: const Text("Send "), 
             onPressed: () {
               if (formKey.currentState!.validate()) {
                 Navigator.pop(context);
@@ -396,7 +398,7 @@ class _QrGenerateScreenState extends ConsumerState<QrGenerateScreen> {
                   children: [
                     RichText(
                       text: TextSpan(
-                        style: const TextStyle(fontSize: 18, color: Color(0xFF014679)),
+                        style: const TextStyle(fontSize: 16, color: Color(0xFF014679)),
                         children: [
                           const TextSpan(text: "DE NUMBER: "),
                           TextSpan(
@@ -415,9 +417,9 @@ class _QrGenerateScreenState extends ConsumerState<QrGenerateScreen> {
                       child: Row(
                         mainAxisSize: MainAxisSize.min,
                         children: [
-                          Icon(Icons.copy, size: 14, color: Colors.grey.shade600),
+                          Icon(Icons.copy, size: 12, color: Colors.grey.shade600),
                           const SizedBox(width: 4),
-                          Text("Copy", style: TextStyle(fontSize: 13, color: Colors.grey.shade600)),
+                         // Text("Copy", style: TextStyle(fontSize: 13, color: Colors.grey.shade600)),
                         ],
                       ),
                     ),
@@ -540,7 +542,7 @@ class _QrGenerateScreenState extends ConsumerState<QrGenerateScreen> {
             Row(
               children: [
                 Expanded(
-                  flex: 4, 
+                  flex: 3, 
                   child: ElevatedButton.icon(
                     icon: const Icon(Icons.file_download_rounded, size: 16),
                     label: const Text(
@@ -569,7 +571,7 @@ class _QrGenerateScreenState extends ConsumerState<QrGenerateScreen> {
                         : const Icon(Icons.send, size: 16),
                     label: _cooldownSeconds > 0
                         ? Text(formatDuration(_cooldownSeconds), style: const TextStyle(fontSize: 13, fontWeight: FontWeight.bold))
-                        : const Text("Send Email", style: TextStyle(fontSize: 13, fontWeight: FontWeight.bold)),
+                        : const Text("Send", style: TextStyle(fontSize: 13, fontWeight: FontWeight.bold)),
                     style: ElevatedButton.styleFrom(
                       shape: RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(6),

@@ -15,6 +15,7 @@ import 'package:mmac/data/models/country_model.dart';
 import 'package:mmac/ui/views/pages/new_application/widget/nrc_selector_widget.dart';
 import 'package:mmac/utils/form_validators.dart';
 import 'package:mmac/utils/upper_case_text_formatter.dart';
+import 'package:mmac/utils/formatters.dart';
 import '../../widgets/custom_text_field.dart';
 import '../../widgets/custom_date_field.dart';
 import '../../widgets/custom_dropdown_field.dart';
@@ -486,7 +487,7 @@ class _IdentificationFormLayoutState
 
   Widget _buildFirstNameField(double lw) {
     return CustomTextField(
-      label: "First name * (in passport)",
+      label: "First Name (in passport)",
       controller: _firstNameController,
       filter: [
         FilteringTextInputFormatter.singleLineFormatter,
@@ -503,7 +504,7 @@ class _IdentificationFormLayoutState
 
   Widget _buildLastNameField(double lw) {
     return CustomTextField(
-      label: "Last name (in passport)",
+      label: "Last Name (in passport)",
       controller: _lastNameController,
       filter: [
         FilteringTextInputFormatter.singleLineFormatter,
@@ -522,6 +523,8 @@ class _IdentificationFormLayoutState
     return CustomTextField(
       label: "UID",
       hintText: "10 max (optional)",
+      keyboardtype: TextInputType.number,
+      filter: [FilteringTextInputFormatter.digitsOnly],
       controller: widget.controllers['uid']!,
       maxLength: 10,
       labelWidth: lw,
@@ -979,6 +982,7 @@ class _IdentificationFormLayoutState
       onChanged: (value) => widget.onValueChanged('passportNumber', value),
     );
   }
+
   Widget _buildIssuedDateField(double lw) {
     final DateTime today = DateTime.now();
     final DateTime? dob = widget.values['dateOfBirth'];
@@ -988,9 +992,9 @@ class _IdentificationFormLayoutState
     if (expiry != null && expiry.isBefore(today)) {
       maxIssuedDate = expiry;
     }
-    DateTime minIssuedDate = dob != null 
-      ? dob.add(const Duration(days: 1)) 
-      : DateTime(1900);
+    DateTime minIssuedDate = dob != null
+        ? dob.add(const Duration(days: 1))
+        : DateTime(1900);
 
     return CustomDateField(
       label: "Passport Issued Date",
@@ -1110,10 +1114,12 @@ class _IdentificationFormLayoutState
             padding: const EdgeInsets.symmetric(horizontal: 10),
             child: TextFormField(
               controller: _nrcNumberController,
-              keyboardType: TextInputType.number,
               readOnly: widget.isUpdateMode && isMyanmar,
               inputFormatters: [
-                FilteringTextInputFormatter.allow(RegExp(r'[\u1040-\u1049]')),
+                FilteringTextInputFormatter.allow(
+                  RegExp(r'[0-9\u1040-\u1049]'),
+                ),
+                MyanmarDigitFormatter(),
                 LengthLimitingTextInputFormatter(6),
               ],
               style: TextStyle(

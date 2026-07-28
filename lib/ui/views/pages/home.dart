@@ -70,107 +70,294 @@ class _HeroBanner extends StatelessWidget {
 
   const _HeroBanner({this.onStartNewApplication, this.onStartUpdateWorkflow});
 
+  String _getMonthStr(int month) {
+    const months = [
+      'JAN',
+      'FEB',
+      'MAR',
+      'APR',
+      'MAY',
+      'JUN',
+      'JUL',
+      'AUG',
+      'SEP',
+      'OCT',
+      'NOV',
+      'DEC',
+    ];
+    return months[month - 1];
+  }
+
+  String _getWeekdayStr(int weekday) {
+    const days = ['MON', 'TUE', 'WED', 'THU', 'FRI', 'SAT', 'SUN'];
+    return days[weekday - 1];
+  }
+
+  Widget _buildDateBox(DateTime date) {
+    return Container(
+      width: 100,
+      height: 96,
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(8),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.05),
+            blurRadius: 4,
+            offset: const Offset(0, 2),
+          ),
+        ],
+      ),
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          Text(
+            _getMonthStr(date.month),
+            style: const TextStyle(
+              fontSize: 15,
+              color: Colors.grey,
+              fontWeight: FontWeight.bold,
+            ),
+          ),
+          Text(
+            date.day.toString().padLeft(2, '0'),
+            style: const TextStyle(
+              fontSize: 25,
+              fontWeight: FontWeight.bold,
+              color: Colors.black,
+            ),
+          ),
+          Text(
+            _getWeekdayStr(date.weekday),
+            style: const TextStyle(
+              fontSize: 15,
+              color: Colors.grey,
+              fontWeight: FontWeight.bold,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildDateWidget() {
+    final today = DateTime.now();
+    final plusTwo = today.add(const Duration(days: 2));
+
+    return Container(
+      padding: const EdgeInsets.all(18),
+      decoration: BoxDecoration(
+        color: const Color(0xFFF0F7FF),
+        borderRadius: BorderRadius.circular(12),
+      ),
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        crossAxisAlignment: CrossAxisAlignment.center,
+        children: [
+          const Text(
+            "Submission is Free.",
+            style: TextStyle(
+              color: Color(0xFF0078D4),
+              fontWeight: FontWeight.bold,
+              fontSize: 25,
+            ),
+          ),
+          const SizedBox(height: 8),
+          const Text(
+            "Complete and submit within 72 hours before arrival.",
+            textAlign: TextAlign.center,
+            style: TextStyle(color: Color(0xFF0078D4), fontSize: 18),
+          ),
+          const SizedBox(height: 24),
+          Row(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              _buildDateBox(today),
+              const Padding(
+                padding: EdgeInsets.symmetric(horizontal: 16.0),
+                child: Text(
+                  "~",
+                  style: TextStyle(color: Colors.grey, fontSize: 20),
+                ),
+              ),
+              _buildDateBox(plusTwo),
+            ],
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildActionCard(
+    String title,
+    String subtitle,
+    IconData icon,
+    VoidCallback? onTap,
+  ) {
+    return ElevatedButton(
+      onPressed: onTap,
+      style: ElevatedButton.styleFrom(
+        backgroundColor: Colors.white,
+        foregroundColor: Colors.blue, // Ripple and default text/icon color
+        surfaceTintColor: Colors.white,
+        elevation: 2, // Base elevation, increases on hover
+        shadowColor: Colors.black.withOpacity(0.15),
+        padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(8),
+          side: BorderSide(color: Colors.grey.shade200),
+        ),
+      ),
+      child: Row(
+        children: [
+          Container(
+            padding: const EdgeInsets.all(8),
+            decoration: BoxDecoration(
+              color: const Color(0xFFF0F7FF),
+              shape: BoxShape.circle,
+            ),
+            child: Icon(icon, color: const Color(0xff0078D4), size: 24),
+          ),
+          const SizedBox(width: 16),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Text(
+                  title,
+                  style: const TextStyle(
+                    fontSize: 18,
+                    fontWeight: FontWeight.bold,
+                    color: Colors.black87,
+                  ),
+                ),
+                const SizedBox(height: 4),
+                Text(
+                  subtitle,
+                  style: const TextStyle(
+                    fontSize: 13,
+                    color: Colors.grey,
+                    fontWeight: FontWeight.normal,
+                  ),
+                ),
+              ],
+            ),
+          ),
+          const Icon(Icons.chevron_right, color: Colors.grey),
+        ],
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     final double screenWidth = MediaQuery.of(context).size.width;
-    final bool isMobile = screenWidth < 650;
+    final bool isMobile =
+        screenWidth < 768; // breakpoint for stacked vs horizontal
+
+    final welcomeText = const Text(
+      'Welcome to',
+      style: TextStyle(
+        fontSize: 35,
+        fontWeight: FontWeight.bold,
+        fontFamily: AppFonts.primaryFont,
+        // color: const Color.fromRGBO(9, 156, 244, 1),
+        color: Colors.white,
+        letterSpacing: -0.5,
+      ),
+      textAlign: TextAlign.left,
+    );
+
+    final welcomeText2 = const Text(
+      'Myanmar eArrival',
+      style: TextStyle(
+        fontSize: 35,
+        fontWeight: FontWeight.bold,
+        fontFamily: AppFonts.primaryFont,
+        // color: const Color.fromRGBO(9, 156, 244, 1),
+        color: Colors.white,
+        letterSpacing: -0.5,
+      ),
+      textAlign: TextAlign.left,
+    );
+
+    final actionCards = Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        _buildActionCard(
+          "New Application",
+          "Start new form",
+          Icons.add_circle_outline,
+          onStartNewApplication,
+        ),
+        const SizedBox(height: 16),
+        _buildActionCard(
+          "Update Application",
+          "Modify application",
+          Icons.edit_note,
+          onStartUpdateWorkflow,
+        ),
+      ],
+    );
 
     return Container(
       width: double.infinity,
       decoration: const BoxDecoration(
-        // gradient: LinearGradient(
-        //   colors: [Color(0xff004578), Color(0xff0078D4), Color(0xff2B88D8)],
-        //   begin: Alignment.topLeft,
-        //   end: Alignment.bottomRight,
-        // ),
-        color: Color.fromRGBO(9, 156, 244, 1),
-      ),
+        color: Colors.black,
+        image: DecorationImage(
+          image: AssetImage('assets/images/home_image.jpg'),
+          fit: BoxFit.cover,
+          opacity: 0.6,
+        ),
+      ), // Remove blue background
       padding: EdgeInsets.symmetric(
-        vertical: isMobile ? 40.0 : 60.0,
+        vertical: isMobile ? 32.0 : 60.0,
         horizontal: 20.0,
       ),
-      child: Column(
-        children: [
-          Text(
-            'Myanmar eArrival Information System',
-            style: TextStyle(
-              fontSize: isMobile ? 26 : 36,
-              fontWeight: FontWeight.bold,
-              fontFamily: AppFonts.primaryFont,
-              color: Colors.white,
-              letterSpacing: -0.5,
-            ),
-            textAlign: TextAlign.center,
-          ),
-          const SizedBox(height: 12),
-          Container(
-            constraints: const BoxConstraints(maxWidth: 600),
-            child: Text(
-              'Welcome to the official electronic declaration clearance system. Register your incoming trip vectors or pull existing records for operational adjustments before arrival barriers.',
-              style: TextStyle(
-                color: Colors.white.withOpacity(0.85),
-                fontSize: isMobile ? 13 : 15,
-                fontFamily: AppFonts.primaryFont,
-                height: 1.5,
-              ),
-              textAlign: TextAlign.center,
-            ),
-          ),
-          const SizedBox(height: 36),
-
-          Wrap(
-            spacing: 16,
-            runSpacing: 12,
-            alignment: WrapAlignment.center,
+      child: Center(
+        child: ConstrainedBox(
+          constraints: const BoxConstraints(maxWidth: 1100),
+          child: Column(
+            crossAxisAlignment:
+                CrossAxisAlignment.stretch, // Ensure children stretch to width
             children: [
-              ElevatedButton.icon(
-                onPressed: () => onStartNewApplication?.call(),
-                icon: const Icon(Icons.add_circle_outline, size: 20),
-                label: const Text('New Application'),
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: Colors.white,
-                  foregroundColor: const Color(0xff0078D4),
-                  elevation: 0,
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 28,
-                    vertical: 18,
-                  ),
-                  textStyle: const TextStyle(
-                    fontWeight: FontWeight.bold,
-                    fontFamily: AppFonts.primaryFont,
-                    fontSize: 16,
-                  ),
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(8),
-                  ),
-                ),
-              ),
-              ElevatedButton.icon(
-                onPressed: () => onStartUpdateWorkflow?.call(),
-                icon: const Icon(Icons.edit_note, size: 20),
-                label: const Text('Update Application'),
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: Colors.white.withOpacity(0.15),
-                  foregroundColor: Colors.white,
-                  elevation: 0,
-                  side: const BorderSide(color: Colors.white30),
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 28,
-                    vertical: 18,
-                  ),
-                  textStyle: const TextStyle(
-                    fontWeight: FontWeight.bold,
-                    fontFamily: AppFonts.primaryFont,
-                    fontSize: 16,
-                  ),
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(8),
+              if (isMobile) ...[
+                welcomeText,
+                const SizedBox(height: 5),
+                welcomeText2,
+                const SizedBox(height: 24),
+                _buildDateWidget(),
+                const SizedBox(height: 24),
+                actionCards,
+              ] else ...[
+                IntrinsicHeight(
+                  child: Row(
+                    crossAxisAlignment: CrossAxisAlignment.stretch,
+                    children: [
+                      Expanded(
+                        flex: 6,
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            welcomeText,
+                            const SizedBox(height: 5),
+                            welcomeText2,
+                            const SizedBox(height: 24),
+                            actionCards,
+                          ],
+                        ),
+                      ),
+                      const SizedBox(width: 40),
+                      Expanded(flex: 5, child: _buildDateWidget()),
+                    ],
                   ),
                 ),
-              ),
+              ],
             ],
           ),
-        ],
+        ),
       ),
     );
   }
@@ -181,34 +368,35 @@ class _ProcessTimeline extends StatelessWidget {
 
   static const List<Map<String, String>> _stepData = [
     {
-      'title': 'Personal Info',
+      'title': 'Personal Information',
       'desc':
-          'Register verified full identity names, active tracking emails, and passports matching your core travel books.',
+          'Provide identity details exactly as shown on passport. Myanmar nationals must also include their NRC number and father"${"'"}s" name.',
     },
     {
-      'title': 'Itinerary Detail',
+      'title': 'Trip and Accommodation',
       'desc':
-          'Specify incoming entry terminals, ports of registry, commercial flight transit logs, and local hotel nodes.',
+          'Enter flight or vehicle details and mandatory stay address while in Myanmar.',
     },
     {
       'title': 'Health & Customs',
       'desc':
-          'Certify background safety questionnaires, quarantine health checks, and customs registry declarations.',
+          'Declare health status for the last 14 days and report any restricted goods or currency digitally.',
     },
     {
-      'title': 'Review Preview',
+      'title': 'Review and Submit',
       'desc':
-          'Verify all compiled entry arrays for absolute data accuracy and review before sealing structural legal records.',
+          'Verify all entered data for accuracy. Provide a digital signature to finalize and lock your submission for processing.',
     },
     {
-      'title': 'Secure QR Code',
+      'title': 'Receive QR Code',
       'desc':
-          'Generate your secure immigration clearance code. Download it locally or distribute instantly via email nodes.',
+          'Obtain Disembarkation/Embarkation (DE) Number and digital QR code. Download the file or send it to own email for easy access.',
     },
   ];
 
   @override
   Widget build(BuildContext context) {
+    final bool isDesktop = MediaQuery.of(context).size.width >= 1024;
     return Container(
       width: double.infinity,
       padding: const EdgeInsets.symmetric(vertical: 50.0, horizontal: 24.0),
@@ -237,103 +425,36 @@ class _ProcessTimeline extends StatelessWidget {
           ),
           const SizedBox(height: 32),
 
-          LayoutBuilder(
-            builder: (context, constraints) {
-              final double width = constraints.maxWidth;
-
-              if (width < 600) {
-                // Mobile layout
-                return Column(
-                  children: List.generate(_stepData.length, (index) {
-                    return Padding(
-                      padding: const EdgeInsets.only(bottom: 16.0),
-                      child: _StepCard(
-                        stepNumber: '${index + 1}',
-                        title: _stepData[index]['title']!,
-                        description: _stepData[index]['desc']!,
-                      ),
-                    );
-                  }),
-                );
-              } else if (width < 1000) {
-                // Tablet layout
-                return Column(
+          isDesktop
+              ? Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
                   children: [
-                    Row(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Expanded(
-                          child: _StepCard(
-                            stepNumber: '1',
-                            title: _stepData[0]['title']!,
-                            description: _stepData[0]['desc']!,
-                          ),
-                        ),
-                        const SizedBox(width: 16),
-                        Expanded(
-                          child: _StepCard(
-                            stepNumber: '2',
-                            title: _stepData[1]['title']!,
-                            description: _stepData[1]['desc']!,
-                          ),
-                        ),
-                        const SizedBox(width: 16),
-                        Expanded(
-                          child: _StepCard(
-                            stepNumber: '3',
-                            title: _stepData[2]['title']!,
-                            description: _stepData[2]['desc']!,
-                          ),
-                        ),
-                      ],
-                    ),
-                    const SizedBox(height: 16),
-                    Row(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        const Spacer(flex: 1),
-                        Expanded(
-                          flex: 2,
-                          child: _StepCard(
-                            stepNumber: '4',
-                            title: _stepData[3]['title']!,
-                            description: _stepData[3]['desc']!,
-                          ),
-                        ),
-                        const SizedBox(width: 16),
-                        Expanded(
-                          flex: 2,
-                          child: _StepCard(
-                            stepNumber: '5',
-                            title: _stepData[4]['title']!,
-                            description: _stepData[4]['desc']!,
-                          ),
-                        ),
-                        const Spacer(flex: 1),
-                      ],
-                    ),
-                  ],
-                );
-              } else {
-                // Desktop layout
-                return Row(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: List.generate(_stepData.length, (index) {
-                    return Expanded(
-                      child: Padding(
-                        padding: EdgeInsets.only(right: index == 4 ? 0 : 16.0),
+                    for (int i = 0; i < _stepData.length; i++) ...[
+                      Expanded(
                         child: _StepCard(
-                          stepNumber: '${index + 1}',
-                          title: _stepData[index]['title']!,
-                          description: _stepData[index]['desc']!,
+                          stepNumber: '${i + 1}',
+                          title: _stepData[i]['title']!,
+                          description: _stepData[i]['desc']!,
+                          isDesktop: true,
                         ),
                       ),
+                      if (i != _stepData.length - 1) const SizedBox(width: 16),
+                    ],
+                  ],
+                )
+              : Wrap(
+                  spacing: 16,
+                  runSpacing: 16,
+                  alignment: WrapAlignment.center,
+                  children: List.generate(_stepData.length, (index) {
+                    return _StepCard(
+                      stepNumber: '${index + 1}',
+                      title: _stepData[index]['title']!,
+                      description: _stepData[index]['desc']!,
+                      isDesktop: false,
                     );
                   }),
-                );
-              }
-            },
-          ),
+                ),
         ],
       ),
     );
@@ -344,17 +465,20 @@ class _StepCard extends StatelessWidget {
   final String stepNumber;
   final String title;
   final String description;
+  final bool isDesktop;
 
   const _StepCard({
     required this.stepNumber,
     required this.title,
     required this.description,
+    this.isDesktop = false,
   });
 
   @override
   Widget build(BuildContext context) {
     return Container(
-      width: double.infinity,
+      width: isDesktop ? null : 280,
+      height: 280,
       decoration: BoxDecoration(
         color: Colors.white,
         border: Border.all(color: const Color(0xffE5E7EB)),
@@ -368,56 +492,68 @@ class _StepCard extends StatelessWidget {
         ],
       ),
       child: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
+        mainAxisAlignment: MainAxisAlignment.start,
         crossAxisAlignment: CrossAxisAlignment.center,
         children: [
           Container(
             width: double.infinity,
             height: 5,
-            decoration: BoxDecoration(
-              color: const Color.fromRGBO(9, 156, 244, 1),
-              borderRadius: BorderRadius.circular(12),
+            decoration: const BoxDecoration(
+              color: Color.fromRGBO(9, 156, 244, 1),
+              borderRadius: BorderRadius.only(
+                topLeft: Radius.circular(11),
+                topRight: Radius.circular(11),
+              ),
             ),
           ),
-          Container(
-            padding: const EdgeInsets.all(24),
-            child: Column(
-              children: [
-                CircleAvatar(
-                  radius: 22,
-                  backgroundColor: const Color(0xffE1F0FA),
-                  child: Text(
-                    stepNumber,
-                    style: const TextStyle(
-                      color: Color(0xff0078D4),
-                      fontWeight: FontWeight.bold,
-                      fontSize: 16,
+          Expanded(
+            child: Container(
+              padding: const EdgeInsets.all(24),
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  CircleAvatar(
+                    radius: 22,
+                    backgroundColor: const Color(0xffE1F0FA),
+                    child: Text(
+                      stepNumber,
+                      style: const TextStyle(
+                        color: Color(0xff0078D4),
+                        fontWeight: FontWeight.bold,
+                        fontSize: 16,
+                      ),
                     ),
                   ),
-                ),
-                const SizedBox(height: 16),
-                Text(
-                  title,
-                  style: const TextStyle(
-                    fontWeight: FontWeight.bold,
-                    fontSize: 15,
-                    fontFamily: AppFonts.primaryFont,
-                    color: Color(0xff1A1A1A),
+                  const SizedBox(height: 16),
+                  Expanded(
+                    child: Column(
+                      children: [
+                        Text(
+                          title,
+                          style: const TextStyle(
+                            fontWeight: FontWeight.bold,
+                            fontSize: 15,
+                            fontFamily: AppFonts.primaryFont,
+                            color: Color(0xff1A1A1A),
+                          ),
+                          textAlign: TextAlign.center,
+                        ),
+                        const SizedBox(height: 10),
+                        Text(
+                          description,
+                          style: const TextStyle(
+                            color: Color(0xff6B7280),
+                            fontSize: 13,
+                            fontFamily: AppFonts.primaryFont,
+                            height: 1.4,
+                          ),
+                          textAlign: TextAlign.center,
+                        ),
+                      ],
+                    ),
                   ),
-                  textAlign: TextAlign.center,
-                ),
-                const SizedBox(height: 10),
-                Text(
-                  description,
-                  style: const TextStyle(
-                    color: Color(0xff6B7280),
-                    fontSize: 13,
-                    fontFamily: AppFonts.primaryFont,
-                    height: 1.4,
-                  ),
-                  textAlign: TextAlign.center,
-                ),
-              ],
+                ],
+              ),
             ),
           ),
         ],

@@ -42,6 +42,7 @@ class _MainLayoutState extends State<MainLayout>
   Widget _buildDesktopNoticeDropdown() {
     return PopupMenuButton<String>(
       offset: const Offset(0, 50),
+      color: Colors.white,
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
       tooltip: "View Official Notices",
       onSelected: (value) {
@@ -62,7 +63,7 @@ class _MainLayoutState extends State<MainLayout>
           );
         }).toList();
       },
-      child: const _NoticeTabTrigger(),
+      child: _NoticeTabTrigger(isActive: _tabController.index == 4),
     );
   }
 
@@ -273,7 +274,18 @@ class _MainLayoutState extends State<MainLayout>
     }
 
     if (_selectedResidency == null) {
-      return ResidencyLayout(onResidencySelected: _handleResidencySelection);
+      return ResidencyLayout(
+        onResidencySelected: _handleResidencySelection,
+        onBackPressed: () async {
+          await FormSessionService.clearDraft(isUpdateMode: false);
+          final prefs = await SharedPreferences.getInstance();
+          await prefs.remove('hasAcceptedTerms');
+          setState(() {
+            _hasAcceptedTerms = false;
+          });
+          _handleTabTap(0);
+        },
+      );
     }
     return NewApplication(
       key: _formKey,
@@ -285,7 +297,12 @@ class _MainLayoutState extends State<MainLayout>
 
   Widget _buildUpdateApplicationTab() {
     if (_selectedResidency == null) {
-      return ResidencyLayout(onResidencySelected: _handleResidencySelection);
+      return ResidencyLayout(
+        onResidencySelected: _handleResidencySelection,
+        onBackPressed: () {
+          _handleTabTap(0);
+        },
+      );
     }
 
     if (_fetchedUpdateData == null) {
@@ -356,6 +373,60 @@ class _MainLayoutState extends State<MainLayout>
     );
   }
 
+  Widget _buildMobileNoticeDropdown() {
+    final isActive = _tabController.index == 4;
+    return PopupMenuButton<String>(
+      offset: const Offset(0, 48),
+      color: Colors.white,
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+      onSelected: (value) {
+        setState(() {
+          _activeNoticeTitle = value;
+          _isMenuExpanded = false;
+        });
+        _handleTabTap(4);
+      },
+      itemBuilder: (BuildContext context) {
+        return _noticeTitles.map((String choice) {
+          return PopupMenuItem<String>(
+            value: choice,
+            child: Text(
+              choice,
+              style: const TextStyle(
+                fontFamily: AppFonts.primaryFont,
+                fontSize: 14,
+              ),
+            ),
+          );
+        }).toList();
+      },
+      child: Container(
+        height: 48,
+        padding: const EdgeInsets.symmetric(horizontal: 16),
+        color: isActive ? const Color.fromRGBO(9, 156, 244, 1) : Colors.white,
+        alignment: Alignment.centerLeft,
+        child: Row(
+          mainAxisAlignment: MainAxisAlignment.start,
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Text(
+              "Notice",
+              style: TextStyle(
+                fontWeight: FontWeight.bold,
+                color: isActive ? Colors.white : Colors.black87,
+              ),
+            ),
+            const SizedBox(width: 4),
+            Icon(
+              Icons.keyboard_arrow_down,
+              color: isActive ? Colors.white : Colors.black87,
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     final double screenWidth = MediaQuery.of(context).size.width;
@@ -386,7 +457,7 @@ class _MainLayoutState extends State<MainLayout>
                             color: Color.fromRGBO(9, 156, 244, 1),
                           ),
                         ),
-                        const NationalHeader(),
+                        NationalHeader(onTap: () => _handleTabTap(0)),
                         const Divider(
                           height: 1,
                           thickness: 1,
@@ -472,17 +543,23 @@ class _MainLayoutState extends State<MainLayout>
                                             _buildDesktopNoticeDropdown(),
                                           ],
                                         ),
-                                      Text(
-                                        "Official Myanmar eArrival Card",
-                                        style: TextStyle(
-                                          fontFamily: AppFonts.primaryFont,
-                                          fontSize: isMobile ? 16 : 21,
-                                          fontWeight: FontWeight.w600,
-                                          color: const Color.fromRGBO(
-                                            9,
-                                            156,
-                                            244,
-                                            1,
+                                      MouseRegion(
+                                        cursor: SystemMouseCursors.click,
+                                        child: GestureDetector(
+                                          onTap: () => _handleTabTap(0),
+                                          child: Text(
+                                            "Official Myanmar eArrival Card",
+                                            style: TextStyle(
+                                              fontFamily: AppFonts.primaryFont,
+                                              fontSize: isMobile ? 16 : 21,
+                                              fontWeight: FontWeight.w600,
+                                              color: const Color.fromRGBO(
+                                                9,
+                                                156,
+                                                244,
+                                                1,
+                                              ),
+                                            ),
                                           ),
                                         ),
                                       ),
@@ -509,7 +586,7 @@ class _MainLayoutState extends State<MainLayout>
                                       2,
                                     ),
                                     _buildExpandableMenuItem("FAQS", 3),
-                                    _buildExpandableMenuItem("Notice", 4),
+                                    _buildMobileNoticeDropdown(),
                                   ],
                                 ),
                               ),
@@ -575,7 +652,8 @@ class _StickyNavBarDelegate extends SliverPersistentHeaderDelegate {
 }
 
 class _NoticeTabTrigger extends StatefulWidget {
-  const _NoticeTabTrigger();
+  final bool isActive;
+  const _NoticeTabTrigger({this.isActive = false});
   @override
   State<_NoticeTabTrigger> createState() => _NoticeTabTriggerState();
 }
@@ -585,6 +663,7 @@ class _NoticeTabTriggerState extends State<_NoticeTabTrigger> {
 
   @override
   Widget build(BuildContext context) {
+    final bool isActive = widget.isActive;
     return MouseRegion(
       onEnter: (_) => setState(() => _isHovered = true),
       onExit: (_) => setState(() => _isHovered = false),
@@ -594,10 +673,12 @@ class _NoticeTabTriggerState extends State<_NoticeTabTrigger> {
         padding: const EdgeInsets.symmetric(horizontal: 16),
         alignment: Alignment.center,
         decoration: BoxDecoration(
-          color: Colors.transparent,
+          color: isActive
+              ? const Color.fromRGBO(9, 156, 244, 1)
+              : Colors.transparent,
           border: Border(
             bottom: BorderSide(
-              color: _isHovered
+              color: _isHovered && !isActive
                   ? const Color.fromRGBO(1, 156, 244, 1)
                   : Colors.transparent,
               width: 3.0,
@@ -613,14 +694,18 @@ class _NoticeTabTriggerState extends State<_NoticeTabTrigger> {
               style: TextStyle(
                 fontWeight: FontWeight.bold,
                 fontSize: 14,
-                color: _isHovered ? const Color(0xFFB4CEF5) : Colors.black87,
+                color: isActive
+                    ? Colors.white
+                    : (_isHovered ? const Color(0xFFB4CEF5) : Colors.black87),
               ),
             ),
             const SizedBox(width: 4),
             Icon(
               Icons.keyboard_arrow_down,
               size: 16,
-              color: _isHovered ? const Color(0xFFB4CEF5) : Colors.black87,
+              color: isActive
+                  ? Colors.white
+                  : (_isHovered ? const Color(0xFFB4CEF5) : Colors.black87),
             ),
           ],
         ),

@@ -194,12 +194,14 @@ class _DeclarationLayoutState extends ConsumerState<DeclarationLayout>
         if (widget.values['hasSymptoms'] == 'Yes') ...[
           const SizedBox(height: 16),
           _RecordUploadSection(
+            title: "Health Record Document",
             uploadState: healthUploadState,
             fallbackUrl: widget.values['healthRecordUrl'] as String?,
             fallbackFileName: widget.values['healthRecordFileName'] as String?,
             onPickAndUpload: _pickAndUpload,
             onClear: _clearHealthRecord,
-            infoText: 'If you have any symptoms, please upload your medical record or test result file using the button below.',
+            infoText:
+                'If you have any symptoms, please upload your medical record or test result file using the button below.',
           ),
         ],
 
@@ -227,11 +229,12 @@ class _DeclarationLayoutState extends ConsumerState<DeclarationLayout>
         if (widget.values['carryingRestricted'] == 'Yes') ...[
           const SizedBox(height: 16),
           _RecordUploadSection(
+            title: "Goods Record Document",
             uploadState: digitalUploadState,
             fallbackUrl: widget.values['goodsRecordUrl'] as String?,
-            fallbackFileName:
-                widget.values['goodsRecordFileName'] as String?,
-            infoText:"Please upload a detailed manifest, invoice, or supporting documents for your restricted items.",
+            fallbackFileName: widget.values['goodsRecordFileName'] as String?,
+            infoText:
+                "Please upload a detailed manifest, invoice, or supporting documents for your restricted items.",
             onPickAndUpload: _pickAndUploadGoods,
             onClear: _clearRestrictedRecord,
           ),
@@ -251,6 +254,7 @@ class _RecordUploadSection extends StatelessWidget {
   final VoidCallback onPickAndUpload;
   final String infoText;
   final VoidCallback onClear;
+  final String title;
 
   const _RecordUploadSection({
     required this.uploadState,
@@ -259,13 +263,14 @@ class _RecordUploadSection extends StatelessWidget {
     this.fallbackUrl,
     this.fallbackFileName,
     required this.infoText,
+    required this.title,
   });
 
   @override
   Widget build(BuildContext context) {
     final displayUrl = uploadState.uploadedUrl ?? fallbackUrl;
     final displayFileName = uploadState.localFileName ?? fallbackFileName;
-    
+
     if (displayUrl != null) {
       return Material(
         color: Colors.transparent,
@@ -289,7 +294,11 @@ class _RecordUploadSection extends StatelessWidget {
             ),
             child: Row(
               children: [
-                Icon(Icons.check_circle, color: Colors.green.shade600, size: 20),
+                Icon(
+                  Icons.check_circle,
+                  color: Colors.green.shade600,
+                  size: 20,
+                ),
                 const SizedBox(width: 8),
                 Expanded(
                   child: Text(
@@ -322,9 +331,19 @@ class _RecordUploadSection extends StatelessWidget {
         ),
         child: Row(
           children: [
-            const SizedBox(width: 18, height: 18, child: CircularProgressIndicator(strokeWidth: 2)),
+            const SizedBox(
+              width: 18,
+              height: 18,
+              child: CircularProgressIndicator(strokeWidth: 2),
+            ),
             const SizedBox(width: 10),
-            Text('Uploading...', style: TextStyle(color: Colors.blue.shade700, fontFamily: AppFonts.primaryFont)),
+            Text(
+              'Uploading...',
+              style: TextStyle(
+                color: Colors.blue.shade700,
+                fontFamily: AppFonts.primaryFont,
+              ),
+            ),
           ],
         ),
       );
@@ -346,7 +365,7 @@ class _RecordUploadSection extends StatelessWidget {
               const SizedBox(width: 8),
               Expanded(
                 child: Text(
-                  infoText, 
+                  infoText,
                   style: const TextStyle(
                     fontSize: 13,
                     color: Colors.black87,
@@ -359,19 +378,45 @@ class _RecordUploadSection extends StatelessWidget {
         ),
         const SizedBox(height: 12),
 
-        const Text('Health Record Document', style: TextStyle(fontSize: 14, fontWeight: FontWeight.w600, fontFamily: AppFonts.primaryFont)),
+        Text(
+          title,
+          style: const TextStyle(
+            fontSize: 14,
+            fontWeight: FontWeight.w600,
+            fontFamily: AppFonts.primaryFont,
+          ),
+        ),
         const SizedBox(height: 4),
-        Text('Upload supporting file types (jpg, png, jpeg ,pdf — max 5 MB)', style: TextStyle(fontSize: 12, color: Colors.grey.shade600, fontFamily: AppFonts.primaryFont)),
+        Text(
+          'Upload supporting file types (jpg, png, jpeg ,pdf — max 5 MB)',
+          style: TextStyle(
+            fontSize: 12,
+            color: Colors.grey.shade600,
+            fontFamily: AppFonts.primaryFont,
+          ),
+        ),
         const SizedBox(height: 10),
         OutlinedButton.icon(
           onPressed: onPickAndUpload,
           icon: const Icon(Icons.upload_file, size: 18),
           label: const Text('Choose File'),
-          style: OutlinedButton.styleFrom(padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12), shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8))),
+          style: OutlinedButton.styleFrom(
+            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(8),
+            ),
+          ),
         ),
         if (uploadState.error != null) ...[
           const SizedBox(height: 8),
-          Text(uploadState.error!, style: const TextStyle(fontSize: 12, color: Colors.red, fontFamily: AppFonts.primaryFont)),
+          Text(
+            uploadState.error!,
+            style: const TextStyle(
+              fontSize: 12,
+              color: Colors.red,
+              fontFamily: AppFonts.primaryFont,
+            ),
+          ),
         ],
       ],
     );

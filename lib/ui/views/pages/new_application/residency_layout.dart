@@ -6,8 +6,13 @@ import 'package:mmac/ui/views/widgets/footer.dart';
 
 class ResidencyLayout extends StatelessWidget {
   final Function(String) onResidencySelected;
+  final VoidCallback? onBackPressed;
 
-  const ResidencyLayout({super.key, required this.onResidencySelected});
+  const ResidencyLayout({
+    super.key,
+    required this.onResidencySelected,
+    this.onBackPressed,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -43,6 +48,38 @@ class ResidencyLayout extends StatelessWidget {
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
+                      if (onBackPressed != null) ...[
+                        InkWell(
+                          onTap: onBackPressed,
+                          borderRadius: BorderRadius.circular(4),
+                          child: const Padding(
+                            padding: EdgeInsets.symmetric(
+                              vertical: 8,
+                              horizontal: 4,
+                            ),
+                            child: Row(
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                Icon(
+                                  Icons.arrow_back_ios_new,
+                                  size: 14,
+                                  color: Colors.blue,
+                                ),
+                                SizedBox(width: 4),
+                                Text(
+                                  "Back",
+                                  style: TextStyle(
+                                    color: Colors.blue,
+                                    fontWeight: FontWeight.bold,
+                                    fontSize: 14,
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                        ),
+                        const SizedBox(height: 16),
+                      ],
                       // Header Section
                       Text(
                         "Select Residency Type",
@@ -54,18 +91,18 @@ class ResidencyLayout extends StatelessWidget {
                         ),
                       ),
                       const SizedBox(height: 12),
-                      Container(
-                        constraints: const BoxConstraints(maxWidth: 600),
-                        child: Text(
-                          "Choose the status that matches your situation. This determines which documents you will need to provide in the next steps.",
-                          style: TextStyle(
-                            fontSize: isMobile ? 15 : 16,
-                            color: Colors.grey.shade600,
-                            fontFamily: AppFonts.primaryFont,
-                            height: 1.5,
-                          ),
-                        ),
-                      ),
+                      // Container(
+                      //   constraints: const BoxConstraints(maxWidth: 600),
+                      //   child: Text(
+                      //     "Choose the status that matches your situation. This determines which documents you will need to provide in the next steps.",
+                      //     style: TextStyle(
+                      //       fontSize: isMobile ? 15 : 16,
+                      //       color: Colors.grey.shade600,
+                      //       fontFamily: AppFonts.primaryFont,
+                      //       height: 1.5,
+                      //     ),
+                      //   ),
+                      // ),
                       const SizedBox(height: 32),
 
                       // Responsive Cards Section
@@ -104,17 +141,17 @@ class ResidencyLayout extends StatelessWidget {
       img:
           "assets/images/residency_img1.jpg", // Using your original working asset
       icon: Icons.badge_outlined,
-      subtitle: "CITIZEN / PERMANENT RESIDENT",
+      subtitle: "PERMANENT RESIDENT",
       header: "Myanmar Citizen",
       para:
-          "For applicants holding a National Registration Card (NRC) or Permanent Residency in Myanmar.",
+          "Fo1r applicants holding a NRC   Card  or Permanent Residency in Myanmar.",
       iconColor: Colors.brown.shade600,
-      requiredData: [
-        "Personal Information",
-        "Travel Information",
-        "NRC & Mobile Number(MM)",
-        "Health and Declaration informations",
-      ],
+      // requiredData: [
+      //   "Personal Information",
+      //   "Travel Information",
+      //   "NRC & Mobile Number(MM)",
+      //   "Health and Declaration informations",
+      // ],
       onTap: () => onResidencySelected('Myanmar'),
     );
   }
@@ -129,12 +166,12 @@ class ResidencyLayout extends StatelessWidget {
       para:
           "For foreign nationals applying with a valid passport and an entry or stay permit.",
       iconColor: Colors.brown.shade700,
-      requiredData: [
-        "Personal Information",
-        "Travel Information",
-        "Passport and Accommodation Information",
-        "Health and Declaration Informations",
-      ],
+      // requiredData: [
+      //   "Personal Information",
+      //   "Travel Information",
+      //   "Passport and Accommodation Information",
+      //   "Health and Declaration Informations",
+      // ],
       onTap: () => onResidencySelected('Foreigner'),
     );
   }
@@ -151,7 +188,7 @@ class _DetailedResidencyCard extends StatefulWidget {
   final String header;
   final String para;
   final Color iconColor;
-  final List<String> requiredData;
+  // final List<String> requiredData;
   // final String requiredTextData;
   final VoidCallback onTap;
 
@@ -164,7 +201,7 @@ class _DetailedResidencyCard extends StatefulWidget {
     required this.iconColor,
     // required this.requiredTextData,
     required this.onTap,
-    required this.requiredData,
+    // required this.requiredData,
   });
 
   @override
@@ -180,6 +217,7 @@ class _DetailedResidencyCardState extends State<_DetailedResidencyCard> {
 
   @override
   Widget build(BuildContext context) {
+    bool isMobile = MediaQuery.of(context).size.width < 800;
     return AnimatedContainer(
       duration: const Duration(milliseconds: 200),
       curve: Curves.easeInOut,
@@ -212,119 +250,211 @@ class _DetailedResidencyCardState extends State<_DetailedResidencyCard> {
           onTapDown: (_) => _setActive(true),
           onTapUp: (_) => _setActive(false),
           onTapCancel: () => _setActive(false),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              // Image Section
-              Container(
-                height: 220,
-                width: double.infinity,
-                decoration: BoxDecoration(
-                  image: DecorationImage(
-                    image: AssetImage(widget.img),
-                    fit: BoxFit.cover,
+          child: isMobile
+              ? IntrinsicHeight(
+                  child: Row(
+                    crossAxisAlignment: CrossAxisAlignment.stretch,
+                    children: [
+                      Expanded(
+                        flex: 2,
+                        child: Container(
+                          width: double.infinity,
+                          decoration: BoxDecoration(
+                            image: DecorationImage(
+                              image: AssetImage(widget.img),
+                              fit: BoxFit.cover,
+                            ),
+                          ),
+                        ),
+                      ),
+                      Expanded(
+                        flex: 3,
+                        child: Padding(
+                          padding: const EdgeInsets.symmetric(
+                            vertical: 16.0,
+                            horizontal: 12.0,
+                          ),
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: [
+                              // Subtitle & Icon
+                              Row(
+                                children: [
+                                  Container(
+                                    padding: const EdgeInsets.all(4),
+                                    decoration: BoxDecoration(
+                                      color: widget.iconColor.withOpacity(0.1),
+                                      shape: BoxShape.circle,
+                                    ),
+                                    child: Icon(
+                                      widget.icon,
+                                      size: 14,
+                                      color: widget.iconColor,
+                                    ),
+                                  ),
+                                  const SizedBox(width: 8),
+                                  Expanded(
+                                    child: Text(
+                                      widget.subtitle,
+                                      style: TextStyle(
+                                        fontSize: 11,
+                                        color: widget.iconColor,
+                                        fontWeight: FontWeight.w700,
+                                        fontFamily: AppFonts.primaryFont,
+                                        letterSpacing: 0.5,
+                                      ),
+                                    ),
+                                  ),
+                                ],
+                              ),
+                              const SizedBox(height: 8),
+                              // Main Header
+                              Text(
+                                widget.header,
+                                style: TextStyle(
+                                  fontSize: 18,
+                                  fontWeight: FontWeight.w800,
+                                  fontFamily: AppFonts.primaryFont,
+                                  color: const Color(0xFF0F172A),
+                                  decoration: _isActive
+                                      ? TextDecoration.underline
+                                      : TextDecoration.none,
+                                ),
+                              ),
+                              const SizedBox(height: 6),
+                              // Paragraph
+                              Text(
+                                widget.para,
+                                style: TextStyle(
+                                  fontSize: 12,
+                                  color: Colors.grey.shade600,
+                                  fontFamily: AppFonts.primaryFont,
+                                  height: 1.4,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ),
+                    ],
                   ),
-                ),
-              ),
-
-              // Content Section
-              Padding(
-                padding: const EdgeInsets.all(24.0),
-                child: Column(
+                )
+              : Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    // Subtitle & Icon
-                    Row(
-                      children: [
-                        Container(
-                          padding: const EdgeInsets.all(6),
-                          decoration: BoxDecoration(
-                            color: widget.iconColor.withOpacity(0.1),
-                            shape: BoxShape.circle,
-                          ),
-                          child: Icon(
-                            widget.icon,
-                            size: 16,
-                            color: widget.iconColor,
-                          ),
+                    // Image Section
+                    Container(
+                      height: 220,
+                      width: double.infinity,
+                      decoration: BoxDecoration(
+                        image: DecorationImage(
+                          image: AssetImage(widget.img),
+                          fit: BoxFit.cover,
                         ),
-                        const SizedBox(width: 10),
-                        Text(
-                          widget.subtitle,
-                          style: TextStyle(
-                            fontSize: 13,
-                            color: widget.iconColor,
-                            fontWeight: FontWeight.w700,
-                            fontFamily: AppFonts.primaryFont,
-                            letterSpacing: 0.5,
-                          ),
-                        ),
-                      ],
-                    ),
-                    const SizedBox(height: 12),
-
-                    // Main Header
-                    Text(
-                      widget.header,
-                      style: const TextStyle(
-                        fontSize: 24,
-                        fontWeight: FontWeight.w800,
-                        fontFamily: AppFonts.primaryFont,
-                        color: Color(0xFF0F172A),
-                      ),
-                    ),
-                    const SizedBox(height: 8),
-
-                    // Paragraph
-                    Text(
-                      widget.para,
-                      style: TextStyle(
-                        fontSize: 14,
-                        color: Colors.grey.shade600,
-                        fontFamily: AppFonts.primaryFont,
-                        height: 1.5,
                       ),
                     ),
 
-                    const SizedBox(height: 20),
-                    const Divider(height: 1),
-                    const SizedBox(height: 20),
-
-                    // Required Data Title
-                    Row(
-                      children: [
-                        Icon(
-                          Icons.edit_document,
-                          color: Colors.grey.shade500,
-                          size: 18,
-                        ),
-                        const SizedBox(width: 8),
-                        Text(
-                          "REQUIRED DATA",
-                          style: TextStyle(
-                            fontSize: 12,
-                            color: Colors.grey.shade600,
-                            fontWeight: FontWeight.w700,
-                            letterSpacing: 0.5,
+                    // Content Section
+                    Padding(
+                      padding: const EdgeInsets.all(24.0),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          // Subtitle & Icon
+                          Row(
+                            children: [
+                              Container(
+                                padding: const EdgeInsets.all(6),
+                                decoration: BoxDecoration(
+                                  color: widget.iconColor.withOpacity(0.1),
+                                  shape: BoxShape.circle,
+                                ),
+                                child: Icon(
+                                  widget.icon,
+                                  size: 16,
+                                  color: widget.iconColor,
+                                ),
+                              ),
+                              const SizedBox(width: 10),
+                              Expanded(
+                                child: Text(
+                                  widget.subtitle,
+                                  style: TextStyle(
+                                    fontSize: 13,
+                                    color: widget.iconColor,
+                                    fontWeight: FontWeight.w700,
+                                    fontFamily: AppFonts.primaryFont,
+                                    letterSpacing: 0.5,
+                                  ),
+                                ),
+                              ),
+                            ],
                           ),
-                        ),
-                      ],
-                    ),
-                    const SizedBox(height: 16),
+                          const SizedBox(height: 12),
 
-                    // 🎯 Wrap is used here so the chips drop to the next line on narrow mobile screens!
-                    Wrap(
-                      spacing: 8,
-                      runSpacing: 8,
-                      children: widget.requiredData
-                          .map((data) => _buildBullet(data))
-                          .toList(),
+                          // Main Header
+                          Text(
+                            widget.header,
+                            style: const TextStyle(
+                              fontSize: 24,
+                              fontWeight: FontWeight.w800,
+                              fontFamily: AppFonts.primaryFont,
+                              color: Color(0xFF0F172A),
+                            ),
+                          ),
+                          const SizedBox(height: 8),
+
+                          // Paragraph
+                          Text(
+                            widget.para,
+                            style: TextStyle(
+                              fontSize: 14,
+                              color: Colors.grey.shade600,
+                              fontFamily: AppFonts.primaryFont,
+                              height: 1.5,
+                            ),
+                          ),
+
+                          const SizedBox(height: 20),
+                          const Divider(height: 1),
+                          const SizedBox(height: 20),
+
+                          // Required Data Title
+                          // Row(
+                          //   children: [
+                          //     Icon(
+                          //       Icons.edit_document,
+                          //       color: Colors.grey.shade500,
+                          //       size: 18,
+                          //     ),
+                          //     const SizedBox(width: 8),
+                          //     Text(
+                          //       "REQUIRED DATA",
+                          //       style: TextStyle(
+                          //         fontSize: 12,
+                          //         color: Colors.grey.shade600,
+                          //         fontWeight: FontWeight.w700,
+                          //         letterSpacing: 0.5,
+                          //       ),
+                          //     ),
+                          //   ],
+                          // ),
+                          // const SizedBox(height: 16),
+
+                          // 🎯 Wrap is used here so the chips drop to the next line on narrow mobile screens!
+                          // Wrap(
+                          //   spacing: 8,
+                          //   runSpacing: 8,
+                          //   children: widget.requiredData
+                          //       .map((data) => _buildBullet(data))
+                          //       .toList(),
+                          // ),
+                        ],
+                      ),
                     ),
                   ],
                 ),
-              ),
-            ],
-          ),
         ),
       ),
     );

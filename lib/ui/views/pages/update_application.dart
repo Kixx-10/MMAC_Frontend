@@ -13,6 +13,10 @@ import 'package:mmac/data/controllers/update_application_provider.dart';
 import 'package:mmac/data/controllers/country_provider.dart';
 import 'package:mmac/data/controllers/nrc_provider.dart';
 import 'package:mmac/ui/views/pages/new_application/widget/nrc_selector_widget.dart';
+import 'package:mmac/ui/views/widgets/custom_dropdown_field.dart';
+import 'package:mmac/ui/views/widgets/custom_date_field.dart';
+import 'package:mmac/ui/views/widgets/footer.dart';
+import 'package:mmac/utils/formatters.dart';
 
 class UpdateApplication extends ConsumerStatefulWidget {
   final String? initialCountry;
@@ -401,6 +405,9 @@ class _UpdateApplicationState extends ConsumerState<UpdateApplication> {
             Icons.qr_code_scanner_outlined,
             isMobile,
           ),
+          inputFormatters: [
+            FilteringTextInputFormatter.allow(RegExp(r'[\x00-\x7F]')),
+          ],
           validator: (v) =>
               (v == null || v.trim().isEmpty) ? 'DE Number is mandatory' : null,
         ),
@@ -435,7 +442,10 @@ class _UpdateApplicationState extends ConsumerState<UpdateApplication> {
               keyboardType: TextInputType.number,
               textAlign: TextAlign.center,
               inputFormatters: [
-                FilteringTextInputFormatter.allow(RegExp(r'[\u1040-\u1049]')),
+                FilteringTextInputFormatter.allow(
+                  RegExp(r'[0-9\u1040-\u1049]'),
+                ),
+                MyanmarDigitFormatter(),
                 LengthLimitingTextInputFormatter(6),
               ],
               style: const TextStyle(
@@ -553,6 +563,9 @@ class _UpdateApplicationState extends ConsumerState<UpdateApplication> {
           controller: _searchControllers['passportNumber'],
           textCapitalization: TextCapitalization.characters,
           decoration: _inputDecoration("", Icons.badge_outlined, isMobile),
+          inputFormatters: [
+            FilteringTextInputFormatter.allow(RegExp(r'[\x00-\x7F]')),
+          ],
           validator: (v) => (v == null || v.trim().isEmpty)
               ? 'Passport Number required'
               : null,
@@ -560,90 +573,99 @@ class _UpdateApplicationState extends ConsumerState<UpdateApplication> {
       ],
     );
 
-    final countryField = Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        _buildLabel("Country ", true),
-        _isLoadingCountries
-            ? const LinearProgressIndicator()
-            : Container(
-                padding: const EdgeInsets.symmetric(horizontal: 8),
-                height: 45,
-                decoration: BoxDecoration(
-                  color: Colors.white,
-                  borderRadius: BorderRadius.circular(8),
-                  border: Border.all(color: Colors.black87, width: 1),
-                ),
-                child: DropdownButtonHideUnderline(
-                  child: DropdownButton<String>(
-                    value:
-                        _searchControllers['nationalityCode']?.text.isEmpty ??
-                            true
-                        ? null
-                        : _searchControllers['nationalityCode']?.text,
-                    isExpanded: true,
-                    hint: Text(
-                      "Select Nationality",
-                      style: TextStyle(fontSize: isMobile ? 10 : 12),
-                    ),
-                    items: _rawCountryObjects.map<DropdownMenuItem<String>>((
-                      c,
-                    ) {
-                      return DropdownMenuItem<String>(
-                        value: c.countryCode,
-                        child: Text(c.countryName),
-                      );
-                    }).toList(),
-                    onChanged: (val) {
-                      if (val != null)
-                        setState(
-                          () =>
-                              _searchControllers['nationalityCode']?.text = val,
-                        );
-                    },
-                  ),
-                ),
-              ),
-      ],
+    String? selectedCountryName;
+    final currentCode = _searchControllers['nationalityCode']?.text;
+    if (currentCode != null && currentCode.isNotEmpty) {
+      try {
+        selectedCountryName = _rawCountryObjects
+            .firstWhere((c) => c.countryCode == currentCode)
+            .countryName;
+      } catch (_) {}
+    }
+
+    final countryField = _isLoadingCountries
+        ? const LinearProgressIndicator()
+        : CustomDropdownField(
+            label: "Country",
+            value: selectedCountryName,
+            hint: "Select Nationality",
+            items: _rawCountryObjects
+                .map((c) => c.countryName.toString())
+                .toList(),
+            validator: (v) =>
+                (v == null || v.trim().isEmpty) ? 'Country required' : null,
+            onChanged: (val) {
+              if (val != null) {
+                try {
+                  final matchedCode = _rawCountryObjects
+                      .firstWhere((c) => c.countryName == val)
+                      .countryCode;
+                  setState(() {
+                    _searchControllers['nationalityCode']?.text = matchedCode;
+                  });
+                } catch (_) {}
+              }
+            },
+          );
+
+    DateTime? dobValue = _searchControllers['dob']?.text.isNotEmpty == true
+        ? DateTime.tryParse(_searchControllers['dob']!.text)
+        : null;
+
+    final dobField = CustomDateField(
+      label: "Date of Birth",
+      value: dobValue,
+      firstDate: DateTime(1900),
+      lastDate: DateTime(2100),
+      onPicked: (DateTime? d) {
+        if (d != null) {
+          setState(() {
+            _searchControllers['dob']?.text =
+                "${d.year}-${d.month.toString().padLeft(2, '0')}-${d.day.toString().padLeft(2, '0')}";
+          });
+        }
+      },
+      errorText:
+          null, // Basic validation handled by searchFormKey or externally if needed
     );
 
-    final dobField = Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        _buildLabel("Date of Birth", true),
-        TextFormField(
-          controller: _searchControllers['dob'],
-          readOnly: true,
-          onTap: () => _selectDate(context, _searchControllers['dob']!),
-          decoration: _inputDecoration(
-            "YYYY-MM-DD",
-            Icons.calendar_today,
-            isMobile,
-          ),
-          validator: (v) =>
-              (v == null || v.trim().isEmpty) ? 'DOB required' : null,
-        ),
-      ],
+    DateTime? expiryValue =
+        _searchControllers['passportExpiry']?.text.isNotEmpty == true
+        ? DateTime.tryParse(_searchControllers['passportExpiry']!.text)
+        : null;
+
+    final expiryField = CustomDateField(
+      label: "Passport Expiry Date",
+      value: expiryValue,
+      firstDate: DateTime(1900),
+      lastDate: DateTime(2100),
+      onPicked: (DateTime? d) {
+        if (d != null) {
+          setState(() {
+            _searchControllers['passportExpiry']?.text =
+                "${d.year}-${d.month.toString().padLeft(2, '0')}-${d.day.toString().padLeft(2, '0')}";
+          });
+        }
+      },
+      errorText: null,
     );
 
-    final expiryField = Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        _buildLabel("Passport Expiry Date", true),
-        TextFormField(
-          controller: _searchControllers['passportExpiry'],
-          readOnly: true,
-          onTap: () =>
-              _selectDate(context, _searchControllers['passportExpiry']!),
-          decoration: _inputDecoration(
-            "YYYY-MM-DD",
-            Icons.calendar_today,
-            isMobile,
+    // Hidden Validation for DOB and Expiry
+    final hiddenValidation = Offstage(
+      child: Column(
+        children: [
+          TextFormField(
+            controller: _searchControllers['dob'],
+            validator: (v) =>
+                (v == null || v.trim().isEmpty) ? 'DOB required' : null,
           ),
-          validator: (v) =>
-              (v == null || v.trim().isEmpty) ? 'Expiry date required' : null,
-        ),
-      ],
+          TextFormField(
+            controller: _searchControllers['passportExpiry'],
+            validator: (v) =>
+                (v == null || v.trim().isEmpty) ? 'Expiry date required' : null,
+          ),
+        ],
+      ),
     );
 
     return Column(
@@ -678,6 +700,7 @@ class _UpdateApplicationState extends ConsumerState<UpdateApplication> {
                   Expanded(child: expiryField),
                 ],
               ),
+        hiddenValidation,
       ],
     );
   }
@@ -728,65 +751,70 @@ class _UpdateApplicationState extends ConsumerState<UpdateApplication> {
     );
 
     return SingleChildScrollView(
-      padding: const EdgeInsets.all(16),
-      child: Center(
-        child: Container(
-          constraints: const BoxConstraints(maxWidth: 1100),
-          padding: const EdgeInsets.all(24),
-          decoration: BoxDecoration(
-            color: Colors.white,
-            borderRadius: BorderRadius.circular(12),
-            boxShadow: [
-              BoxShadow(
-                color: Colors.black.withOpacity(0.05),
-                blurRadius: 10,
-                offset: const Offset(0, 4),
-              ),
-            ],
-          ),
-          child: Form(
-            key: _searchFormKey,
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                const SizedBox(height: 16),
-                _buildNoticeBox(isMyanmar),
-                const SizedBox(height: 30),
-
-                Text(
-                  "Verify Identity Details to Modify Record",
-                  style: TextStyle(
-                    fontSize: isMobile ? 16 : 20,
-                    fontWeight: FontWeight.bold,
-                    color: Colors.black87,
-                    fontFamily: AppFonts.primaryFont,
+      child: Column(
+        children: [
+          Center(
+            child: Container(
+              constraints: const BoxConstraints(maxWidth: 1100),
+              padding: const EdgeInsets.all(24),
+              decoration: BoxDecoration(
+                color: Colors.white,
+                borderRadius: BorderRadius.circular(12),
+                boxShadow: [
+                  BoxShadow(
+                    color: Colors.black.withOpacity(0.05),
+                    blurRadius: 10,
+                    offset: const Offset(0, 4),
                   ),
-                ),
-                const SizedBox(height: 24),
+                ],
+              ),
+              child: Form(
+                key: _searchFormKey,
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    const SizedBox(height: 16),
+                    _buildNoticeBox(isMyanmar),
+                    const SizedBox(height: 30),
 
-                if (isMyanmar)
-                  _buildNativeLayout(isMobile, isDesktop)
-                else
-                  _buildForeignerLayout(isMobile),
-
-                const SizedBox(height: 32),
-                isMobile
-                    ? Column(
-                        crossAxisAlignment: CrossAxisAlignment.stretch,
-                        children: [
-                          primaryBtn,
-                          const SizedBox(height: 10),
-                          secondaryBtn,
-                        ],
-                      )
-                    : Row(
-                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                        children: [secondaryBtn, primaryBtn],
+                    Text(
+                      "Verify Identity Details to Modify Record",
+                      style: TextStyle(
+                        fontSize: isMobile ? 16 : 20,
+                        fontWeight: FontWeight.bold,
+                        color: Colors.black87,
+                        fontFamily: AppFonts.primaryFont,
                       ),
-              ],
+                    ),
+                    const SizedBox(height: 24),
+
+                    if (isMyanmar)
+                      _buildNativeLayout(isMobile, isDesktop)
+                    else
+                      _buildForeignerLayout(isMobile),
+
+                    const SizedBox(height: 32),
+                    isMobile
+                        ? Column(
+                            crossAxisAlignment: CrossAxisAlignment.stretch,
+                            children: [
+                              primaryBtn,
+                              const SizedBox(height: 10),
+                              secondaryBtn,
+                            ],
+                          )
+                        : Row(
+                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                            children: [secondaryBtn, primaryBtn],
+                          ),
+                  ],
+                ),
+              ),
             ),
           ),
-        ),
+          const SizedBox(height: 20),
+          const FormFooter(),
+        ],
       ),
     );
   }

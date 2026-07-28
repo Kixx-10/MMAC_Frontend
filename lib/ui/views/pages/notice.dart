@@ -190,7 +190,7 @@ class _NoticeLayoutState extends State<NoticeLayout> {
           ),
           const TextSpan(
             text:
-                ' is required. The application confirmation, Declaration (DE) Number, and QR Code will be sent to the registered email address.',
+                ' is required. The application confirmation, Disembarkation/Embarkation (DE) Number, and QR Code will be sent to the registered email address.',
           ),
         ]),
         _buildBulletPoint([
@@ -208,7 +208,10 @@ class _NoticeLayoutState extends State<NoticeLayout> {
         _buildSectionHeader("After Submission"),
         _buildBulletPoint([
           const TextSpan(text: 'A unique '),
-          const TextSpan(text: 'Declaration (DE) Number', style: boldStyle),
+          const TextSpan(
+            text: 'Disembarkation/Embarkation (DE) Number',
+            style: boldStyle,
+          ),
           const TextSpan(
             text:
                 ' will be generated after successful submission. This number is required to update the application before arrival and should be kept for future reference.',
@@ -272,19 +275,22 @@ class _NoticeLayoutState extends State<NoticeLayout> {
         ]),
         _buildNumberedTerm("②", [
           const TextSpan(text: 'Applications must be submitted within '),
-          const TextSpan(text: 'seventy-two (72) hours', style: boldStyle),
+          const TextSpan(text: ' 72 hours', style: boldStyle),
           const TextSpan(
             text: ' before the scheduled arrival time in Myanmar (UTC+6:30).',
           ),
         ]),
         _buildNumberedTerm("③", [
           const TextSpan(text: 'Upon successful submission, a '),
-          const TextSpan(text: 'Declaration (DE) Number', style: boldStyle),
+          const TextSpan(
+            text: 'Disembarkation/Embarkation (DE) Number',
+            style: boldStyle,
+          ),
           const TextSpan(text: ' and '),
           const TextSpan(text: 'QR Code', style: boldStyle),
           const TextSpan(
             text:
-                ' will be sent to the registered email address. The Declaration (DE) Number and email account should be retained for future application updates and official notifications.',
+                ' will be sent to the registered email address. The Disembarkation/Embarkation (DE) Number and email account should be retained for future application updates and official notifications.',
           ),
         ]),
         _buildNumberedTerm("④", [

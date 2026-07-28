@@ -59,6 +59,7 @@ class _TermsAndConditionsPageState extends State<TermsAndConditionsPage> {
               color: Colors.black87,
               height: 1.5,
               fontWeight: FontWeight.bold,
+              fontFamily: AppFonts.primaryFont,
             ),
           ),
           const SizedBox(width: 12),
@@ -115,7 +116,7 @@ class _TermsAndConditionsPageState extends State<TermsAndConditionsPage> {
                       ),
                       child: const Center(
                         child: Text(
-                          'Myanmar eArrival Card System',
+                          'Terms and Conditions',
                           style: TextStyle(
                             fontSize: 20,
                             fontWeight: FontWeight.bold,
@@ -132,18 +133,16 @@ class _TermsAndConditionsPageState extends State<TermsAndConditionsPage> {
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          _buildSectionTitle('Terms and Conditions'),
+                          // _buildSectionTitle('Terms and Conditions'),
+                          // _buildParagraph(
+                          //   'By accessing and using the Myanmar eArrival Card system, you agree to comply with and be bound by the following Terms and Conditions:',
+                          // ),
+                          _buildSectionTitle('1. Time Limitation'),
                           _buildParagraph(
-                            'By accessing and using the Myanmar eArrival Card system, you agree to comply with and be bound by the following Terms and Conditions:',
+                            'Applications for the eArrival Card must be submitted within 72 hours (UTC+6:30) prior to your scheduled arrival in Myanmar.',
                           ),
                           _buildSectionTitle(
-                            '1. Application Timeframe (Time Limitation) ',
-                          ),
-                          _buildParagraph(
-                            'Applications for the eArrival Card must be submitted within seventy-two (72) hours (UTC+6:30) prior to your scheduled arrival in Myanmar.',
-                          ),
-                          _buildSectionTitle(
-                            '2. Modification of Information (Core Field Protection) ',
+                            '2. Modification of Information  ',
                           ),
                           _buildParagraph(
                             'After successful submission of the application, only specific non-core fields (such as accommodation details or flight changes) may be updated. Core personal data, including but not limited to Name, Passport Number, Date of Birth, Nationality, and Date of Arrival—cannot be modified. If changes to core fields are required, the applicant must discard the current application and submit a completely new one.',
@@ -171,7 +170,7 @@ class _TermsAndConditionsPageState extends State<TermsAndConditionsPage> {
                             'The issued eArrival Card QR code is valid for a single entry only. The QR code will automatically expire and be permanently deactivated in the system immediately after the traveler has successfully cleared immigration and entered the country.',
                           ),
                           _buildSectionTitle(
-                            '7. Declaration and Acknowledgment ',
+                            '7. Declaration and Acknowledgement ',
                           ),
                           _buildParagraph(
                             'By submitting this application, I hereby declare that I fully understand the terms stated herein and that all information provided in this form is true, accurate, and complete to the best of my knowledge. I acknowledge that providing false, fabricated, or misleading information may result in the rejection of the application, denial of entry, or other appropriate legal actions under the existing laws of Myanmar.',
