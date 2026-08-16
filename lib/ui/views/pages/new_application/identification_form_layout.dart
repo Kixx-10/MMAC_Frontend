@@ -522,7 +522,7 @@ class _IdentificationFormLayoutState
   Widget _buildUidField(double lw) {
     return CustomTextField(
       label: "UID",
-      hintText: "10 max (optional)",
+      hintText: "",
       keyboardtype: TextInputType.number,
       filter: [FilteringTextInputFormatter.digitsOnly],
       controller: widget.controllers['uid']!,
@@ -530,6 +530,20 @@ class _IdentificationFormLayoutState
       labelWidth: lw,
       isRequired: false,
       readonly: false,
+      validator: (value) {
+        //If it's optional and completely empty, it passes!
+        if (value == null || value.trim().isEmpty) {
+          return null;
+        }
+
+        //If they type something, it MUST be exactly 10 digits
+        if (value.trim().length < 10) {
+          return 'UID must be exactly 10 digits';
+        }
+
+        //Passed validation
+        return null;
+      },
       onChanged: (value) => widget.onValueChanged('uid', value),
     );
   }

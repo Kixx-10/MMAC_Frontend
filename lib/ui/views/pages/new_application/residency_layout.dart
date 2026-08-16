@@ -144,7 +144,7 @@ class ResidencyLayout extends StatelessWidget {
       subtitle: "PERMANENT RESIDENT",
       header: "Myanmar Citizen",
       para:
-          "Fo1r applicants holding a NRC   Card  or Permanent Residency in Myanmar.",
+          "For applicants holding a NRC   Card  or Permanent Residency in Myanmar.",
       iconColor: Colors.brown.shade600,
       // requiredData: [
       //   "Personal Information",

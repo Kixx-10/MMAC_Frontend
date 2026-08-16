@@ -1,4 +1,5 @@
 import 'package:dio/dio.dart';
+import 'package:flutter/material.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 
 class ApiClient {
@@ -12,8 +13,8 @@ class ApiClient {
       BaseOptions(
         // Render Live Backend URL
         baseUrl: "https://mmac-backend.onrender.com/api/",
-        connectTimeout: const Duration(seconds: 120),
-        receiveTimeout: const Duration(seconds: 120),
+        connectTimeout: const Duration(seconds: 30),
+        receiveTimeout: const Duration(seconds: 30),
         headers: {
           'Content-Type': 'application/json',
           'Accept': 'application/json',
@@ -31,9 +32,9 @@ class ApiClient {
           return handler.next(options);
         },
         onError: (DioException e, handler) {
-          // Render free tier တွင် Cold Start ကြောင့် ပထမဆုံး request ကြာမြင့်နိုင်သည့်အတွက် Handle လုပ်ရန်
+          
           if (e.type == DioExceptionType.connectionTimeout) {
-            print("Server takes too long to respond (Cold Start).");
+            debugPrint("Server takes too long to respond (Cold Start).");
           }
           return handler.next(e);
         },
