@@ -12,8 +12,8 @@ class ApiClient {
       BaseOptions(
         // Render Live Backend URL
         baseUrl: "https://mmac-backend.onrender.com/api/",
-        connectTimeout: const Duration(seconds: 30),
-        receiveTimeout: const Duration(seconds: 30),
+        connectTimeout: const Duration(seconds: 120),
+        receiveTimeout: const Duration(seconds: 120),
         headers: {
           'Content-Type': 'application/json',
           'Accept': 'application/json',
